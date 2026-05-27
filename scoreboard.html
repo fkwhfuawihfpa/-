@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>體育課計分板</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ── 背景 Canvas ── */
+    #bgCanvas{position:fixed;inset:0;pointer-events:none;z-index:0;}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(ellipse 60% 50% at 15% 20%, rgba(255,107,107,0.10) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 85% 75%, rgba(78,205,196,0.09) 0%, transparent 65%);
+      transition:opacity 0.6s;}
+    body::after{content:'';position:fixed;inset:-10% -10% -5% -10%;z-index:0;pointer-events:none;
+      background:conic-gradient(from 100deg at 18% 22%, rgba(255,107,107,0.10), transparent 40%),conic-gradient(from -30deg at 82% 78%, rgba(78,205,196,0.10), transparent 40%);
+      filter:blur(40px);animation:auroraShift 18s ease-in-out infinite alternate;transition:opacity 0.6s;}
+    @keyframes auroraShift{0%{transform:translate3d(0,0,0) rotate(0deg);}50%{transform:translate3d(1.5%,-1.5%,0) rotate(2deg);}100%{transform:translate3d(-1%,1%,0) rotate(-2deg);}}
+    .bg-noise body::before{background:radial-gradient(ellipse 70% 60% at 20% 25%, rgba(255,107,107,0.06) 0%, transparent 65%),radial-gradient(ellipse 55% 50% at 80% 75%, rgba(78,205,196,0.06) 0%, transparent 62%);}
+    .bg-noise body::after{opacity:0.5;}
+    .bg-noise #bgCanvas{opacity:0.9;}
+    .bg-mountain body::before{background:radial-gradient(ellipse 100% 60% at 50% 100%, rgba(0,30,60,0.95) 0%, transparent 70%),radial-gradient(ellipse 80% 50% at 50% 50%, rgba(10,20,40,0.5) 0%, transparent 100%);}
+    .bg-mountain body::after{background:radial-gradient(ellipse 80% 40% at 50% 95%, rgba(78,205,196,0.15) 0%, transparent 60%),conic-gradient(from 160deg at 50% 80%, rgba(255,107,107,0.08), transparent 30%);filter:blur(30px);animation:mountainGlow 8s ease-in-out infinite alternate;}
+    @keyframes mountainGlow{0%{opacity:0.7;}100%{opacity:1;}}
+    .bg-geo body::before{background:radial-gradient(ellipse 60% 50% at 15% 20%, rgba(255,107,107,0.09) 0%, transparent 70%),radial-gradient(ellipse 50% 40% at 85% 75%, rgba(78,205,196,0.09) 0%, transparent 65%);}
+    .bg-geo body::after{opacity:0.6;filter:blur(38px);}
+    /* 切換器浮窗 */
+    .bg-float{position:fixed;top:14px;right:14px;z-index:200;display:flex;gap:5px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.12);border-radius:30px;padding:5px 8px;backdrop-filter:blur(8px);}
+    .bg-picker-btn{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;position:relative;overflow:hidden;flex-shrink:0;}
+    .bg-picker-btn:hover{transform:scale(1.18);box-shadow:0 0 8px rgba(255,255,255,0.3);}
+    .bg-picker-btn.active{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,0.5);}
+    .bg-picker-btn[data-bg="star"]{background:radial-gradient(circle at 40% 35%, #3a86ff 0%, #0d0d1a 70%);}
+    .bg-picker-btn[data-bg="geo"]{background:linear-gradient(135deg, #1e1e40 0%, #3a86ff 50%, #4ecdc4 100%);}
+    .bg-picker-btn[data-bg="noise"]{background:radial-gradient(circle, #c8a24a 0%, #3d2c08 60%, #1a1000 100%);}
+    .bg-picker-btn[data-bg="mountain"]{background:linear-gradient(to bottom, #0d0d1a 0%, #1a3050 55%, #3a86ff 100%);}
+    /* 讓內容在 canvas 之上 */
+    h1,.scoreboard,.timer-section,.bottom-row,.win-banner{position:relative;z-index:1;}
+
+    body {
+      font-family: 'Arial Black', Arial, sans-serif;
+      background: #0a0a1a;
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+
+    h1 {
+      font-size: 2rem;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: #ffd700;
+      text-shadow: 0 0 20px rgba(255,215,0,0.5);
+      margin-bottom: 24px;
+    }
+
+    /* 計分區 */
+    .scoreboard {
+      display: flex;
+      gap: 16px;
+      align-items: stretch;
+      width: 100%;
+      max-width: 820px;
+      margin-bottom: 24px;
+    }
+
+    .team {
+      flex: 1;
+      background: linear-gradient(160deg, #1a1a2e, #16213e);
+      border-radius: 20px;
+      padding: 24px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      border: 2px solid transparent;
+      transition: border-color 0.3s;
+    }
+
+    .team.leading { border-color: #ffd700; box-shadow: 0 0 24px rgba(255,215,0,0.3); }
+
+    .team-name-input {
+      width: 100%;
+      background: rgba(255,255,255,0.1);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 1.4rem;
+      font-weight: bold;
+      text-align: center;
+      padding: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .team-name-input:focus { border-color: #ffd700; }
+
+    .score-display {
+      font-size: 6rem;
+      font-weight: 900;
+      line-height: 1;
+      transition: transform 0.1s;
+    }
+    .team:nth-child(1) .score-display { color: #ff6b6b; }
+    .team:nth-child(3) .score-display { color: #4ecdc4; }
+
+    .score-display.bump {
+      transform: scale(1.2);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 1.1rem;
+      font-weight: bold;
+      padding: 10px 18px;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .btn:active { transform: scale(0.93); }
+
+    .btn-plus  { background: #2ecc71; color: #fff; font-size: 1.6rem; padding: 10px 22px; }
+    .btn-minus { background: #e74c3c; color: #fff; }
+    .btn-reset-score { background: rgba(255,255,255,0.15); color: #ccc; font-size: 0.9rem; }
+
+    /* VS 中間欄 */
+    .vs-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      min-width: 80px;
+    }
+
+    .vs-text {
+      font-size: 2rem;
+      font-weight: 900;
+      color: #555;
+      letter-spacing: 2px;
+    }
+
+    /* 倒數計時器 */
+    .timer-section {
+      background: linear-gradient(160deg, #1a1a2e, #16213e);
+      border-radius: 20px;
+      padding: 24px 40px;
+      text-align: center;
+      width: 100%;
+      max-width: 820px;
+      margin-bottom: 20px;
+    }
+
+    .timer-label {
+      font-size: 0.85rem;
+      letter-spacing: 3px;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .timer-display {
+      font-size: 5rem;
+      font-weight: 900;
+      letter-spacing: 6px;
+      color: #fff;
+      transition: color 0.3s;
+    }
+
+    .timer-display.warning { color: #ff6b6b; animation: blink 0.6s infinite; }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+    .timer-controls {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    .preset-btn {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      color: #ccc;
+      border-radius: 8px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background 0.2s;
+    }
+    .preset-btn:hover { background: rgba(255,255,255,0.2); }
+
+    .btn-start  { background: #2ecc71; color: #fff; }
+    .btn-pause  { background: #f39c12; color: #fff; }
+    .btn-stop   { background: #e74c3c; color: #fff; }
+
+    .custom-time {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .custom-time input {
+      width: 60px;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+      text-align: center;
+      padding: 6px;
+      outline: none;
+    }
+
+    /* 底部重置 */
+    .bottom-row {
+      width: 100%;
+      max-width: 820px;
+      display: flex;
+      justify-content: center;
+    }
+    .btn-full-reset {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      color: #888;
+      border-radius: 12px;
+      padding: 10px 30px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s;
+    }
+    .btn-full-reset:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+    /* 勝利訊息 */
+    .win-banner {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 100;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+    }
+    .win-banner.show { display: flex; }
+    .win-text {
+      font-size: 3rem;
+      font-weight: 900;
+      color: #ffd700;
+      text-shadow: 0 0 40px rgba(255,215,0,0.8);
+      text-align: center;
+      animation: pop 0.5s ease;
+    }
+    @keyframes pop { 0%{transform:scale(0)} 80%{transform:scale(1.1)} 100%{transform:scale(1)} }
+    .btn-close-win {
+      background: #ffd700;
+      color: #000;
+      border: none;
+      border-radius: 14px;
+      padding: 12px 32px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+      .score-display { font-size: 4rem; }
+      .timer-display { font-size: 3.5rem; }
+      h1 { font-size: 1.4rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="bgCanvas"></canvas>
+  <div class="bg-float" id="bgSwitcher">
+    <button class="bg-picker-btn" data-bg="star" title="繁星流星"></button>
+    <button class="bg-picker-btn" data-bg="geo" title="幾何網格"></button>
+    <button class="bg-picker-btn" data-bg="noise" title="噪點紙感"></button>
+    <button class="bg-picker-btn" data-bg="mountain" title="視差山脈"></button>
+  </div>
+
+  <h1>🏆 體育課計分板</h1>
+
+  <!-- 計分 -->
+  <div class="scoreboard">
+    <!-- 隊伍 A -->
+    <div class="team" id="teamA">
+      <input class="team-name-input" id="nameA" value="隊伍 A" maxlength="10">
+      <div class="score-display" id="scoreA">0</div>
+      <div class="btn-row">
+        <button class="btn btn-plus"  onclick="changeScore('A', 1)">+</button>
+        <button class="btn btn-minus" onclick="changeScore('A', -1)">−1</button>
+        <button class="btn btn-reset-score" onclick="changeScore('A', 0, true)">歸零</button>
+      </div>
+    </div>
+
+    <!-- VS -->
+    <div class="vs-col">
+      <div class="vs-text">VS</div>
+    </div>
+
+    <!-- 隊伍 B -->
+    <div class="team" id="teamB">
+      <input class="team-name-input" id="nameB" value="隊伍 B" maxlength="10">
+      <div class="score-display" id="scoreB">0</div>
+      <div class="btn-row">
+        <button class="btn btn-plus"  onclick="changeScore('B', 1)">+</button>
+        <button class="btn btn-minus" onclick="changeScore('B', -1)">−1</button>
+        <button class="btn btn-reset-score" onclick="changeScore('B', 0, true)">歸零</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 倒數計時器 -->
+  <div class="timer-section">
+    <div class="timer-label">⏱ 倒數計時器</div>
+    <div class="timer-display" id="timerDisplay">05:00</div>
+    <div class="timer-controls">
+      <button class="preset-btn" onclick="setTimer(60)">1 分</button>
+      <button class="preset-btn" onclick="setTimer(180)">3 分</button>
+      <button class="preset-btn" onclick="setTimer(300)">5 分</button>
+      <button class="preset-btn" onclick="setTimer(600)">10 分</button>
+      <div class="custom-time">
+        <input type="number" id="customMin" placeholder="分" min="0" max="99">
+        <input type="number" id="customSec" placeholder="秒" min="0" max="59">
+        <button class="preset-btn" onclick="setCustomTimer()">設定</button>
+      </div>
+    </div>
+    <div class="timer-controls">
+      <button class="btn btn-start" onclick="startTimer()">▶ 開始</button>
+      <button class="btn btn-pause" onclick="pauseTimer()">⏸ 暫停</button>
+      <button class="btn btn-stop"  onclick="stopTimer()">⏹ 停止</button>
+    </div>
+  </div>
+
+  <div class="bottom-row">
+    <button class="btn-full-reset" onclick="fullReset()">🔄 全部重置</button>
+  </div>
+
+  <!-- 勝利提示 -->
+  <div class="win-banner" id="winBanner">
+    <div class="win-text" id="winText">🎉 隊伍 A 獲勝！</div>
+    <button class="btn-close-win" onclick="closeWin()">繼續比賽</button>
+  </div>
+
+  <script>
+    let scores = { A: 0, B: 0 };
+    let timerSeconds = 300;
+    let timerRunning = false;
+    let timerInterval = null;
+    let winTriggered = false;
+
+    function changeScore(team, delta, reset = false) {
+      if (reset) {
+        scores[team] = 0;
+      } else {
+        scores[team] = Math.max(0, scores[team] + delta);
+      }
+      const el = document.getElementById('score' + team);
+      el.textContent = scores[team];
+
+      // 彈跳動畫
+      el.classList.remove('bump');
+      void el.offsetWidth;
+      el.classList.add('bump');
+      setTimeout(() => el.classList.remove('bump'), 150);
+
+      updateLeading();
+    }
+
+    function updateLeading() {
+      const a = document.getElementById('teamA');
+      const b = document.getElementById('teamB');
+      a.classList.remove('leading');
+      b.classList.remove('leading');
+      if (scores.A > scores.B) a.classList.add('leading');
+      else if (scores.B > scores.A) b.classList.add('leading');
+    }
+
+    // --- 計時器 ---
+    function formatTime(s) {
+      const m = Math.floor(s / 60).toString().padStart(2, '0');
+      const sec = (s % 60).toString().padStart(2, '0');
+      return m + ':' + sec;
+    }
+
+    function updateDisplay() {
+      const el = document.getElementById('timerDisplay');
+      el.textContent = formatTime(timerSeconds);
+      el.classList.toggle('warning', timerSeconds <= 10 && timerSeconds > 0);
+    }
+
+    function setTimer(seconds) {
+      stopTimer();
+      timerSeconds = seconds;
+      updateDisplay();
+    }
+
+    function setCustomTimer() {
+      const m = parseInt(document.getElementById('customMin').value) || 0;
+      const s = parseInt(document.getElementById('customSec').value) || 0;
+      setTimer(m * 60 + s);
+    }
+
+    function startTimer() {
+      if (timerRunning || timerSeconds <= 0) return;
+      timerRunning = true;
+      timerInterval = setInterval(() => {
+        if (timerSeconds <= 0) {
+          pauseTimer();
+          document.getElementById('timerDisplay').classList.add('warning');
+          return;
+        }
+        timerSeconds--;
+        updateDisplay();
+      }, 1000);
+    }
+
+    function pauseTimer() {
+      timerRunning = false;
+      clearInterval(timerInterval);
+    }
+
+    function stopTimer() {
+      pauseTimer();
+      timerSeconds = 300;
+      updateDisplay();
+    }
+
+    function fullReset() {
+      scores = { A: 0, B: 0 };
+      document.getElementById('scoreA').textContent = '0';
+      document.getElementById('scoreB').textContent = '0';
+      document.getElementById('nameA').value = '隊伍 A';
+      document.getElementById('nameB').value = '隊伍 B';
+      updateLeading();
+      stopTimer();
+      winTriggered = false;
+    }
+
+    function closeWin() {
+      document.getElementById('winBanner').classList.remove('show');
+    }
+
+    updateDisplay();
+
+  // --- 背景主題切換器 ---
+  const BG_BODY_CLASSES={star:[],geo:['bg-geo'],noise:['bg-noise'],mountain:['bg-mountain']};
+  let currentBg=localStorage.getItem('ssBg')||'star';
+  let bgRaf=null;
+  function applyBgTheme(name){
+    document.body.classList.remove('bg-geo','bg-noise','bg-mountain');
+    (BG_BODY_CLASSES[name]||[]).forEach(c=>document.body.classList.add(c));
+    document.querySelectorAll('.bg-picker-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.bg===name));
+    currentBg=name; localStorage.setItem('ssBg',name);
+    if(bgRaf) cancelAnimationFrame(bgRaf);
+    startBgCanvas(name);
+  }
+  document.getElementById('bgSwitcher').addEventListener('click',e=>{
+    const btn=e.target.closest('.bg-picker-btn');
+    if(btn) applyBgTheme(btn.dataset.bg);
+  });
+  (function(){
+    const cv=document.getElementById('bgCanvas');
+    const ctx=cv.getContext('2d');
+    let W,H;
+    function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+    window.addEventListener('resize',()=>{resize();if(currentBg)startBgCanvas(currentBg);});
+    resize();
+    function bgStar(){
+      let stars=[],comets=[],lastComet=0;
+      const n=Math.floor(W*H/4800);
+      for(let i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.2,a:Math.random(),da:(Math.random()-0.5)*0.009,color:['#ffffff','#ffd700','#ff6b6b','#4ecdc4'][Math.floor(Math.random()*4)]});
+      function spawnComet(){const y=Math.random()*H*0.65,len=90+Math.random()*130,spd=4+Math.random()*3.5;comets.push({x:-60,y,vx:spd,vy:spd*0.38,len});}
+      return function draw(){
+        ctx.clearRect(0,0,W,H);
+        stars.forEach(s=>{s.a+=s.da;if(s.a<=0||s.a>=1)s.da=-s.da;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=s.color;ctx.globalAlpha=s.a*0.78;ctx.fill();});
+        const now=performance.now();if(now-lastComet>1800+Math.random()*3500){spawnComet();lastComet=now;}
+        ctx.globalAlpha=1;
+        comets.forEach(c=>{const g=ctx.createLinearGradient(c.x,c.y,c.x-c.len,c.y-c.len*0.38);g.addColorStop(0,'rgba(255,255,255,0.92)');g.addColorStop(1,'rgba(255,255,255,0)');ctx.strokeStyle=g;ctx.lineWidth=2.4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x-c.len,c.y-c.len*0.38);ctx.stroke();c.x+=c.vx;c.y+=c.vy;});
+        comets=comets.filter(c=>c.x<W+200&&c.y<H+200);
+        bgRaf=requestAnimationFrame(draw);
+      };
+    }
+    function bgGeo(){
+      const CELL=52,DOT=1.3;let nodes=[];
+      const cols=Math.ceil(W/CELL)+2,rows=Math.ceil(H/CELL)+2;
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) nodes.push({bx:(c-0.5)*CELL,by:(r-0.5)*CELL,ox:0,oy:0,a:Math.random()*Math.PI*2,da:(Math.random()-0.5)*0.008,amp:4+Math.random()*6});
+      return function draw(){
+        ctx.clearRect(0,0,W,H);
+        nodes.forEach(n=>{n.a+=n.da;n.ox=Math.cos(n.a)*n.amp;n.oy=Math.sin(n.a)*n.amp;});
+        for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){const i=r*cols+c,n=nodes[i],nx=n.bx+n.ox,ny=n.by+n.oy;
+          if(c+1<cols){const m=nodes[i+1];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(255,107,107,0.07)';ctx.lineWidth=0.9;ctx.stroke();}
+          if(r+1<rows){const m=nodes[i+cols];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(78,205,196,0.07)';ctx.lineWidth=0.9;ctx.stroke();}
+          ctx.beginPath();ctx.arc(nx,ny,DOT,0,Math.PI*2);ctx.fillStyle='rgba(255,107,107,0.25)';ctx.globalAlpha=1;ctx.fill();
+        }}
+        const cx=W/2,cy=H/2;
+        for(let i=0;i<8;i++){const angle=i*Math.PI/4+(performance.now()*0.0001);const g=ctx.createLinearGradient(cx,cy,cx+Math.cos(angle)*W*0.7,cy+Math.sin(angle)*H*0.7);g.addColorStop(0,'rgba(78,205,196,0.05)');g.addColorStop(1,'rgba(78,205,196,0)');ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(angle)*W,cy+Math.sin(angle)*H);ctx.strokeStyle=g;ctx.lineWidth=60;ctx.stroke();}
+        bgRaf=requestAnimationFrame(draw);
+      };
+    }
+    function bgNoise(){
+      const offC=document.createElement('canvas');offC.width=offC.height=256;
+      const offCtx=offC.getContext('2d'),imgData=offCtx.createImageData(256,256);
+      for(let i=0;i<imgData.data.length;i+=4){const v=Math.random()*255|0;imgData.data[i]=v;imgData.data[i+1]=v;imgData.data[i+2]=v;imgData.data[i+3]=18;}
+      offCtx.putImageData(imgData,0,0);
+      const noisePat=ctx.createPattern(offC,'repeat');
+      let blobs=[];
+      for(let i=0;i<5;i++) blobs.push({x:Math.random()*W,y:Math.random()*H,r:180+Math.random()*200,a:Math.random()*Math.PI*2,spd:0.004+Math.random()*0.006,col:['rgba(255,107,107,','rgba(78,205,196,','rgba(255,215,0,'][i%3],opa:0.04+Math.random()*0.04});
+      return function draw(){
+        ctx.clearRect(0,0,W,H);ctx.globalAlpha=0.9;ctx.fillStyle=noisePat;ctx.fillRect(0,0,W,H);
+        blobs.forEach(b=>{b.a+=b.spd;const bx=b.x+Math.cos(b.a)*60,by=b.y+Math.sin(b.a)*40;const g=ctx.createRadialGradient(bx,by,0,bx,by,b.r);g.addColorStop(0,b.col+b.opa+')');g.addColorStop(1,b.col+'0)');ctx.globalAlpha=1;ctx.fillStyle=g;ctx.beginPath();ctx.arc(bx,by,b.r,0,Math.PI*2);ctx.fill();});
+        for(let y=0;y<H;y+=3){ctx.globalAlpha=0.012;ctx.fillStyle=y%6===0?'rgba(255,255,255,1)':'rgba(0,0,0,1)';ctx.fillRect(0,y,W,1);}
+        ctx.globalAlpha=1;bgRaf=requestAnimationFrame(draw);
+      };
+    }
+    function bgMountain(){
+      function makeMountain(n,minH,maxH,seed){const pts=[{x:0,y:H}];for(let i=0;i<=n;i++){const x=i*W/n,y=H-(minH+(Math.sin(i*seed+seed)*0.5+0.5)*(maxH-minH));pts.push({x,y});}pts.push({x:W,y:H});return pts;}
+      const layers=[{pts:makeMountain(12,H*0.52,H*0.72,1.7),col:'rgba(10,30,60,0.85)',speed:0},{pts:makeMountain(10,H*0.42,H*0.62,2.3),col:'rgba(15,40,80,0.80)',speed:0.08},{pts:makeMountain(8,H*0.32,H*0.52,3.1),col:'rgba(20,55,110,0.70)',speed:0.18},{pts:makeMountain(6,H*0.22,H*0.42,4.2),col:'rgba(30,70,140,0.55)',speed:0.30},{pts:makeMountain(5,H*0.14,H*0.30,5.8),col:'rgba(50,100,180,0.35)',speed:0.44}];
+      let prevTS=0;let stars2=[];const ns=Math.floor(W*H/9000);
+      for(let i=0;i<ns;i++) stars2.push({x:Math.random()*W,y:Math.random()*H*0.55,r:Math.random()+0.3,a:Math.random(),da:(Math.random()-0.5)*0.006});
+      return function draw(ts){
+        prevTS=ts;ctx.clearRect(0,0,W,H);
+        stars2.forEach(s=>{s.a+=s.da;if(s.a<=0||s.a>=1)s.da=-s.da;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle='#ffffff';ctx.globalAlpha=s.a*0.6;ctx.fill();});
+        ctx.globalAlpha=1;
+        const gh=ctx.createLinearGradient(0,H*0.55,0,H);gh.addColorStop(0,'rgba(5,15,40,0)');gh.addColorStop(1,'rgba(5,15,40,0.95)');ctx.fillStyle=gh;ctx.fillRect(0,H*0.55,W,H*0.45);
+        [...layers].reverse().forEach(layer=>{ctx.beginPath();ctx.moveTo(layer.pts[0].x,layer.pts[0].y);layer.pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.closePath();ctx.fillStyle=layer.col;ctx.fill();});
+        const mg=ctx.createRadialGradient(W*0.78,H*0.12,0,W*0.78,H*0.12,W*0.28);mg.addColorStop(0,'rgba(180,210,255,0.10)');mg.addColorStop(1,'rgba(180,210,255,0)');ctx.fillStyle=mg;ctx.fillRect(0,0,W,H);
+        bgRaf=requestAnimationFrame(draw);
+      };
+    }
+    window.startBgCanvas=function(name){
+      if(bgRaf) cancelAnimationFrame(bgRaf);
+      resize();
+      let drawFn;
+      if(name==='star') drawFn=bgStar();
+      else if(name==='geo') drawFn=bgGeo();
+      else if(name==='noise') drawFn=bgNoise();
+      else if(name==='mountain') drawFn=bgMountain();
+      if(drawFn) bgRaf=requestAnimationFrame(drawFn);
+    };
+    startBgCanvas(currentBg);
+  })();
+  applyBgTheme(currentBg);
+  </script>
+</body>
+</html>

@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>體壇動態 | 文武雙全</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{
+  --gold:#ffd700;--teal:#4ecdc4;--red:#ff6b6b;--green:#2ecc71;--blue:#3a86ff;
+  --bg:#080814;--bg2:#0f0f22;--card:#13132b;--card2:#1a1a38;
+  --border:rgba(255,255,255,0.08);--border2:rgba(78,205,196,0.2);
+  --muted:#666;--radius:18px;--text:#f0f0ff;--text2:#aaa;
+  --nav-bg:rgba(8,8,20,0.96);
+  --grad1:linear-gradient(135deg,#0f0f22,#1a1040);
+}
+body{font-family:'Segoe UI',system-ui,Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;}
+button{cursor:pointer;border:none;outline:none;font-family:inherit;}
+a{text-decoration:none;}
+
+/* LIGHT MODE */
+body.light-mode{
+  --bg:#edf3f8;--bg2:#e4eef5;--card:#fff;--card2:#ebf2f8;
+  --border:rgba(0,0,0,0.08);--border2:rgba(78,205,196,0.3);
+  --muted:#666;--text:#111130;--text2:#444;--nav-bg:rgba(237,243,248,0.96);--gold:#d4a017;
+  --grad1:linear-gradient(135deg,#edf3f8,#e2ecf5);
+  background:radial-gradient(ellipse 70% 55% at 8% 15%, rgba(78,205,196,0.16) 0%, transparent 65%),radial-gradient(ellipse 60% 50% at 92% 82%, rgba(58,134,255,0.14) 0%, transparent 65%),radial-gradient(ellipse 50% 45% at 50% 45%, rgba(255,215,0,0.08) 0%, transparent 60%),#edf3f8;
+}
+body.light-mode .nav-a{color:#555;}
+body.light-mode .nav-a:hover{color:#111;background:rgba(0,0,0,0.05);}
+body.light-mode .news-title{color:#111130;}
+body.light-mode .skel-img,.light-mode .skel-line{background:linear-gradient(90deg,rgba(0,0,0,0.05) 25%,rgba(0,0,0,0.1) 50%,rgba(0,0,0,0.05) 75%);background-size:200% 100%;}
+
+/* ── 背景 Canvas 層 ─────────────────────── */
+#bgCanvas{position:fixed;inset:0;pointer-events:none;z-index:0;transition:opacity 0.6s;}
+.page-wrap{position:relative;z-index:1;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;transition:opacity 0.6s;
+  background:
+    radial-gradient(ellipse 60% 50% at 10% 15%, rgba(78,205,196,0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 90% 80%, rgba(58,134,255,0.09) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 35% at 50% 45%, rgba(255,215,0,0.05) 0%, transparent 60%);}
+body::after{content:'';position:fixed;inset:-10% -10% -5% -10%;z-index:0;pointer-events:none;
+  background:
+    conic-gradient(from 110deg at 12% 18%, rgba(78,205,196,0.12), transparent 40%),
+    conic-gradient(from -30deg at 88% 78%, rgba(58,134,255,0.12), transparent 40%),
+    radial-gradient(60% 40% at 50% 90%, rgba(255,215,0,0.04), transparent 60%);
+  filter:blur(42px) saturate(120%);
+  animation:auroraShift 18s ease-in-out infinite alternate;
+  transition:opacity 0.6s;}
+@keyframes auroraShift{0%{transform:translate3d(0,0,0) rotate(0deg);}50%{transform:translate3d(1.5%,-1.5%,0) rotate(2deg);}100%{transform:translate3d(-1%,1%,0) rotate(-2deg);}}
+.bg-noise body::before{background:radial-gradient(ellipse 70% 60% at 15% 20%, rgba(78,205,196,0.06) 0%, transparent 65%),radial-gradient(ellipse 55% 50% at 85% 75%, rgba(58,134,255,0.06) 0%, transparent 62%);}
+.bg-noise body::after{opacity:0.5;}
+.bg-noise #bgCanvas{opacity:0.9;}
+.bg-mountain body::before{background:radial-gradient(ellipse 100% 60% at 50% 100%, rgba(0,30,60,0.95) 0%, transparent 70%),radial-gradient(ellipse 80% 50% at 50% 50%, rgba(10,20,40,0.5) 0%, transparent 100%);}
+.bg-mountain body::after{background:radial-gradient(ellipse 80% 40% at 50% 95%, rgba(58,134,255,0.18) 0%, transparent 60%),conic-gradient(from 160deg at 50% 80%, rgba(78,205,196,0.12), transparent 30%);filter:blur(30px);animation:mountainGlow 8s ease-in-out infinite alternate;}
+@keyframes mountainGlow{0%{opacity:0.7;}100%{opacity:1;}}
+.bg-geo body::before{background:radial-gradient(ellipse 60% 50% at 12% 15%, rgba(78,205,196,0.10) 0%, transparent 70%),radial-gradient(ellipse 50% 40% at 88% 78%, rgba(58,134,255,0.09) 0%, transparent 65%),radial-gradient(ellipse 40% 35% at 50% 50%, rgba(255,215,0,0.04) 0%, transparent 60%);}
+.bg-geo body::after{opacity:0.6;filter:blur(38px);}
+body.light-mode #bgCanvas{opacity:0.55;filter:invert(1) hue-rotate(180deg) saturate(0.6) brightness(1.1);}
+body.light-mode::before{
+  opacity:1;
+  background:
+    radial-gradient(ellipse 65% 55% at 8% 15%, rgba(78,205,196,0.22) 0%, transparent 68%),
+    radial-gradient(ellipse 55% 45% at 90% 80%, rgba(58,134,255,0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 40% at 50% 45%, rgba(255,215,0,0.10) 0%, transparent 60%);
+}
+body.light-mode::after{opacity:0.55;filter:blur(40px) saturate(160%) brightness(1.3);}
+body.light-mode.bg-noise #bgCanvas{opacity:0.35;filter:none;}
+body.light-mode.bg-mountain #bgCanvas{opacity:0.45;filter:none;}
+body.light-mode.bg-mountain::before{
+  background:
+    radial-gradient(ellipse 100% 50% at 50% 100%, rgba(58,134,255,0.22) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 50% at 50% 50%, rgba(78,205,196,0.14) 0%, transparent 100%);
+}
+/* ── 背景切換器按鈕 ─────────────────────── */
+.bg-switcher{display:flex;align-items:center;gap:4px;}
+.bg-picker-btn{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;position:relative;overflow:hidden;flex-shrink:0;}
+.bg-picker-btn:hover{transform:scale(1.18);box-shadow:0 0 8px rgba(255,255,255,0.3);}
+.bg-picker-btn.active{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,0.5);}
+.bg-picker-btn[data-bg="star"]{background:radial-gradient(circle at 40% 35%, #3a86ff 0%, #0d0d1a 70%);}
+.bg-picker-btn[data-bg="geo"]{background:linear-gradient(135deg, #1e1e40 0%, #3a86ff 50%, #4ecdc4 100%);}
+.bg-picker-btn[data-bg="noise"]{background:radial-gradient(circle, #c8a24a 0%, #3d2c08 60%, #1a1000 100%);}
+.bg-picker-btn[data-bg="mountain"]{background:linear-gradient(to bottom, #0d0d1a 0%, #1a3050 55%, #3a86ff 100%);}
+.bg-picker-btn::after{content:attr(data-label);position:absolute;bottom:-32px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.82);color:#fff;font-size:0.7rem;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.2s;}
+.bg-picker-btn:hover::after{opacity:1;}
+/* 自定義圖片背景 */
+.bg-custom-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.bg-custom-panel{background:var(--card,#1e1e40);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:20px;padding:28px 28px 24px;width:min(480px,92vw);box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.bg-custom-panel h3{font-size:1rem;font-weight:800;color:var(--gold,#ffd700);margin-bottom:16px;}
+.bg-upload-zone{border:2px dashed var(--border,rgba(255,255,255,0.18));border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:12px;display:block;}
+.bg-upload-zone:hover{border-color:rgba(58,134,255,0.6);background:rgba(58,134,255,0.05);}
+.bg-upload-zone input{display:none;}
+.bg-url-inp{width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:10px;color:var(--text,#fff);font-size:0.88rem;padding:9px 13px;margin-bottom:10px;box-sizing:border-box;}
+.bg-url-inp:focus{border-color:var(--blue,#3a86ff);outline:none;}
+body.light-mode .bg-custom-panel{background:#fff;}
+body.light-mode .bg-url-inp{color:#1a1a2e;background:rgba(0,0,0,0.05);}
+body.bg-custom-img{background-size:cover;background-position:center;background-attachment:scroll;}
+body.bg-custom-img::before{opacity:0.3!important;}
+body.bg-custom-img::after{opacity:0.25!important;}
+body.bg-custom-img #bgCanvas{opacity:0.15!important;}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;padding:0 24px;height:52px;background:var(--nav-bg);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);}
+.logo{font-size:1rem;font-weight:900;color:var(--gold);letter-spacing:2px;margin-right:14px;white-space:nowrap;}
+.nav-a{padding:7px 13px;border-radius:20px;font-size:0.83rem;font-weight:600;color:var(--muted);transition:all .2s;white-space:nowrap;}
+.nav-a:hover{color:var(--text);background:rgba(255,255,255,0.07);}
+.nav-a.active{background:var(--teal);color:#000;}
+.theme-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;font-size:1rem;color:var(--gold);transition:all .2s;margin-left:0;}
+.theme-btn:hover{background:rgba(255,215,0,0.1);}
+
+/* PAGE */
+.page-wrap{padding:72px 20px 60px;max-width:1040px;margin:0 auto;}
+
+/* HERO BANNER */
+.hero{position:relative;border-radius:24px;overflow:hidden;margin-bottom:28px;min-height:200px;background:linear-gradient(135deg,#0d0d2b 0%,#1a0a3a 50%,#0a1a3a 100%);}
+.hero-bg{position:absolute;inset:0;background:url('https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=1200&q=80&auto=format&fit=crop') center/cover no-repeat;opacity:.22;filter:blur(1px);}
+.hero-overlay{position:absolute;inset:0;background:linear-gradient(120deg,rgba(8,8,20,.85) 40%,rgba(78,205,196,.08) 100%);}
+.hero-content{position:relative;padding:36px 32px 32px;}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;background:rgba(78,205,196,.15);border:1px solid rgba(78,205,196,.3);border-radius:20px;padding:4px 14px;font-size:0.75rem;font-weight:700;color:var(--teal);letter-spacing:1px;margin-bottom:14px;}
+.hero-tag .ldot{width:6px;height:6px;border-radius:50%;background:var(--teal);animation:blink 1.6s infinite;}
+.hero-title{font-size:2rem;font-weight:900;color:#fff;line-height:1.2;margin-bottom:8px;text-shadow:0 2px 20px rgba(0,0,0,.5);}
+.hero-title span{color:var(--teal);}
+.hero-sub{color:rgba(255,255,255,.55);font-size:.9rem;}
+.hero-stats{display:flex;gap:20px;margin-top:20px;flex-wrap:wrap;}
+.hero-stat{text-align:center;}
+.hero-stat-n{font-size:1.4rem;font-weight:900;color:var(--gold);}
+.hero-stat-l{font-size:.72rem;color:rgba(255,255,255,.4);margin-top:1px;}
+
+/* TOPBAR */
+.top-bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+.right-bar{display:flex;align-items:center;gap:10px;}
+.count-badge{font-size:.72rem;background:rgba(255,215,0,.1);color:var(--gold);border:1px solid rgba(255,215,0,.2);border-radius:12px;padding:3px 12px;font-weight:700;}
+.refresh-btn{background:rgba(78,205,196,.1);border:1px solid rgba(78,205,196,.25);border-radius:20px;padding:8px 18px;color:var(--teal);font-size:.85rem;font-weight:700;display:flex;align-items:center;gap:6px;transition:all .2s;}
+.refresh-btn:hover{background:rgba(78,205,196,.22);border-color:var(--teal);transform:translateY(-1px);}
+.refresh-btn .ri{display:inline-block;transition:transform .3s;}
+.refresh-btn:hover .ri{transform:rotate(180deg);}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* STATUS */
+.status-bar{display:flex;align-items:center;justify-content:center;gap:7px;padding:8px;font-size:.78rem;color:var(--muted);margin-bottom:18px;}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);flex-shrink:0;animation:blink 1.8s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+
+/* SOURCE COLOUR MAP */
+.src-bbc    {background:rgba(255, 60,60,.15);color:#ff8888;}
+.src-espn   {background:rgba(255,100,20,.15);color:#ffaa55;}
+.src-sky    {background:rgba(30,120,255,.15);color:#6699ff;}
+.src-talk   {background:rgba(200,60,255,.15);color:#dd88ff;}
+.src-euro   {background:rgba(255,210,0,.12);color:#ffdd44;}
+.src-sn     {background:rgba(78,205,196,.15);color:var(--teal);}
+.src-other  {background:rgba(255,255,255,.08);color:#ccc;}
+
+/* NEWS GRID — masonry-like 3 col */
+.news-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:20px;
+}
+@media(max-width:800px){.news-grid{grid-template-columns:repeat(2,1fr);}}
+@media(max-width:520px){.news-grid{grid-template-columns:1fr;}}
+
+/* CARD */
+.news-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:var(--radius);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  color:var(--text);
+  opacity:0;transform:translateY(20px);
+  animation:fadeUp .45s ease forwards;
+  transition:transform .3s cubic-bezier(.25,.8,.25,1),border-color .25s,box-shadow .3s;
+  position:relative;
+}
+.news-card:hover{
+  transform:translateY(-8px) scale(1.015);
+  border-color:var(--border2);
+  box-shadow:0 24px 60px rgba(0,0,0,.55),0 0 0 1px rgba(78,205,196,.15);
+}
+/* First card spans 2 cols */
+.news-card.hero-card{grid-column:span 2;}
+@media(max-width:800px){.news-card.hero-card{grid-column:span 2;}}
+@media(max-width:520px){.news-card.hero-card{grid-column:span 1;}}
+@keyframes fadeUp{to{opacity:1;transform:translateY(0)}}
+
+/* IMAGE */
+.news-thumb{width:100%;height:175px;object-fit:cover;display:block;background:var(--bg2);transition:transform .4s ease;}
+.news-card:hover .news-thumb{transform:scale(1.04);}
+.news-card.hero-card .news-thumb{height:248px;}
+.news-thumb-ph{
+  width:100%;height:130px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:3rem;
+  background:linear-gradient(135deg,var(--bg2),rgba(78,205,196,.05));
+  color:rgba(255,255,255,.15);
+}
+/* Gradient overlay on image */
+.news-img-wrap{position:relative;overflow:hidden;}
+.news-img-wrap::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:55%;
+  background:linear-gradient(to top,var(--card),transparent);
+  pointer-events:none;
+}
+
+/* BODY */
+.news-body{padding:14px 16px 16px;flex:1;display:flex;flex-direction:column;gap:7px;}
+.news-meta{display:flex;align-items:center;gap:7px;flex-wrap:wrap;}
+.news-src{font-size:.68rem;font-weight:800;padding:2px 9px;border-radius:10px;letter-spacing:.3px;}
+.news-time{font-size:.68rem;color:var(--muted);}
+.news-title{font-size:.9rem;font-weight:700;line-height:1.6;color:var(--text);}
+/* 中文翻譯行 */
+.news-cn{font-size:.8rem;color:var(--teal);line-height:1.55;font-weight:600;opacity:.92;padding:5px 9px;background:rgba(78,205,196,.06);border-left:2px solid rgba(78,205,196,.4);border-radius:0 6px 6px 0;}
+.news-card.hero-card .news-title{font-size:1.05rem;}
+.news-footer{margin-top:auto;padding-top:10px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);}
+.news-link{font-size:.75rem;font-weight:700;color:var(--teal);display:flex;align-items:center;gap:4px;}
+.news-link::after{content:'→';transition:transform .2s;}
+.news-card:hover .news-link::after{transform:translateX(3px);}
+.news-num{font-size:.68rem;color:var(--muted);}
+
+/* SKELETON */
+.skel-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;}
+.skel-img{height:175px;background:linear-gradient(90deg,rgba(255,255,255,.03) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.03) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;}
+.skel-body{padding:14px 16px;}
+.skel-line{height:10px;border-radius:5px;margin-bottom:10px;background:linear-gradient(90deg,rgba(255,255,255,.03) 25%,rgba(255,255,255,.08) 50%,rgba(255,255,255,.03) 75%);background-size:200% 100%;animation:shimmer 1.5s infinite;}
+.skel-line.s{width:40%;}.skel-line.m{width:65%;}.skel-line.f{width:92%;}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+/* ERROR */
+.err-box{grid-column:1/-1;text-align:center;padding:56px 20px;color:var(--muted);}
+.err-icon{font-size:3.5rem;margin-bottom:14px;}
+.retry-btn{margin-top:16px;padding:10px 26px;border-radius:20px;background:rgba(78,205,196,.12);border:1px solid var(--teal);color:var(--teal);font-size:.88rem;font-weight:700;cursor:pointer;transition:background .2s;}
+.retry-btn:hover{background:rgba(78,205,196,.25);}
+
+/* NO-IMAGE strip style */
+.news-card.no-img{flex-direction:row;align-items:stretch;}
+.news-card.no-img .news-body{padding:14px 16px;}
+
+/* ── 橫滑導航列 ─────────────────────── */
+.nav-links{display:flex;align-items:center;gap:4px;flex:1;overflow:hidden;}
+@media(max-width:600px){
+  nav{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap;padding:0 8px;gap:4px;}
+  nav::-webkit-scrollbar{display:none;}
+  .nav-links{overflow:visible;flex:none;}
+  .logo{font-size:.85rem;white-space:nowrap;flex-shrink:0;}
+  .nav-a{flex-shrink:0;}
+  .bg-switcher{gap:2px;margin-left:2px!important;margin-right:2px!important;flex-shrink:0;}
+  .bg-picker-btn{width:22px;height:22px;}
+  .theme-btn{flex-shrink:0;}
+  .page-wrap{padding:68px 12px 40px;}
+  .hero-title{font-size:1.4rem;}
+  .hero-content{padding:24px 18px 20px;}
+}
+</style>
+</head>
+<canvas id="bgCanvas"></canvas>
+<body>
+<nav>
+  <a class="logo" href="app.html">文武雙全</a>
+  <div class="nav-links">
+    <a class="nav-a" href="app.html">🏠 主頁</a>
+    <a class="nav-a" href="english.html">📚 英文</a>
+    <a class="nav-a" href="sports.html">🏆 體育</a>
+    <a class="nav-a" href="tools.html">🎲 教具</a>
+    <a class="nav-a active" href="news.html">📰 體壇動態</a>
+  </div>
+  <div class="bg-switcher" id="bgSwitcher" style="margin-left:auto;margin-right:8px;">
+    <button class="bg-picker-btn active" data-bg="star"     data-label="✨ 星空流星" title="星空流星"></button>
+    <button class="bg-picker-btn"        data-bg="geo"      data-label="⬡ 幾何網格" title="幾何網格"></button>
+    <button class="bg-picker-btn"        data-bg="noise"    data-label="📄 噪點紙感" title="噪點紙感"></button>
+    <button class="bg-picker-btn"        data-bg="mountain" data-label="🏔 視差山脈" title="視差山脈"></button>
+    <button class="bg-picker-btn" id="bgCustomBtn" data-bg="custom" data-label="🖼 自定義圖片" title="自定義圖片" style="background:linear-gradient(135deg,#ff6b6b,#ffd700,#4ecdc4);font-size:13px;display:flex;align-items:center;justify-content:center;" onclick="bgCustomOpen()">🖼</button>
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+</nav>
+
+<!-- 自定義圖片背景面板 -->
+<div class="bg-custom-overlay" id="bgCustomOverlay" style="display:none;" onclick="if(event.target===this)bgCustomClose()">
+  <div class="bg-custom-panel">
+    <h3>🖼 自定義頁面背景</h3>
+    <label class="bg-upload-zone" for="bgFileInput">
+      <input type="file" id="bgFileInput" accept="image/*" onchange="bgHandleFile(this)">
+      <div style="font-size:2rem;margin-bottom:8px;">📁</div>
+      <div style="font-size:0.88rem;color:var(--muted,#888);">點擊選擇圖片（JPG / PNG / WebP）</div>
+      <div style="font-size:0.75rem;color:var(--muted,#888);margin-top:4px;">建議解析度 1920×1080 或以上</div>
+    </label>
+    <div style="text-align:center;font-size:0.8rem;color:var(--muted,#888);margin:8px 0;">— 或貼上圖片網址 —</div>
+    <input class="bg-url-inp" id="bgUrlInput" type="url" placeholder="https://... 圖片 URL">
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button onclick="bgApplyUrl()" style="flex:1;background:var(--blue,#3a86ff);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:0.88rem;">✅ 套用</button>
+      <button onclick="bgCustomClear()" style="background:rgba(255,100,100,0.15);color:#ff8888;border:1px solid rgba(255,100,100,0.3);border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:0.88rem;">🗑 清除自定義</button>
+      <button onclick="bgCustomClose()" style="background:rgba(255,255,255,0.07);color:var(--muted,#888);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:10px;padding:9px 14px;cursor:pointer;font-size:0.88rem;">關閉</button>
+    </div>
+    <div id="bgCustomPreview" style="margin-top:12px;border-radius:10px;overflow:hidden;display:none;max-height:130px;">
+      <img id="bgCustomPreviewImg" style="width:100%;height:130px;object-fit:cover;" src="" alt="">
+    </div>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+  <!-- HERO BANNER -->
+  <div class="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-tag"><span class="ldot"></span> LIVE</div>
+      <div class="hero-title">世界體壇 <span>Live Sports</span></div>
+      <div class="hero-sub">BBC · ESPN · Sky Sports · Eurosport · talkSPORT · Sporting News</div>
+      <div class="hero-stats">
+        <div class="hero-stat"><div class="hero-stat-n" id="statTotal">—</div><div class="hero-stat-l">Total Articles</div></div>
+        <div class="hero-stat"><div class="hero-stat-n" id="statSrc">10</div><div class="hero-stat-l">News Sources</div></div>
+        <div class="hero-stat"><div class="hero-stat-n" id="statPage">—</div><div class="hero-stat-l">Current Page</div></div>
+        <div class="hero-stat"><div class="hero-stat-n" id="statDate" style="font-size:1rem;">—</div><div class="hero-stat-l">Today's Date</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="status-bar" id="statusBar" style="margin:0;padding:0;">
+      <span class="live-dot"></span><span id="statusText">載入中…</span>
+    </div>
+    <div class="right-bar">
+      <span class="count-badge" id="countBadge">…</span>
+      <button class="refresh-btn" id="refreshBtn" onclick="refreshTab()">
+        <span class="ri">↻</span><span id="refreshLabel">下一批</span>
+      </button>
+    </div>
+  </div>
+
+  <div id="newsContainer" class="news-grid"></div>
+</div>
+
+<script>
+const API = 'https://api.rss2json.com/v1/api.json?rss_url=';
+
+const FEED_URLS = [
+  { url:'https://feeds.bbci.co.uk/sport/rss.xml',           src:'BBC Sport',    cls:'src-bbc'  },
+  { url:'https://feeds.bbci.co.uk/sport/football/rss.xml',  src:'BBC Football', cls:'src-bbc'  },
+  { url:'https://feeds.bbci.co.uk/sport/tennis/rss.xml',    src:'BBC Tennis',   cls:'src-bbc'  },
+  { url:'https://www.espn.com/espn/rss/news',               src:'ESPN',         cls:'src-espn' },
+  { url:'https://www.espn.com/espn/rss/soccer/news',        src:'ESPN Soccer',  cls:'src-espn' },
+  { url:'https://www.skysports.com/rss/12040',              src:'Sky Sports',   cls:'src-sky'  },
+  { url:'https://www.skysports.com/rss/12603',              src:'Sky Football', cls:'src-sky'  },
+  { url:'https://talksport.com/feed/',                      src:'talkSPORT',    cls:'src-talk' },
+  { url:'https://www.eurosport.com/rss/news/all.xml',       src:'Eurosport',    cls:'src-euro' },
+  { url:'https://sportingnews.com/rss',                     src:'Sporting News',cls:'src-sn'   },
+];
+
+const PAGE = 9;
+let allItems = null, pageIdx = 0, loading = false;
+
+// ── 每日自動更新 ──────────────────────────────────
+const TODAY = new Date().toLocaleDateString('zh-TW',{year:'numeric',month:'2-digit',day:'2-digit'});
+(function(){
+  const lastDate = localStorage.getItem('newsDate');
+  if(lastDate !== TODAY){
+    allItems = null;
+    localStorage.setItem('newsDate', TODAY);
+  }
+  const el = document.getElementById('statDate');
+  if(el) el.textContent = new Date().toLocaleDateString('zh-TW',{month:'numeric',day:'numeric'});
+})();
+
+// ── 翻譯字典（超完整版）────────────────────────────
+const DICT = [
+  // ===== 賽事 / 盃賽 =====
+  [/Premier League/gi,'英超聯賽'],
+  [/Champions League/gi,'歐冠聯賽'],
+  [/UEFA Champions League/gi,'UEFA歐冠聯賽'],
+  [/Europa League/gi,'歐霸盃'],
+  [/Conference League/gi,'歐聯盃'],
+  [/World Cup/gi,'世界盃'],
+  [/Euro\b(?:pean Championship)?/gi,'歐國盃'],
+  [/Copa America/gi,'美洲盃'],
+  [/Africa Cup of Nations|AFCON/gi,'非洲國家盃'],
+  [/Asian Cup/gi,'亞洲盃'],
+  [/La Liga/gi,'西甲'],
+  [/Bundesliga/gi,'德甲'],
+  [/Serie A/gi,'意甲'],
+  [/Ligue 1/gi,'法甲'],
+  [/Eredivisie/gi,'荷甲'],
+  [/Primeira Liga/gi,'葡甲'],
+  [/Scottish Premiership/gi,'蘇格蘭超級聯賽'],
+  [/MLS/gi,'美職聯'],
+  [/J\.?-?League|J League/gi,'日職聯'],
+  [/K League/gi,'韓職聯'],
+  [/FA Cup/gi,'足總盃'],
+  [/Carabao Cup|EFL Cup/gi,'聯賽盃'],
+  [/Community Shield/gi,'慈善盾'],
+  [/Super Cup/gi,'超級盃'],
+  [/Club World Cup/gi,'世俱盃'],
+  [/Nations League/gi,'國家聯賽'],
+  [/Women['']s World Cup/gi,'女子世界盃'],
+  // ===== 英超球隊 =====
+  [/Manchester City/gi,'曼城'],
+  [/Manchester United|Man Utd|Man United/gi,'曼聯'],
+  [/Arsenal/gi,'阿仙奴'],
+  [/Chelsea/gi,'車路士'],
+  [/Liverpool/gi,'利物浦'],
+  [/Tottenham(?: Hotspur)?|Spurs/gi,'熱刺'],
+  [/Newcastle(?: United)?/gi,'紐卡素'],
+  [/Aston Villa/gi,'阿士東維拉'],
+  [/West Ham(?: United)?/gi,'西漢姆'],
+  [/Everton/gi,'愛華頓'],
+  [/Brighton(?: & Hove Albion)?/gi,'白禮頓'],
+  [/Fulham/gi,'富咸'],
+  [/Brentford/gi,'賓福特'],
+  [/Crystal Palace/gi,'水晶宮'],
+  [/Wolves|Wolverhampton(?: Wanderers)?/gi,'狼隊'],
+  [/Leicester(?: City)?/gi,'李斯特城'],
+  [/Nottingham Forest/gi,'諾定咸森林'],
+  [/Southampton/gi,'修咸頓'],
+  [/Burnley/gi,'般尼'],
+  [/Luton(?: Town)?/gi,'盧頓'],
+  [/Sheffield(?: United)?/gi,'錫菲聯'],
+  [/Bournemouth/gi,'般尼茅夫'],
+  [/Ipswich(?: Town)?/gi,'葉士域治'],
+  // ===== 歐洲球隊 =====
+  [/Real Madrid/gi,'皇家馬德里'],
+  [/Barcelona|Barca/gi,'巴塞隆拿'],
+  [/Atletico(?: de)? Madrid/gi,'馬德里體育會'],
+  [/Sevilla/gi,'塞維利亞'],
+  [/Valencia/gi,'華倫西亞'],
+  [/Villarreal/gi,'比利亞雷亞爾'],
+  [/Athletic(?: Club)?(?:\s+Bilbao)?/gi,'畢爾包競技'],
+  [/Bayern(?: Munich)?/gi,'拜仁慕尼黑'],
+  [/Borussia Dortmund|BVB/gi,'多蒙特'],
+  [/RB Leipzig/gi,'萊比錫'],
+  [/Bayer Leverkusen/gi,'利華古遜'],
+  [/Eintracht Frankfurt/gi,'法蘭克福'],
+  [/Borussia M(?:önchen)?gladbach/gi,'門興格拉德巴赫'],
+  [/Paris Saint-?Germain|PSG/gi,'大巴黎'],
+  [/Marseille/gi,'馬賽'],
+  [/Lyon/gi,'里昂'],
+  [/Monaco/gi,'摩納哥'],
+  [/Juventus/gi,'祖雲達斯'],
+  [/AC Milan/gi,'AC米蘭'],
+  [/Inter(?: Milan)?/gi,'國際米蘭'],
+  [/Napoli/gi,'拿玻里'],
+  [/AS Roma|Roma/gi,'羅馬'],
+  [/Lazio/gi,'拉素'],
+  [/Fiorentina/gi,'費倫天拿'],
+  [/Atalanta/gi,'亞特蘭大'],
+  [/Ajax/gi,'阿積士'],
+  [/Porto/gi,'波圖'],
+  [/Benfica/gi,'賓菲加'],
+  [/Sporting(?: CP)?/gi,'體育CP'],
+  [/Celtic/gi,'些路迪'],
+  [/Rangers/gi,'格拉斯哥流浪'],
+  [/Red Bull Salzburg/gi,'紅牛薩爾斯堡'],
+  [/Galatasaray/gi,'加拉塔沙雷'],
+  [/Fenerbahce/gi,'費倫巴治'],
+  // ===== 球員名（常見）=====
+  [/Erling Haaland/gi,'哈蘭德'],
+  [/Kylian Mbappe|Mbappé/gi,'姆巴佩'],
+  [/Lionel Messi/gi,'美斯'],
+  [/Cristiano Ronaldo/gi,'C朗拿度'],
+  [/Vinicius(?: Junior| Jr\.?)?/gi,'雲尼修斯'],
+  [/Jude Bellingham/gi,'貝林咸'],
+  [/Phil Foden/gi,'科登'],
+  [/Bukayo Saka/gi,'沙卡'],
+  [/Declan Rice/gi,'戴斯萊斯'],
+  [/Marcus Rashford/gi,'拉舒福特'],
+  [/Mohamed Salah/gi,'沙拿'],
+  [/Virgil van Dijk/gi,'雲迪克'],
+  [/Trent Alexander-Arnold/gi,'阿歷山大阿諾'],
+  [/Harry Kane/gi,'基恩'],
+  [/Son Heung-?min/gi,'孫興慜'],
+  [/Rodri\b/gi,'路迪'],
+  [/Kevin De Bruyne/gi,'迪布韋'],
+  [/Bruno Fernandes/gi,'費南迪斯'],
+  [/Ruben Dias/gi,'迪亞斯'],
+  [/Pedri\b/gi,'佩德利'],
+  [/Lamine Yamal/gi,'雅馬爾'],
+  [/Robert Lewandowski/gi,'利雲度夫斯基'],
+  [/Florian Wirtz/gi,'維爾茨'],
+  [/Jamal Musiala/gi,'穆西亞拉'],
+  [/Dušan Vlahovic|Dusan Vlahovic/gi,'維拿卡域治'],
+  [/Federico Chiesa/gi,'基沙'],
+  [/Rafael Leao|Leão/gi,'萊奧'],
+  [/Mike Maignan/gi,'麥安'],
+  [/Khvicha Kvaratskhelia/gi,'卡域斯基利亞'],
+  [/Victor Osimhen/gi,'奧斯文'],
+  [/Lautaro Martinez|Martínez/gi,'馬丁尼斯'],
+  [/Carlos Alcaraz/gi,'阿爾卡拉斯'],
+  [/Jannik Sinner/gi,'辛納'],
+  [/Novak Djokovic/gi,'德祖高域'],
+  [/Iga Swiatek|Świątek/gi,'施雲迪克'],
+  [/Rafael Nadal/gi,'拿度'],
+  [/Roger Federer/gi,'費達拿'],
+  [/Serena Williams/gi,'小威廉絲'],
+  [/Max Verstappen/gi,'維斯塔彭'],
+  [/Lewis Hamilton/gi,'咸美頓'],
+  [/Lando Norris/gi,'諾里斯'],
+  [/Charles Leclerc/gi,'勒克萊爾'],
+  [/LeBron James/gi,'勒邦占士'],
+  [/Stephen Curry/gi,'屈里'],
+  [/Giannis Antetokounmpo/gi,'字母哥'],
+  // ===== 球隊教練 / 管理層 =====
+  [/Pep Guardiola/gi,'瓜迪奧拉'],
+  [/Jurgen Klopp|Jürgen Klopp/gi,'高普'],
+  [/Erik ten Hag/gi,'添夏治'],
+  [/Mikel Arteta/gi,'阿迪達'],
+  [/Enzo Maresca/gi,'馬雷斯卡'],
+  [/Arne Slot/gi,'斯洛特'],
+  [/Carlo Ancelotti/gi,'安察洛堤'],
+  [/Luis Enrique/gi,'路易斯恩里克'],
+  [/Hansi Flick/gi,'費力克'],
+  [/Jose Mourinho|José Mourinho/gi,'摩里尼奧'],
+  [/Antonio Conte/gi,'干地'],
+  [/Thomas Tuchel/gi,'圖赫爾'],
+  // ===== 其他運動 =====
+  [/Olympics|Olympic Games/gi,'奧運'],
+  [/Summer Olympics/gi,'夏季奧運'],
+  [/Winter Olympics/gi,'冬季奧運'],
+  [/Paralympic(s)?/gi,'殘奧'],
+  [/Asian Games/gi,'亞運'],
+  [/Commonwealth Games/gi,'英聯邦運動會'],
+  [/World Athletics(?: Championships)?/gi,'世界田徑錦標賽'],
+  [/Wimbledon/gi,'溫布頓'],
+  [/US Open/gi,'美國公開賽'],
+  [/French Open|Roland.?Garros/gi,'法國公開賽'],
+  [/Australian Open/gi,'澳洲公開賽'],
+  [/Davis Cup/gi,'台維斯盃'],
+  [/Formula (?:One|1)|F1/gi,'F1方程式'],
+  [/Grand Prix/gi,'大獎賽'],
+  [/MotoGP/gi,'摩托車大獎賽'],
+  [/Tour de France/gi,'環法單車賽'],
+  [/Giro d'Italia/gi,'環意單車賽'],
+  [/Vuelta a España/gi,'環西班牙單車賽'],
+  [/NBA/gi,'NBA'],
+  [/NFL/gi,'NFL'],
+  [/MLB/gi,'MLB'],
+  [/NHL/gi,'NHL'],
+  [/UFC/gi,'UFC'],
+  [/boxing/gi,'拳擊'],
+  [/rugby(?:\s+union)?/gi,'欖球'],
+  [/rugby league/gi,'聯盟式欖球'],
+  [/cricket/gi,'板球'],
+  [/golf/gi,'高爾夫'],
+  [/swimming/gi,'游泳'],
+  [/athletics/gi,'田徑'],
+  [/cycling/gi,'單車'],
+  [/gymnastics/gi,'體操'],
+  [/basketball/gi,'籃球'],
+  [/volleyball/gi,'排球'],
+  [/badminton/gi,'羽毛球'],
+  [/table tennis/gi,'乒乓球'],
+  [/handball/gi,'手球'],
+  [/skiing/gi,'滑雪'],
+  [/skating/gi,'溜冰'],
+  [/weightlifting/gi,'舉重'],
+  [/wrestling/gi,'摔跤'],
+  [/judo/gi,'柔道'],
+  [/taekwondo/gi,'跆拳道'],
+  [/archery/gi,'射箭'],
+  [/fencing/gi,'擊劍'],
+  // ===== 動詞 / 狀態 =====
+  [/\bwins?\b/gi,'勝出'],
+  [/\bbeats?\b/gi,'擊敗'],
+  [/\bloses?\b|\bdefeated?\b/gi,'落敗'],
+  [/\bdraws?\b/gi,'賽和'],
+  [/\bcrushes?\b|\bthrashe?s?\b/gi,'大勝'],
+  [/\bstun(?:ned|s)?\b/gi,'爆冷擊敗'],
+  [/\bupset\b/gi,'爆冷'],
+  [/\binjur(?:y|ies|ed)\b/gi,'受傷'],
+  [/\btransfer(?:red)?\b/gi,'轉會'],
+  [/\bsign(?:ed|s|ing)?\b/gi,'簽約'],
+  [/\bfired?\b|\bsacked?\b|\bdismissed?\b/gi,'解僱'],
+  [/\bappointed?\b/gi,'上任'],
+  [/\bresigns?\b|\bquits?\b/gi,'辭職'],
+  [/\bretires?\b/gi,'退休'],
+  [/\bsuspended?\b/gi,'停賽'],
+  [/\bbanned?\b/gi,'禁賽'],
+  [/\bcontract(?:s)?\b/gi,'合約'],
+  [/\bloan(?:ed)?\b/gi,'租借'],
+  [/\bscored?\b/gi,'入球'],
+  [/\bscores?\b/gi,'射入'],
+  [/\bextend(?:ed|s)?\b/gi,'續約'],
+  [/\brelease(?:d|s)?\b/gi,'解約'],
+  [/\bcomplet(?:es?|ed|ing)\b/gi,'完成'],
+  [/\bannounced?\b/gi,'宣佈'],
+  [/\bconfirmed?\b/gi,'確認'],
+  [/\bcelebrat(?:es?|ed)\b/gi,'慶祝'],
+  [/\bclaim(?:s|ed)?\b/gi,'奪得'],
+  [/\blifts?\b/gi,'捧起'],
+  [/\bknocked?\s+out?\b/gi,'淘汰'],
+  [/\bqualif(?:y|ies|ied)\b/gi,'晉級'],
+  [/\beliminate(?:d|s)?\b/gi,'出局'],
+  [/\breturns?\b/gi,'回歸'],
+  [/\bsetback\b/gi,'挫折'],
+  [/\brecovering?\b/gi,'康復'],
+  [/\bfaces?\b/gi,'面對'],
+  [/\bplays?\b/gi,'出賽'],
+  [/\bhost(?:s|ed)?\b/gi,'主場迎戰'],
+  [/\bclash(?:es)?\b/gi,'交鋒'],
+  [/\bmeets?\b/gi,'對陣'],
+  [/\bfaced?\b/gi,'面對'],
+  [/\bdominate(?:s|d)?\b/gi,'主宰'],
+  [/\bsurprise(?:s|d)?\b/gi,'驚喜'],
+  [/\bstruggle(?:s|d)?\b/gi,'苦戰'],
+  [/\bsecure(?:s|d)?\b/gi,'鎖定'],
+  [/\breach(?:es|ed)?\b/gi,'晉身'],
+  [/\badvance(?:s|d)?\b/gi,'晉級'],
+  [/\bcrash(?:es|ed)?\b/gi,'慘敗'],
+  [/\bslump(?:s|ed)?\b/gi,'跌入低谷'],
+  [/\bsurge(?:s|d)?\b/gi,'急升'],
+  [/\bpower(?:s|ed)?\b/gi,'強攻'],
+  [/\bheld?\b/gi,'平手'],
+  [/\bsuffer(?:s|ed)?\b/gi,'承受'],
+  [/\bscore(?:s|d)?\b/gi,'入球'],
+  [/\bset\b/gi,'創下'],
+  [/\bbreak(?:s)?\b/gi,'打破'],
+  [/\bmake(?:s)?\b/gi,'創造'],
+  [/\bback\b/gi,'回歸'],
+  [/\bhit(?:s)?\b/gi,'擊出'],
+  [/\bpush(?:es|ed)?\b/gi,'推進'],
+  [/\btake(?:s)?\b/gi,'奪取'],
+  // ===== 詞彙 =====
+  [/\bfinal\b/gi,'決賽'],
+  [/\bsemi.?finals?\b/gi,'準決賽'],
+  [/\bquarter.?finals?\b/gi,'八強賽'],
+  [/\bround of 16\b/gi,'十六強'],
+  [/\bgroup stage\b/gi,'小組賽'],
+  [/\bplayoffs?\b/gi,'附加賽'],
+  [/\bderby\b/gi,'德比戰'],
+  [/\bhat.?trick\b/gi,'帽子戲法'],
+  [/\bown goal\b/gi,'烏龍球'],
+  [/\bpenalty(?: kick| shootout)?\b/gi,'點球'],
+  [/\bpenalties\b/gi,'點球大戰'],
+  [/\bgoals?\b/gi,'入球'],
+  [/\bassist\b/gi,'助攻'],
+  [/\bclean sheet\b/gi,'零失球'],
+  [/\bmanager\b/gi,'主帥'],
+  [/\bhead coach\b/gi,'主教練'],
+  [/\bcoach\b/gi,'教練'],
+  [/\bplayer(?:s)?\b/gi,'球員'],
+  [/\bclub\b/gi,'球會'],
+  [/\bteam(?:s)?\b/gi,'球隊'],
+  [/\bseason\b/gi,'賽季'],
+  [/\bmatch(?:es)?\b/gi,'賽事'],
+  [/\bgame(?:s)?\b/gi,'比賽'],
+  [/\brecord\b/gi,'紀錄'],
+  [/\bchampion(?:s|ship)?\b/gi,'冠軍'],
+  [/\btitle\b/gi,'錦標'],
+  [/\btrophy\b/gi,'獎盃'],
+  [/\bleague\b/gi,'聯賽'],
+  [/\btournament\b/gi,'錦標賽'],
+  [/\bcup\b/gi,'盃賽'],
+  [/\bstadium\b/gi,'球場'],
+  [/\binjury time\b/gi,'傷停補時'],
+  [/\bextra time\b/gi,'加時'],
+  [/\bhalftime?\b/gi,'半場'],
+  [/\bfulltime?\b/gi,'全場'],
+  [/\bsubstitute\b/gi,'替補'],
+  [/\bred card\b/gi,'紅牌'],
+  [/\byellow card\b/gi,'黃牌'],
+  [/\bVAR\b/gi,'VAR'],
+  [/\btransfer window\b/gi,'轉會窗口'],
+  [/\bfree agent\b/gi,'自由身'],
+  [/\bwage(?:s)?\b/gi,'薪酬'],
+  [/\bfee\b/gi,'費用'],
+  [/\bmillion\b/gi,'百萬'],
+  [/\bbillion\b/gi,'十億'],
+  [/\binjured\b/gi,'傷缺'],
+  [/\bfitness\b/gi,'健康狀態'],
+  [/\bdebut\b/gi,'首秀'],
+  [/\bmilestone\b/gi,'里程碑'],
+  [/\bhattrick\b/gi,'帽子戲法'],
+  [/\bcomebacks?\b/gi,'逆轉勝'],
+  [/\bthrill(?:er|ing)?\b/gi,'精彩'],
+  [/\bdisappoint(?:ing|ment)?\b/gi,'令人失望'],
+  [/\bvictory\b/gi,'勝利'],
+  [/\bdefeat\b/gi,'敗仗'],
+  [/\bdraw\b/gi,'平局'],
+  [/\bstandings?\b/gi,'積分榜'],
+  [/\bpoints?\b/gi,'積分'],
+  [/\bgoal difference\b/gi,'進球差'],
+  [/\btop scorer\b/gi,'神射手'],
+  [/\bGolden Boot\b/gi,'金靴獎'],
+  [/\bBest Player\b/gi,'最佳球員'],
+  [/\bMVP\b/gi,'最有價值球員'],
+  [/\bAll-?Star\b/gi,'全明星'],
+  [/\bnew\b/gi,'最新'],
+  [/\blatest\b/gi,'最新'],
+  [/\bbreaking\b/gi,'突發'],
+  [/\breport(?:s|ed)?\b/gi,'報道'],
+  [/\bexclusive\b/gi,'獨家'],
+  [/\banalysis\b/gi,'分析'],
+  [/\bpreview\b/gi,'前瞻'],
+  [/\breview\b/gi,'回顧'],
+  [/\bhighlights?\b/gi,'精華片段'],
+  [/\binterview\b/gi,'訪問'],
+  [/\bpress conference\b/gi,'新聞發佈會'],
+  [/\btraining\b/gi,'訓練'],
+  [/\blineup\b/gi,'陣容'],
+  [/\bformation\b/gi,'陣式'],
+  [/\btactics?\b/gi,'戰術'],
+  [/\bstatistics?\b/gi,'數據'],
+  [/\bperformance\b/gi,'表現'],
+  [/\bseason opener\b/gi,'揭幕戰'],
+  [/\bopener\b/gi,'開幕戰'],
+  [/\bsuperfinal\b/gi,'總決賽'],
+  [/\bhome\b/gi,'主場'],
+  [/\baway\b/gi,'客場'],
+  [/\bneutral\b/gi,'中立場'],
+  [/\bovertime\b/gi,'加時'],
+  [/\baggregate\b/gi,'兩回合總比分'],
+  [/\btwo.?legs?\b/gi,'兩回合'],
+  [/\bfirst leg\b/gi,'首回合'],
+  [/\bsecond leg\b/gi,'次回合'],
+  [/\bplayoff\b/gi,'附加賽'],
+  [/\bknockout\b/gi,'淘汰賽'],
+  [/\btable\b/gi,'積分榜'],
+  [/\btop(?:-|\s)flight\b/gi,'頂級聯賽'],
+  [/\bcritical\b/gi,'關鍵'],
+  [/\bcrucial\b/gi,'重要'],
+  [/\bhistoric(?:al)?\b/gi,'歷史性'],
+  [/\bimpressive\b/gi,'精彩'],
+  [/\bdominating\b/gi,'主導'],
+  [/\bcontroversial\b/gi,'具爭議'],
+  [/\bpenalty box\b/gi,'禁區'],
+  [/\bgrandstand\b/gi,'看台'],
+  [/\bfan(?:s)?\b/gi,'球迷'],
+  [/\bsupporter(?:s)?\b/gi,'支持者'],
+  [/\bcrowd\b/gi,'觀眾'],
+  [/\bticket(?:s)?\b/gi,'門票'],
+  [/\bboycott\b/gi,'抵制'],
+  [/\bprotest\b/gi,'抗議'],
+  [/\bsponsors?\b/gi,'贊助商'],
+  [/\bbroadcast\b/gi,'直播'],
+  [/\bright(?:s)?\b/gi,'版權'],
+  [/\baward(?:s)?\b/gi,'頒獎'],
+  [/\bnominated?\b/gi,'提名'],
+  [/\bwinner\b/gi,'得獎者'],
+  [/\blosers?\b/gi,'敗者'],
+  [/\brunner.?up\b/gi,'亞軍'],
+  [/\bthird place\b/gi,'季軍'],
+  [/\bfourth\b/gi,'第四'],
+  [/\bfirst\b/gi,'首位'],
+  [/\bsecond\b/gi,'第二'],
+  [/\bthird\b/gi,'第三'],
+  [/\bstreak\b/gi,'連勝'],
+  [/\bunbeaten\b/gi,'不敗'],
+  [/\bwinning run\b/gi,'連勝'],
+  [/\blosing streak\b/gi,'連敗'],
+  [/\bdark horse\b/gi,'黑馬'],
+  [/\bunderdog\b/gi,'冷門'],
+  [/\bfavorite\b/gi,'熱門'],
+  [/\bfavourite\b/gi,'熱門'],
+  [/\bbig game\b/gi,'大賽'],
+  [/\bshowdown\b/gi,'對決'],
+  [/\bfaceoff\b/gi,'交鋒'],
+  [/\bclassic\b/gi,'經典'],
+  [/\bepic\b/gi,'史詩級'],
+  [/\bsensational\b/gi,'轟動'],
+  [/\bsurprising\b/gi,'令人驚喜'],
+  [/\bunexpected\b/gi,'意外'],
+  [/\bthrilling\b/gi,'驚心動魄'],
+  [/\bdramatic\b/gi,'戲劇性'],
+];
+
+// ── 本地字典翻譯（備用）────────────────────────
+function autoTranslate(title){
+  if(!title) return '';
+  let t = title;
+  for(const [re, rep] of DICT) t = t.replace(re, rep);
+  if(t === title) return '';
+  const total = t.replace(/\s/g,'').length;
+  const cnCount = (t.match(/[\u4e00-\u9fff\u3400-\u4dbf\uff00-\uffef]/g)||[]).length;
+  return (cnCount/total) >= 0.20 ? t : '';
+}
+
+// ── Google 線上翻譯 ──────────────────────────────
+const _gtCache = new Map();
+async function googleTranslate(text){
+  if(!text) return '';
+  if(_gtCache.has(text)) return _gtCache.get(text);
+  try{
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&q=${encodeURIComponent(text)}`;
+    const res = await fetch(url, {signal: AbortSignal.timeout(5000)});
+    const json = await res.json();
+    const translated = json[0].map(x=>x[0]).join('');
+    _gtCache.set(text, translated);
+    return translated;
+  } catch(e){
+    return '';
+  }
+}
+
+// ── 翻譯單張卡片（渲染後異步更新）──────────────
+async function translateCard(el, title){
+  const cnEl = el.querySelector('.news-cn');
+  const result = await googleTranslate(title);
+  if(!result || result === title) return;
+  if(cnEl){
+    cnEl.textContent = result;
+    cnEl.style.display = '';
+  } else {
+    const titleEl = el.querySelector('.news-title');
+    if(titleEl){
+      const div = document.createElement('div');
+      div.className = 'news-cn';
+      div.textContent = result;
+      titleEl.insertAdjacentElement('afterend', div);
+    }
+  }
+}
+
+// ── 工具 ────────────────────────────────────────
+function relTime(pub){
+  if(!pub) return '';
+  // rss2json 返回的 pubDate 格式為 "2026-05-03 12:00:00"，無時區標識
+  // 原始 RSS 時間為 UTC，需補上 Z 避免被當成本地時間（差 +8 小時）
+  const normalized = pub.replace(' ','T').replace(/([^Z])$/,'$1Z');
+  const d = new Date(normalized);
+  if(isNaN(d)) return '';
+  const s = (Date.now()-d)/1000;
+  if(s<60)    return 'Just now';
+  if(s<3600)  return Math.floor(s/60)+'m ago';
+  if(s<86400) return Math.floor(s/3600)+'h ago';
+  if(s<172800)return 'Yesterday';
+  return d.toLocaleDateString('en-GB',{month:'short',day:'numeric'});
+}
+
+function getThumb(item){
+  if(item.thumbnail?.startsWith('http')) return item.thumbnail;
+  if(item.enclosure?.type?.startsWith('image')) return item.enclosure.link;
+  const html = item.content||item.description||'';
+  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m ? m[1] : null;
+}
+
+// ── 骨架屏 ──────────────────────────────────────
+function showSkeleton(){
+  document.getElementById('newsContainer').innerHTML =
+    Array(PAGE).fill(0).map((_,i)=>`
+      <div class="skel-card${i===0?' news-card hero-card':''}">
+        <div class="skel-img" style="${i===0?'height:240px':''}"></div>
+        <div class="skel-body">
+          <div class="skel-line s"></div>
+          <div class="skel-line m"></div>
+          <div class="skel-line f"></div>
+        </div>
+      </div>`).join('');
+}
+
+// ── Fetch 全部 Feed ───────────────────────────────
+async function fetchAll(){
+  const results = await Promise.allSettled(
+    FEED_URLS.map(({url,src,cls})=>
+      fetch(API+encodeURIComponent(url),{signal:AbortSignal.timeout(9000)})
+        .then(r=>r.json())
+        .then(j=>(j.status==='ok'&&j.items)?j.items.map(i=>({...i,_src:src,_cls:cls})):[])
+        .catch(()=>[])
+    )
+  );
+  const seen=new Set(), merged=[];
+  for(const r of results){
+    if(r.status!=='fulfilled') continue;
+    for(const item of r.value){
+      const key=item.link||item.guid||item.title;
+      if(!key||seen.has(key)) continue;
+      seen.add(key);
+      item._thumb = getThumb(item);
+      merged.push(item);
+    }
+  }
+  // 有圖片的排前，同組內按時間排
+  merged.sort((a,b)=>{
+    const ha = a._thumb?1:0, hb = b._thumb?1:0;
+    if(ha!==hb) return hb-ha;
+    const ta=a.pubDate?new Date(a.pubDate).getTime():0;
+    const tb=b.pubDate?new Date(b.pubDate).getTime():0;
+    return tb-ta;
+  });
+  return merged.length>0?merged:null;
+}
+
+// ── 渲染 ─────────────────────────────────────────
+function renderPage(){
+  const grid=document.getElementById('newsContainer');
+  if(!allItems||allItems.length===0){
+    grid.innerHTML=`<div class="err-box">
+      <div class="err-icon">📡</div>
+      <p style="font-size:.95rem">暫時無法載入新聞，請稍後重試</p>
+      <button class="retry-btn" onclick="forceReload()">↻ 重新載入</button>
+    </div>`;
+    setStatus('載入失敗','0','');
+    return;
+  }
+  const total=allItems.length;
+  const start=pageIdx;
+  const end=Math.min(start+PAGE,total);
+  const show=allItems.slice(start,end);
+
+  grid.innerHTML=show.map((item,idx)=>{
+    const thumb=item._thumb;
+    const imgHtml=thumb
+      ? `<div class="news-img-wrap"><img class="news-thumb" src="${thumb}" alt="" loading="lazy" onerror="this.parentNode.innerHTML='<div class=news-thumb-ph>🏆</div>'"></div>`
+      : `<div class="news-thumb-ph">🏆</div>`;
+    const time=relTime(item.pubDate);
+    const link=item.link||item.guid||'#';
+    const cn=autoTranslate(item.title||'');
+    const isHero=idx===0?'hero-card':'';
+    const noImg=!thumb?'no-img':'';
+    const srcCls=item._cls||'src-other';
+    return `
+    <a class="news-card ${isHero} ${noImg}" href="${link}" target="_blank" rel="noopener"
+       style="animation-delay:${idx*45}ms" data-title="${(item.title||'').replace(/"/g,'&quot;')}">
+      ${imgHtml}
+      <div class="news-body">
+        <div class="news-meta">
+          <span class="news-src ${srcCls}">${item._src||'Sport'}</span>
+          ${time?`<span class="news-time">${time}</span>`:''}
+        </div>
+        <div class="news-title">${item.title||'(No title)'}</div>
+        ${cn?`<div class="news-cn">${cn}</div>`:'<div class="news-cn" style="display:none"></div>'}
+        <div class="news-footer">
+          <span class="news-link">Read more →</span>
+          <span class="news-num">${start+idx+1}/${total}</span>
+        </div>
+      </div>
+    </a>`;
+  }).join('');
+
+  // 異步 Google 翻譯每張卡片標題
+  grid.querySelectorAll('.news-card[data-title]').forEach(card=>{
+    const title = card.getAttribute('data-title');
+    if(!title) return;
+    translateCard(card, title);
+  });
+
+  setStatus(`共 ${total} 篇 · 第 ${start+1}–${end} 篇`,`${end}/${total}`,`${Math.ceil(end/PAGE)}/${Math.ceil(total/PAGE)}`);
+  const hasMore=end<total;
+  document.getElementById('refreshLabel').textContent=hasMore?'下一批':'重新載入';
+}
+
+function setStatus(text,badge,page){
+  document.getElementById('statusText').textContent=text;
+  document.getElementById('countBadge').textContent=badge;
+  if(page){
+    document.getElementById('statTotal').textContent=allItems?.length||'—';
+    document.getElementById('statPage').textContent=page;
+  }
+}
+
+// ── 主載入 ────────────────────────────────────────
+async function loadNews(){
+  if(loading) return;
+  loading=true;
+  showSkeleton();
+  allItems=await fetchAll();
+  pageIdx=0;
+  renderPage();
+  loading=false;
+}
+
+function refreshTab(){
+  const ri=document.getElementById('refreshBtn').querySelector('.ri');
+  ri.style.animation='spin .6s linear';
+  setTimeout(()=>ri.style.animation='',700);
+  if(!allItems||!allItems.length){forceReload();return;}
+  const next=pageIdx+PAGE;
+  pageIdx=next>=allItems.length?0:next;
+  renderPage();
+  window.scrollTo({top:document.querySelector('.news-grid').offsetTop-80,behavior:'smooth'});
+}
+
+async function forceReload(){
+  allItems=null; pageIdx=0;
+  await loadNews();
+}
+
+// ── 背景主題切換器 ──
+const BG_BODY_CLASSES={star:[],geo:['bg-geo'],noise:['bg-noise'],mountain:['bg-mountain']};
+let currentBg=localStorage.getItem('ssBg')||'star';
+let bgRaf=null;
+function applyBgTheme(name){
+  document.body.classList.remove('bg-geo','bg-noise','bg-mountain');
+  (BG_BODY_CLASSES[name]||[]).forEach(c=>document.body.classList.add(c));
+  document.querySelectorAll('.bg-picker-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.bg===name));
+  currentBg=name; localStorage.setItem('ssBg',name);
+  if(bgRaf) cancelAnimationFrame(bgRaf);
+  startBgCanvas(name);
+}
+document.getElementById('bgSwitcher').addEventListener('click',e=>{
+  const btn=e.target.closest('.bg-picker-btn');
+  if(btn && btn.dataset.bg!=='custom') applyBgTheme(btn.dataset.bg);
+});
+
+// ===== 自定義圖片背景 =====
+function getBgCustomKey(){ const uid=localStorage.getItem('ssCurrentId')||'guest'; return 'ssBgCustomImg_news_'+uid; }
+function bgIsBase64(s){ return s&&s.startsWith('data:'); }
+function _applyBgVisual(dataUrl){
+  document.body.style.backgroundImage='url('+dataUrl+')';
+  document.body.classList.add('bg-custom-img');
+  document.querySelectorAll('.bg-picker-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('bgCustomBtn').classList.add('active');
+  document.getElementById('bgCustomPreviewImg').src=dataUrl;
+  document.getElementById('bgCustomPreview').style.display='block';
+}
+async function applyCustomBg(dataUrl){
+  _applyBgVisual(dataUrl);
+  localStorage.setItem(getBgCustomKey(),dataUrl);
+  if(!bgIsBase64(dataUrl)){
+    const uid=ssGetId();
+    if(uid){
+      try{ await sbFetch('users?id=eq.'+uid,{method:'PATCH',prefer:'return=minimal',body:{bg_url:dataUrl}}); }
+      catch(e){ console.warn('bgSync:',e); }
+    }
+  }
+}
+(async function initCustomBg(){
+  const uid=ssGetId();
+  if(uid){
+    try{
+      const rows=await sbFetch('users?id=eq.'+uid+'&select=bg_url');
+      if(rows&&rows[0]&&rows[0].bg_url){ localStorage.setItem(getBgCustomKey(),rows[0].bg_url); _applyBgVisual(rows[0].bg_url); return; }
+    }catch(e){ console.warn('bgSync init:',e); }
+  }
+  const saved=localStorage.getItem(getBgCustomKey());
+  if(saved) _applyBgVisual(saved);
+})();
+function bgCustomOpen(){ document.getElementById('bgCustomOverlay').style.display='flex'; }
+function bgCustomClose(){ document.getElementById('bgCustomOverlay').style.display='none'; }
+function bgHandleFile(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>applyCustomBg(e.target.result);
+  reader.readAsDataURL(file);
+  bgCustomClose();
+}
+function bgApplyUrl(){
+  const url=document.getElementById('bgUrlInput').value.trim();
+  if(!url)return;
+  applyCustomBg(url);
+  bgCustomClose();
+}
+async function bgCustomClear(){
+  localStorage.removeItem(getBgCustomKey());
+  document.body.style.backgroundImage='';
+  document.body.classList.remove('bg-custom-img');
+  document.getElementById('bgCustomBtn').classList.remove('active');
+  document.getElementById('bgCustomPreview').style.display='none';
+  applyBgTheme(currentBg);
+  bgCustomClose();
+  const uid=ssGetId();
+  if(uid){ try{ await sbFetch('users?id=eq.'+uid,{method:'PATCH',prefer:'return=minimal',body:{bg_url:null}}); }catch(e){} }
+}
+(function(){
+  const cv=document.getElementById('bgCanvas');
+  const ctx=cv.getContext('2d');
+  let W,H;
+  function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+  window.addEventListener('resize',()=>{resize();if(currentBg)startBgCanvas(currentBg);});
+  resize();
+  function bgStar(){
+    let stars=[],comets=[],lastComet=0;
+    const n=Math.floor(W*H/4800);
+    for(let i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.2,a:Math.random(),da:(Math.random()-0.5)*0.009,color:['#ffffff','#4ecdc4','#3a86ff','#ffd700'][Math.floor(Math.random()*4)]});
+    function spawnComet(){const y=Math.random()*H*0.65,len=90+Math.random()*130,spd=4+Math.random()*3.5;comets.push({x:-60,y,vx:spd,vy:spd*0.38,len});}
+    return function draw(){
+      ctx.clearRect(0,0,W,H);
+      stars.forEach(s=>{s.a+=s.da;if(s.a<=0||s.a>=1)s.da=-s.da;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=s.color;ctx.globalAlpha=s.a*0.78;ctx.fill();});
+      const now=performance.now();if(now-lastComet>1800+Math.random()*3500){spawnComet();lastComet=now;}
+      ctx.globalAlpha=1;
+      comets.forEach(c=>{const g=ctx.createLinearGradient(c.x,c.y,c.x-c.len,c.y-c.len*0.38);g.addColorStop(0,'rgba(255,255,255,0.92)');g.addColorStop(1,'rgba(255,255,255,0)');ctx.strokeStyle=g;ctx.lineWidth=2.4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x-c.len,c.y-c.len*0.38);ctx.stroke();c.x+=c.vx;c.y+=c.vy;});
+      comets=comets.filter(c=>c.x<W+200&&c.y<H+200);
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+  function bgGeo(){
+    const CELL=52,DOT=1.3;let nodes=[];
+    const cols=Math.ceil(W/CELL)+2,rows=Math.ceil(H/CELL)+2;
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) nodes.push({bx:(c-0.5)*CELL,by:(r-0.5)*CELL,ox:0,oy:0,a:Math.random()*Math.PI*2,da:(Math.random()-0.5)*0.008,amp:4+Math.random()*6});
+    return function draw(){
+      ctx.clearRect(0,0,W,H);
+      nodes.forEach(n=>{n.a+=n.da;n.ox=Math.cos(n.a)*n.amp;n.oy=Math.sin(n.a)*n.amp;});
+      for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){const i=r*cols+c,n=nodes[i],nx=n.bx+n.ox,ny=n.by+n.oy;
+        if(c+1<cols){const m=nodes[i+1];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(78,205,196,0.07)';ctx.lineWidth=0.9;ctx.stroke();}
+        if(r+1<rows){const m=nodes[i+cols];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(58,134,255,0.07)';ctx.lineWidth=0.9;ctx.stroke();}
+        if(c+1<cols&&r+1<rows){const m=nodes[i+cols+1];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(255,215,0,0.035)';ctx.lineWidth=0.7;ctx.stroke();}
+        ctx.beginPath();ctx.arc(nx,ny,DOT,0,Math.PI*2);ctx.fillStyle='rgba(78,205,196,0.25)';ctx.globalAlpha=1;ctx.fill();
+      }}
+      const cx=W/2,cy=H/2;
+      for(let i=0;i<8;i++){const angle=i*Math.PI/4+(performance.now()*0.0001);const g=ctx.createLinearGradient(cx,cy,cx+Math.cos(angle)*W*0.7,cy+Math.sin(angle)*H*0.7);g.addColorStop(0,'rgba(78,205,196,0.05)');g.addColorStop(1,'rgba(78,205,196,0)');ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(angle)*W,cy+Math.sin(angle)*H);ctx.strokeStyle=g;ctx.lineWidth=60;ctx.stroke();}
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+  function bgNoise(){
+    const offC=document.createElement('canvas');offC.width=offC.height=256;
+    const offCtx=offC.getContext('2d'),imgData=offCtx.createImageData(256,256);
+    for(let i=0;i<imgData.data.length;i+=4){const v=Math.random()*255|0;imgData.data[i]=v;imgData.data[i+1]=v;imgData.data[i+2]=v;imgData.data[i+3]=18;}
+    offCtx.putImageData(imgData,0,0);
+    const noisePat=ctx.createPattern(offC,'repeat');
+    let blobs=[];
+    for(let i=0;i<5;i++) blobs.push({x:Math.random()*W,y:Math.random()*H,r:180+Math.random()*200,a:Math.random()*Math.PI*2,spd:0.004+Math.random()*0.006,col:['rgba(78,205,196,','rgba(58,134,255,','rgba(255,215,0,'][i%3],opa:0.04+Math.random()*0.04});
+    return function draw(){
+      ctx.clearRect(0,0,W,H);ctx.globalAlpha=0.9;ctx.fillStyle=noisePat;ctx.fillRect(0,0,W,H);
+      blobs.forEach(b=>{b.a+=b.spd;const bx=b.x+Math.cos(b.a)*60,by=b.y+Math.sin(b.a)*40;const g=ctx.createRadialGradient(bx,by,0,bx,by,b.r);g.addColorStop(0,b.col+b.opa+')');g.addColorStop(1,b.col+'0)');ctx.globalAlpha=1;ctx.fillStyle=g;ctx.beginPath();ctx.arc(bx,by,b.r,0,Math.PI*2);ctx.fill();});
+      for(let y=0;y<H;y+=3){ctx.globalAlpha=0.012;ctx.fillStyle=y%6===0?'rgba(255,255,255,1)':'rgba(0,0,0,1)';ctx.fillRect(0,y,W,1);}
+      ctx.globalAlpha=1;bgRaf=requestAnimationFrame(draw);
+    };
+  }
+  function bgMountain(){
+    function makeMountain(n,minH,maxH,seed){const pts=[{x:0,y:H}];for(let i=0;i<=n;i++){const x=i*W/n,y=H-(minH+(Math.sin(i*seed+seed)*0.5+0.5)*(maxH-minH));pts.push({x,y});}pts.push({x:W,y:H});return pts;}
+    const layers=[{pts:makeMountain(12,H*0.52,H*0.72,1.7),col:'rgba(10,30,60,0.85)',speed:0},{pts:makeMountain(10,H*0.42,H*0.62,2.3),col:'rgba(15,40,80,0.80)',speed:0.08},{pts:makeMountain(8,H*0.32,H*0.52,3.1),col:'rgba(20,55,110,0.70)',speed:0.18},{pts:makeMountain(6,H*0.22,H*0.42,4.2),col:'rgba(30,70,140,0.55)',speed:0.30},{pts:makeMountain(5,H*0.14,H*0.30,5.8),col:'rgba(50,100,180,0.35)',speed:0.44}];
+    let prevTS=0;let stars2=[];const ns=Math.floor(W*H/9000);
+    for(let i=0;i<ns;i++) stars2.push({x:Math.random()*W,y:Math.random()*H*0.55,r:Math.random()+0.3,a:Math.random(),da:(Math.random()-0.5)*0.006});
+    return function draw(ts){
+      prevTS=ts;ctx.clearRect(0,0,W,H);
+      stars2.forEach(s=>{s.a+=s.da;if(s.a<=0||s.a>=1)s.da=-s.da;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle='#ffffff';ctx.globalAlpha=s.a*0.6;ctx.fill();});
+      ctx.globalAlpha=1;
+      const gh=ctx.createLinearGradient(0,H*0.55,0,H);gh.addColorStop(0,'rgba(5,15,40,0)');gh.addColorStop(1,'rgba(5,15,40,0.95)');ctx.fillStyle=gh;ctx.fillRect(0,H*0.55,W,H*0.45);
+      [...layers].reverse().forEach(layer=>{ctx.beginPath();ctx.moveTo(layer.pts[0].x,layer.pts[0].y);layer.pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.closePath();ctx.fillStyle=layer.col;ctx.fill();});
+      const mg=ctx.createRadialGradient(W*0.78,H*0.12,0,W*0.78,H*0.12,W*0.28);mg.addColorStop(0,'rgba(180,210,255,0.10)');mg.addColorStop(1,'rgba(180,210,255,0)');ctx.fillStyle=mg;ctx.fillRect(0,0,W,H);
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+  window.startBgCanvas=function(name){
+    if(bgRaf) cancelAnimationFrame(bgRaf);
+    resize();
+    let drawFn;
+    if(name==='star') drawFn=bgStar();
+    else if(name==='geo') drawFn=bgGeo();
+    else if(name==='noise') drawFn=bgNoise();
+    else if(name==='mountain') drawFn=bgMountain();
+    if(drawFn) bgRaf=requestAnimationFrame(drawFn);
+  };
+  startBgCanvas(currentBg);
+})();
+applyBgTheme(currentBg);
+// ── Theme ─────────────────────────────────────────
+function applyTheme(m){
+  document.body.classList.toggle('light-mode',m==='light');
+  document.getElementById('themeBtn').textContent=m==='light'?'🌙':'☀️';
+}
+function toggleTheme(){
+  const n=document.body.classList.contains('light-mode')?'dark':'light';
+  localStorage.setItem('ssTheme',n); applyTheme(n);
+}
+applyTheme(localStorage.getItem('ssTheme')||'dark');
+
+loadNews();
+</script>
+</body>
+</html>

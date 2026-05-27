@@ -1,0 +1,1047 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文武雙全 Study &amp; Sweat</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--gold:#ffd700;--blue:#3a86ff;--teal:#4ecdc4;--red:#ff6b6b;--green:#2ecc71;--bg:#0d0d1a;--card:#1e1e40;--border:rgba(255,255,255,0.1);--muted:#888;--text:#fff;--text2:#ccc;--nav-bg:rgba(13,13,26,0.97);}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background 0.3s,color 0.3s;}
+a{text-decoration:none;}
+
+/* ── 背景 Canvas 層 ─────────────────────── */
+#bgCanvas{position:fixed;inset:0;pointer-events:none;z-index:0;transition:opacity 0.6s;}
+.page-wrap,nav,.hero,.modules,footer{position:relative;z-index:1;}
+
+/* 光暈底層 — 星空／幾何時顯示 */
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;transition:opacity 0.6s;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 20%, rgba(58,134,255,0.12) 0%, transparent 72%),
+    radial-gradient(ellipse 50% 40% at 85% 75%, rgba(78,205,196,0.10) 0%, transparent 68%),
+    radial-gradient(ellipse 45% 40% at 70% 25%, rgba(255,107,107,0.06) 0%, transparent 62%),
+    radial-gradient(ellipse 40% 35% at 50% 50%, rgba(255,215,0,0.045) 0%, transparent 60%);
+}
+/* 極光動畫層 */
+body::after{content:'';position:fixed;inset:-10% -10% -5% -10%;z-index:0;pointer-events:none;
+  background:
+    conic-gradient(from 120deg at 20% 30%, rgba(58,134,255,0.13), transparent 40%),
+    conic-gradient(from -40deg at 80% 70%, rgba(78,205,196,0.13), transparent 45%),
+    radial-gradient(60% 40% at 50% 80%, rgba(255,215,0,0.055), transparent 60%);
+  filter: blur(42px) saturate(120%);
+  animation: auroraShift 18s ease-in-out infinite alternate;
+  transition:opacity 0.6s;
+}
+@keyframes auroraShift{
+  0%{transform:translate3d(0,0,0) rotate(0deg);}
+  50%{transform:translate3d(1.5%,-1.5%,0) rotate(2deg);}
+  100%{transform:translate3d(-1%,1%,0) rotate(-2deg);}
+}
+/* 噪點主題 — 紙感顆粒（SVG filter） */
+.bg-noise body::before{background:
+    radial-gradient(ellipse 70% 60% at 30% 30%, rgba(255,215,0,0.07) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 50% at 70% 75%, rgba(58,134,255,0.07) 0%, transparent 62%);}
+.bg-noise body::after{opacity:0.5;}
+.bg-noise #bgCanvas{opacity:0.9;}
+/* 山脈主題 */
+.bg-mountain body::before{background:
+    radial-gradient(ellipse 100% 60% at 50% 100%, rgba(0,30,60,0.95) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 50% at 50% 50%, rgba(10,20,40,0.5) 0%, transparent 100%);}
+.bg-mountain body::after{
+  background:
+    radial-gradient(ellipse 80% 40% at 50% 95%, rgba(58,134,255,0.18) 0%, transparent 60%),
+    conic-gradient(from 160deg at 50% 80%, rgba(78,205,196,0.12), transparent 30%);
+  filter:blur(30px);
+  animation:mountainGlow 8s ease-in-out infinite alternate;
+}
+@keyframes mountainGlow{0%{opacity:0.7;}100%{opacity:1;}}
+/* 幾何主題 */
+.bg-geo body::before{background:
+    radial-gradient(ellipse 60% 50% at 15% 20%, rgba(58,134,255,0.10) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 40% at 85% 75%, rgba(78,205,196,0.09) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 35% at 50% 50%, rgba(255,215,0,0.04) 0%, transparent 60%);}
+.bg-geo body::after{opacity:0.6;filter:blur(38px);}
+
+/* LIGHT MODE */
+body.light-mode{
+  --bg:#eef1f9;--card:#ffffff;--border:rgba(0,0,0,0.1);--muted:#555;--text:#1a1a2e;--text2:#444;
+  --nav-bg:rgba(238,241,249,0.96);--gold:#d4a017;
+  background:
+    radial-gradient(ellipse 70% 55% at 10% 15%, rgba(58,134,255,0.13) 0%, transparent 65%),
+    radial-gradient(ellipse 60% 50% at 90% 80%, rgba(78,205,196,0.11) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 45% at 55% 40%, rgba(255,215,0,0.08) 0%, transparent 60%),
+    #eef1f9;
+}
+body.light-mode #bgCanvas{opacity:0.55;filter:invert(1) hue-rotate(180deg) saturate(0.6) brightness(1.1);}
+body.light-mode::before{
+  opacity:1;
+  background:
+    radial-gradient(ellipse 65% 55% at 12% 18%, rgba(58,134,255,0.18) 0%, transparent 68%),
+    radial-gradient(ellipse 55% 45% at 88% 78%, rgba(78,205,196,0.15) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 40% at 55% 42%, rgba(255,215,0,0.10) 0%, transparent 60%);
+}
+body.light-mode::after{opacity:0.55;filter:blur(40px) saturate(160%) brightness(1.3);}
+body.light-mode .nav-a{color:#555;}
+body.light-mode .nav-a:hover{color:#000;background:rgba(0,0,0,0.06);}
+body.light-mode .hero{background:none;}
+body.light-mode .hero-sub{color:#555;}
+body.light-mode .role-card{color:#1a1a2e;}
+body.light-mode .rd{color:#555;}
+body.light-mode .mc-desc{color:#555;}
+body.light-mode .mod-card{color:#1a1a2e;}
+body.light-mode footer{color:#aaa;}
+body.light-mode .mc-tag.tag-eng{background:rgba(58,134,255,0.15);color:#1a5fd1;}
+body.light-mode .mc-tag.tag-sports{background:rgba(78,205,196,0.15);color:#0a8f87;}
+body.light-mode .mc-tag.tag-tools{background:rgba(212,160,23,0.13);color:#8a6200;}
+body.light-mode .role-badge{background:rgba(212,160,23,0.13);color:#8a6200;border-color:rgba(212,160,23,0.35);}
+body.light-mode .theme-btn{color:#8a6200;}
+body.light-mode .bg-picker-btn.active{border-color:#333;box-shadow:0 0 0 2px rgba(0,0,0,0.35);}
+/* 日間各主題背景強化 */
+body.light-mode.bg-geo::before{
+  background:
+    radial-gradient(ellipse 65% 55% at 12% 18%, rgba(58,134,255,0.20) 0%, transparent 68%),
+    radial-gradient(ellipse 55% 45% at 88% 78%, rgba(78,205,196,0.17) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 40% at 55% 42%, rgba(255,215,0,0.12) 0%, transparent 60%);
+}
+body.light-mode.bg-noise::before{
+  background:
+    radial-gradient(ellipse 65% 55% at 25% 25%, rgba(255,215,0,0.18) 0%, transparent 65%),
+    radial-gradient(ellipse 55% 45% at 75% 75%, rgba(58,134,255,0.15) 0%, transparent 62%);
+}
+body.light-mode.bg-noise #bgCanvas{opacity:0.35;filter:none;}
+body.light-mode.bg-mountain #bgCanvas{opacity:0.45;filter:none;}
+body.light-mode.bg-mountain::before{
+  background:
+    radial-gradient(ellipse 100% 50% at 50% 100%, rgba(100,150,220,0.25) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 50% at 50% 50%, rgba(58,134,255,0.12) 0%, transparent 100%);
+}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--nav-bg);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:56px;gap:4px;transition:background 0.3s,border-color 0.3s;flex-wrap:nowrap;}
+.logo{font-size:1rem;font-weight:900;color:var(--gold);letter-spacing:2px;margin-right:14px;white-space:nowrap;}
+.nav-a{padding:7px 13px;border-radius:20px;font-size:0.83rem;font-weight:600;color:var(--muted);transition:all 0.2s;white-space:nowrap;}
+.nav-a:hover{color:#fff;background:rgba(255,255,255,0.08);}
+.nav-spacer{flex:1;}
+.role-badge{padding:5px 12px;border-radius:20px;font-size:0.78rem;font-weight:700;background:rgba(255,215,0,0.15);color:var(--gold);border:1px solid rgba(255,215,0,0.3);white-space:nowrap;}
+/* NAV 當前頁高亮 */
+.nav-a.nav-active{color:#fff;background:rgba(255,215,0,0.18);border:1px solid rgba(255,215,0,0.35);}
+body.light-mode .nav-a.nav-active{color:#1a1a2e;background:rgba(58,134,255,0.15);border:1px solid rgba(58,134,255,0.35);}
+
+.theme-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;font-size:1rem;color:var(--gold);transition:all 0.2s;margin-left:6px;}
+.theme-btn:hover{background:rgba(255,215,0,0.12);}
+
+/* ── 背景切換器按鈕 ─────────────────────── */
+.bg-switcher{display:flex;align-items:center;gap:4px;margin-left:6px;}
+.bg-picker-btn{
+  width:28px;height:28px;border-radius:50%;border:2px solid transparent;
+  cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;
+  position:relative;overflow:hidden;flex-shrink:0;
+}
+.bg-picker-btn:hover{transform:scale(1.18);box-shadow:0 0 8px rgba(255,255,255,0.3);}
+.bg-picker-btn.active{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,0.5);}
+/* 各主題色圓 */
+.bg-picker-btn[data-bg="star"]{background:radial-gradient(circle at 40% 35%, #3a86ff 0%, #0d0d1a 70%);}
+.bg-picker-btn[data-bg="geo"]{background:linear-gradient(135deg, #1e1e40 0%, #3a86ff 50%, #4ecdc4 100%);}
+.bg-picker-btn[data-bg="noise"]{background:radial-gradient(circle, #c8a24a 0%, #3d2c08 60%, #1a1000 100%);}
+.bg-picker-btn[data-bg="mountain"]{background:linear-gradient(to bottom, #0d0d1a 0%, #1a3050 55%, #3a86ff 100%);}
+/* 自定義圖片背景 */
+.bg-custom-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.bg-custom-panel{background:var(--card,#1e1e40);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:20px;padding:28px 28px 24px;width:min(480px,92vw);box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.bg-custom-panel h3{font-size:1rem;font-weight:800;color:var(--gold,#ffd700);margin-bottom:16px;}
+.bg-upload-zone{border:2px dashed var(--border,rgba(255,255,255,0.18));border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:12px;display:block;}
+.bg-upload-zone:hover{border-color:rgba(58,134,255,0.6);background:rgba(58,134,255,0.05);}
+.bg-upload-zone input{display:none;}
+.bg-url-inp{width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:10px;color:var(--text,#fff);font-size:0.88rem;padding:9px 13px;margin-bottom:10px;box-sizing:border-box;}
+.bg-url-inp:focus{border-color:var(--blue,#3a86ff);outline:none;}
+body.light-mode .bg-custom-panel{background:#fff;}
+body.light-mode .bg-url-inp{color:#1a1a2e;background:rgba(0,0,0,0.05);}
+body.bg-custom-img{background-size:cover;background-position:center;background-attachment:scroll;}
+body.bg-custom-img::before{opacity:0.3!important;}
+body.bg-custom-img::after{opacity:0.25!important;}
+body.bg-custom-img #bgCanvas{opacity:0.15!important;}
+/* tooltip — 朝上彈出，避免被 Nav 以下內容遮住 */
+.bg-picker-btn::after{content:attr(data-label);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.82);color:#fff;font-size:0.7rem;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.2s;}
+.bg-picker-btn:hover::after{opacity:1;}
+
+/* HERO */
+.hero{min-height:100vh;background:radial-gradient(ellipse at 30% 30%,rgba(58,134,255,0.15),transparent 60%),radial-gradient(ellipse at 70% 70%,rgba(255,215,0,0.1),transparent 60%),var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px 40px;gap:28px;}
+.hero-title{font-size:clamp(2.2rem,7vw,4.5rem);font-weight:900;text-align:center;line-height:1.15;}
+.hero-title span{color:var(--gold);}
+.hero-sub{color:var(--muted);font-size:1rem;text-align:center;max-width:500px;line-height:1.75;}
+
+/* ROLE CARDS */
+.role-row{display:flex;gap:20px;flex-wrap:wrap;justify-content:center;}
+.role-card{background:var(--card);border:2px solid var(--border);border-radius:24px;overflow:hidden;min-width:220px;max-width:260px;cursor:pointer;transition:all 0.3s;text-decoration:none;color:#fff;display:block;}
+.role-card:hover{transform:translateY(-6px);border-color:var(--gold);box-shadow:0 16px 40px rgba(255,215,0,0.25);}
+.ri-img{width:100%;height:140px;object-fit:cover;display:block;}
+.ri-body{padding:20px 22px 22px;}
+.rn{font-size:1.2rem;font-weight:800;color:var(--gold);margin-bottom:6px;}
+.rd{font-size:0.85rem;color:var(--muted);line-height:1.6;}
+
+/* MODULE GRID */
+.modules{max-width:1000px;margin:0 auto;padding:40px 20px;}
+.modules h2{font-size:1.3rem;font-weight:800;color:var(--gold);margin-bottom:20px;text-align:center;letter-spacing:2px;}
+.mod-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:18px;}
+.mod-card{background:var(--card);border:1px solid var(--border);border-radius:18px;text-decoration:none;color:#fff;transition:all 0.25s;display:block;position:relative;overflow:hidden;}
+.mod-card:hover{transform:translateY(-5px);border-color:rgba(255,215,0,0.4);box-shadow:0 12px 32px rgba(0,0,0,0.4);}
+.mc-img{width:100%;height:130px;object-fit:cover;display:block;filter:brightness(0.82);}
+.mc-body{padding:16px 20px 18px;}
+.mc-title{font-size:1.05rem;font-weight:700;margin-bottom:6px;}
+.mc-desc{font-size:0.83rem;color:var(--muted);line-height:1.6;}
+.mc-tag{display:inline-block;margin-top:10px;font-size:0.75rem;padding:3px 10px;border-radius:20px;font-weight:600;}
+.tag-eng{background:rgba(58,134,255,0.2);color:#7eb8ff;}
+.tag-sports{background:rgba(78,205,196,0.2);color:var(--teal);}
+.tag-tools{background:rgba(255,215,0,0.15);color:var(--gold);}
+.tag-news{background:rgba(255,107,107,0.15);color:#ff9999;}
+
+/* FOOTER */
+footer{text-align:center;padding:30px 20px;color:#888;font-size:0.82rem;}
+body.light-mode footer{color:#666;}
+
+/* ── 登入系統 ─────────────────────── */
+.auth-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.72);z-index:999;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.auth-box{background:var(--card);border:1px solid var(--border);border-radius:24px;padding:36px 32px;width:100%;max-width:380px;box-shadow:0 24px 64px rgba(0,0,0,0.6);}
+.auth-logo{font-size:1.6rem;font-weight:900;color:var(--gold);letter-spacing:2px;text-align:center;margin-bottom:4px;}
+.auth-sub{text-align:center;color:var(--muted);font-size:0.82rem;margin-bottom:24px;}
+.auth-tabs{display:flex;background:rgba(255,255,255,0.05);border-radius:12px;padding:4px;margin-bottom:22px;}
+.auth-tab{flex:1;padding:8px 0;text-align:center;border-radius:9px;font-size:0.88rem;font-weight:700;cursor:pointer;transition:all 0.2s;color:var(--muted);}
+.auth-tab.active{background:var(--gold);color:#000;}
+.auth-field{margin-bottom:14px;}
+.auth-field label{display:block;font-size:0.78rem;color:var(--muted);margin-bottom:5px;font-weight:600;}
+.auth-inp{width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:0.95rem;padding:10px 14px;transition:border-color .2s;}
+.auth-inp:focus{border-color:var(--gold);outline:none;}
+.auth-btn{width:100%;padding:11px 0;border-radius:12px;font-size:1rem;font-weight:800;cursor:pointer;border:none;background:var(--gold);color:#000;margin-top:6px;transition:all .15s;}
+.auth-btn:hover{background:#ffe033;}
+.auth-btn:active{transform:scale(0.97);}
+.auth-err{color:var(--red);font-size:0.82rem;text-align:center;margin-top:8px;min-height:18px;}
+.auth-guest{text-align:center;margin-top:14px;font-size:0.82rem;color:var(--muted);}
+.auth-guest a{color:var(--gold);cursor:pointer;text-decoration:underline;}
+/* Nav 用戶區 */
+.nav-user{display:flex;align-items:center;gap:8px;white-space:nowrap;}
+.nav-username{font-size:0.82rem;font-weight:700;color:var(--gold);padding:5px 12px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.25);border-radius:20px;}
+.nav-logout{font-size:0.78rem;font-weight:600;color:var(--muted);padding:5px 10px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:none;transition:all .2s;}
+.nav-logout:hover{color:#fff;background:rgba(255,100,100,0.15);border-color:rgba(255,100,100,0.4);}
+body.light-mode .auth-inp{color:#1a1a2e;background:rgba(0,0,0,0.05);}
+body.light-mode .auth-box{background:#fff;}
+body.light-mode .nav-username{color:var(--gold);}
+@media(max-width:680px){.auth-box{padding:26px 18px;margin:0 12px;}.nav-username{display:none;}}
+
+/* ── 橫滑導航列 ─────────────────────── */
+.nav-links{display:flex;align-items:center;gap:4px;flex:1;overflow:hidden;}
+@media(max-width:680px){
+  nav{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap;padding:0 10px;gap:4px;}
+  nav::-webkit-scrollbar{display:none;}
+  .nav-links{overflow:visible;flex:none;}
+  .nav-spacer{display:none;}
+  .logo{font-size:0.88rem;white-space:nowrap;flex-shrink:0;}
+  .nav-a{flex-shrink:0;}
+  .bg-switcher{gap:2px;flex-shrink:0;}
+  .bg-picker-btn{width:24px;height:24px;}
+  .theme-btn{flex-shrink:0;}
+  #navUser,#navBadge{flex-shrink:0;}
+  .role-row{flex-direction:column;align-items:center;}
+  .role-card{min-width:unset;max-width:340px;width:100%;}
+  .hero{padding:80px 16px 40px;}
+  .hero-title{font-size:clamp(1.8rem,8vw,3rem);}
+  .modules{padding:20px 12px;}
+  .mod-grid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<canvas id="bgCanvas"></canvas>
+<body>
+<nav>
+  <div class="logo">文武雙全</div>
+  <div class="nav-links">
+    <a class="nav-a" href="app.html">🏠 主頁</a>
+    <a class="nav-a" href="english.html">📚 英文</a>
+    <a class="nav-a" href="sports.html">🏆 體育</a>
+    <a class="nav-a" href="tools.html">🎲 教具</a>
+    <a class="nav-a" href="news.html">📰 體壇動態</a>
+  </div>
+  <!-- 背景切換器 -->
+  <div class="bg-switcher" id="bgSwitcher">
+    <button class="bg-picker-btn active" data-bg="star"   data-label="✨ 星空流星" title="星空流星"></button>
+    <button class="bg-picker-btn"        data-bg="geo"    data-label="⬡ 幾何網格" title="幾何網格"></button>
+    <button class="bg-picker-btn"        data-bg="noise"  data-label="📄 噪點紙感" title="噪點紙感"></button>
+    <button class="bg-picker-btn"        data-bg="mountain" data-label="🏔 視差山脈" title="視差山脈"></button>
+    <button class="bg-picker-btn" id="bgCustomBtn" data-bg="custom" data-label="🖼 自定義圖片" title="自定義圖片" style="background:linear-gradient(135deg,#ff6b6b,#ffd700,#4ecdc4);font-size:13px;display:flex;align-items:center;justify-content:center;" onclick="bgCustomOpen()">🖼</button>
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="切換深淺色模式">🌙</button>
+  <div class="nav-user" id="navUser" style="display:none;">
+    <span class="nav-username" id="navUsername"></span>
+    <button class="nav-logout" onclick="authLogout()">登出</button>
+  </div>
+  <span class="role-badge" id="navBadge">Study &amp; Sweat</span>
+</nav>
+
+<!-- 自定義圖片背景面板 -->
+<div class="bg-custom-overlay" id="bgCustomOverlay" style="display:none;" onclick="if(event.target===this)bgCustomClose()">
+  <div class="bg-custom-panel">
+    <h3>🖼 自定義頁面背景</h3>
+    <label class="bg-upload-zone" for="bgFileInput">
+      <input type="file" id="bgFileInput" accept="image/*" onchange="bgHandleFile(this)">
+      <div style="font-size:2rem;margin-bottom:8px;">📁</div>
+      <div style="font-size:0.88rem;color:var(--muted,#888);">點擊選擇圖片（JPG / PNG / WebP）</div>
+      <div style="font-size:0.75rem;color:var(--muted,#888);margin-top:4px;">建議解析度 1920×1080 或以上</div>
+    </label>
+    <div style="text-align:center;font-size:0.8rem;color:var(--muted,#888);margin:8px 0;">— 或貼上圖片網址 —</div>
+    <input class="bg-url-inp" id="bgUrlInput" type="url" placeholder="https://... 圖片 URL">
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button onclick="bgApplyUrl()" style="flex:1;background:var(--blue,#3a86ff);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:0.88rem;">✅ 套用</button>
+      <button onclick="bgCustomClear()" style="background:rgba(255,100,100,0.15);color:#ff8888;border:1px solid rgba(255,100,100,0.3);border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:0.88rem;">🗑 清除自定義</button>
+      <button onclick="bgCustomClose()" style="background:rgba(255,255,255,0.07);color:var(--muted,#888);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:10px;padding:9px 14px;cursor:pointer;font-size:0.88rem;">關閉</button>
+    </div>
+    <div id="bgCustomPreview" style="margin-top:12px;border-radius:10px;overflow:hidden;display:none;max-height:130px;">
+      <img id="bgCustomPreviewImg" style="width:100%;height:130px;object-fit:cover;" src="" alt="">
+    </div>
+  </div>
+</div>
+
+<!-- ── 登入/注冊 Modal ───────────────── -->
+<div class="auth-overlay" id="authOverlay">
+  <div class="auth-box">
+    <div class="auth-logo">文武雙全</div>
+    <div class="auth-sub">登入以保留個人學習記錄</div>
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tabLogin" onclick="authSwitchTab('login')">登入</div>
+      <div class="auth-tab" id="tabReg" onclick="authSwitchTab('reg')">注冊新賬號</div>
+    </div>
+    <!-- 登入表單 -->
+    <div id="formLogin">
+      <div class="auth-field"><label>用戶名</label><input class="auth-inp" id="loginUser" placeholder="輸入用戶名" autocomplete="username"></div>
+      <div class="auth-field"><label>密碼</label><input class="auth-inp" id="loginPw" type="password" placeholder="輸入密碼" autocomplete="current-password"></div>
+      <button class="auth-btn" onclick="doLogin()">登入</button>
+    </div>
+    <!-- 注冊表單 -->
+    <div id="formReg" style="display:none;">
+      <div class="auth-field"><label>用戶名（3–16字，字母/數字）</label><input class="auth-inp" id="regUser" placeholder="設定用戶名" autocomplete="username"></div>
+      <div class="auth-field"><label>密碼（至少4字）</label><input class="auth-inp" id="regPw" type="password" placeholder="設定密碼" autocomplete="new-password"></div>
+      <div class="auth-field"><label>確認密碼</label><input class="auth-inp" id="regPw2" type="password" placeholder="再輸入一次密碼" autocomplete="new-password"></div>
+      <button class="auth-btn" onclick="doRegister()">注冊</button>
+    </div>
+    <div class="auth-err" id="authErr"></div>
+    <div class="auth-guest"><a onclick="guestMode()">不登入，以訪客模式繼續（記錄不會保留）</a></div>
+  </div>
+</div>
+
+<div class="hero">
+  <div class="hero-title">文武<span>雙全</span><br><span style="font-size:0.45em;color:#666;letter-spacing:4px;">STUDY &amp; SWEAT</span></div>
+  <p class="hero-sub">中學英文 × 體育教學整合平台<br>智慧學習 · 強健體魄 · 文武兼修</p>
+  <div class="role-row">
+    <a class="role-card" href="english.html">
+      <img class="ri-img" src="https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=520&q=80&auto=format&fit=crop" alt="學生學習">
+      <div class="ri-body">
+        <div class="rn">學生專區</div>
+        <div class="rd">學習英文詞彙與句型<br>記錄體育表現數據<br>每日一字挑戰</div>
+      </div>
+    </a>
+    <a class="role-card" href="tools.html">
+      <img class="ri-img" src="https://images.unsplash.com/photo-1509062522246-3755977927d7?w=520&q=80&auto=format&fit=crop" alt="教師教具">
+      <div class="ri-body">
+        <div class="rn">教師教具</div>
+        <div class="rd">課堂抽籤與投票<br>計分板與計時器<br>互動教學工具</div>
+      </div>
+    </a>
+  </div>
+</div>
+
+<div class="modules">
+  <h2>📋 所有功能模組</h2>
+  <div class="mod-grid">
+    <a class="mod-card" href="english.html#flashcard">
+      <img class="mc-img" src="https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=520&q=80&auto=format&fit=crop" alt="智慧閃卡">
+      <div class="mc-body">
+        <div class="mc-title">智慧閃卡</div>
+        <div class="mc-desc">50 張精選中學詞彙卡，3D 翻轉動畫呈現音標、詞性、例句與同義詞；支援 TTS 語音朗讀、主題篩選及隨機排列</div>
+        <span class="mc-tag tag-eng">英文專區</span>
+      </div>
+    </a>
+    <a class="mod-card" href="english.html#sentence">
+      <img class="mc-img" src="https://images.unsplash.com/photo-1455390582262-044cdead277a?w=520&q=80&auto=format&fit=crop" alt="句子練習">
+      <div class="mc-body">
+        <div class="mc-title">句子練習</div>
+        <div class="mc-desc">填空選擇、單字排列、中翻英三種模式任選；連答加成最高 ×3 分，🔥 連答徽章即時激勵，自動統計正確率</div>
+        <span class="mc-tag tag-eng">英文專區</span>
+      </div>
+    </a>
+    <a class="mod-card" href="english.html#daily">
+      <img class="mc-img" src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=520&q=80&auto=format&fit=crop" alt="每日一字">
+      <div class="mc-body">
+        <div class="mc-title">每日一字</div>
+        <div class="mc-desc">每次精選一個重點詞彙，附主題大圖、KK 音標、例句中譯及 7 條記憶技巧，一鍵 TTS 朗讀單字與例句</div>
+        <span class="mc-tag tag-eng">英文專區</span>
+      </div>
+    </a>
+    <a class="mod-card" href="english.html#custom">
+      <img class="mc-img" src="https://images.unsplash.com/photo-1468779036391-52341f60b55d?w=520&q=80&auto=format&fit=crop" alt="自定義詞庫">
+      <div class="mc-body">
+        <div class="mc-title">自定義詞庫</div>
+        <div class="mc-desc">老師自行輸入單字與例句，系統自動生成填空練習題；支援批量匯入，隨時開始練習</div>
+        <span class="mc-tag tag-eng">英文專區</span>
+      </div>
+    </a>
+    <a class="mod-card" href="sports.html#scoreboard">
+      <img class="mc-img" src="https://images.unsplash.com/photo-1504450758481-7338eba7524a?w=520&q=80&auto=format&fit=crop" alt="萬用計分板">
+      <div class="mc-body">
+        <div class="mc-title">萬用計分板</div>
+        <div class="mc-desc">籃球、足球、排球、羽球、桌球六大項目切換，加分動畫 + 領先金框高亮，附帶倒數計時器可一鍵套用賽制時長</div>
+        <span class="mc-tag tag-sports">體育專區</span>
+      </div>
+    </a>
+    <a class="mod-card" href="sports.html#fitness">
+      <img class="mc-img" src="https://images.unsplash.com/photo-1599058917765-a780eda07a3e?w=520&q=80&auto=format&fit=crop" alt="體適能紀錄">
+      <div class="mc-body">
+        <div class="mc-title">體適能紀錄</div>
+        <div class="mc-desc">輸入六項測驗成績，對照香港中學標準自動評分，生成六邊形雷達圖並針對弱項提供個人化訓練建議</div>
+        <span class="mc-tag tag-sports">體育專區</span>
+      </div>
+    </a>
+    <a class="mod-card" href="sports.html#rules">
+      <img class="mc-img" src="https://images.unsplash.com/photo-1560272564-c83b66b1ad12?w=520&q=80&auto=format&fit=crop" alt="球類規則百科">
+      <div class="mc-body">
+        <div class="mc-title">球類規則百科</div>
+        <div class="mc-desc">8 種運動手風琴式展開，涵蓋場地尺寸、核心規則、裁判手勢及歷史小知識，附真實場地照片</div>
+        <span class="mc-tag tag-sports">體育專區</span>
+      </div>
+    </a>
+    <a class="mod-card" href="tools.html#draw">
+      <img class="mc-img" src="https://images.unsplash.com/photo-1515187029135-18ee286d815b?w=520&q=80&auto=format&fit=crop" alt="隨機抽籤">
+      <div class="mc-body">
+        <div class="mc-title">隨機抽籤</div>
+        <div class="mc-desc">貼上名單即可滾動抽籤，三段漸慢動畫製造緊張感，結果揭曉後自動撒花彩紙慶祝，支援撤銷上一位</div>
+        <span class="mc-tag tag-tools">課堂教具</span>
+      </div>
+    </a>
+    <a class="mod-card" href="tools.html#vote">
+      <img class="mc-img" src="https://images.unsplash.com/photo-1494172961521-33799ddd43a5?w=520&q=80&auto=format&fit=crop" alt="課堂投票">
+      <div class="mc-body">
+        <div class="mc-title">課堂投票</div>
+        <div class="mc-desc">自訂題目與最多四個選項，點擊即時累計票數，進度條動態展示各選項百分比與票數</div>
+        <span class="mc-tag tag-tools">課堂教具</span>
+      </div>
+    </a>
+    <a class="mod-card" href="tools.html#timer">
+      <img class="mc-img" src="https://images.unsplash.com/photo-1533749871411-5e21e14bcc7d?w=520&q=80&auto=format&fit=crop" alt="倒數計時器">
+      <div class="mc-body">
+        <div class="mc-title">倒數計時器</div>
+        <div class="mc-desc">七個快速預設（30秒至15分）加自訂時間，剩餘 10 秒自動閃紅警告，時間到以 Web Audio 蜂鳴聲提醒</div>
+        <span class="mc-tag tag-tools">課堂教具</span>
+      </div>
+    </a>
+    <a class="mod-card" href="sports.html#bmi">
+      <img class="mc-img" src="https://images.unsplash.com/photo-1511690743698-d9d85f2fbf38?w=520&q=80&auto=format&fit=crop" alt="BMI 計算">
+      <div class="mc-body">
+        <div class="mc-title">BMI 計算器</div>
+        <div class="mc-desc">公制／英制切換，SVG 半圓儀表動畫即時顯示 BMI，8 級分類 + 健康體重範圍，選填年齡性別可計算 BMR 基礎代謝率</div>
+        <span class="mc-tag tag-sports">體育專區</span>
+      </div>
+    </a>
+    <a class="mod-card" href="news.html">
+      <img class="mc-img" src="https://images.unsplash.com/photo-1585829365295-ab7cd400c167?w=520&q=80&auto=format&fit=crop" alt="體壇動態">
+      <div class="mc-body">
+        <div class="mc-title">體壇動態</div>
+        <div class="mc-desc">同步抓取 BBC、ESPN、Sky Sports 等 10 大源頭，骨架屏預載，每批 9 篇，標題附本地字典 + Google 雙重中文翻譯</div>
+        <span class="mc-tag tag-news">即時新聞</span>
+      </div>
+    </a>
+  </div>
+</div>
+
+<footer>文武雙全 Study &amp; Sweat &nbsp;|&nbsp; 中學英文 × 體育教學整合平台</footer>
+
+<script>
+// =====================================================
+// Supabase 設定
+// =====================================================
+const SB_URL = 'https://lqpuffsjirsnusjxtwin.supabase.co';
+const SB_KEY = 'sb_publishable_QW-2DPyUIrzMwIkug8Tliw_cf1tx0qH';
+
+async function sbFetch(path, options={}){
+  const headers = {
+    'apikey': SB_KEY,
+    'Authorization': 'Bearer '+SB_KEY,
+    'Content-Type': 'application/json',
+  };
+  if(options.prefer) headers['Prefer'] = options.prefer;
+  Object.assign(headers, options.headers||{});
+
+  const res = await fetch(SB_URL+'/rest/v1/'+path, {
+    method: options.method||'GET',
+    headers,
+    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+  });
+  if(!res.ok && res.status!==204){
+    const txt = await res.text();
+    throw new Error(txt||String(res.status));
+  }
+  if(res.status===204) return null;
+  const text = await res.text();
+  if(!text || !text.trim()) return null;
+  try{ return JSON.parse(text); }
+  catch(e){ throw new Error('Invalid JSON: '+text.slice(0,120)); }
+}
+
+// 簡易密碼雜湊（前端混淆）
+function hashPw(pw){
+  let h=0; for(let i=0;i<pw.length;i++){h=(h<<5)-h+pw.charCodeAt(i);h|=0;} return 'ss'+Math.abs(h).toString(36);
+}
+
+// =====================================================
+// 登入/注冊系統（Supabase 雲端）
+// =====================================================
+(function(){
+  // 當前用戶存 sessionStorage（分頁關閉即清除）+ localStorage 長期保留
+  function getCurrent(){
+    const s = sessionStorage.getItem('ssCurrentUser');
+    if(s!==null) return s;
+    return localStorage.getItem('ssCurrentUser')||'';
+  }
+  function getCurId(){
+    const s = sessionStorage.getItem('ssCurrentId');
+    if(s!==null) return s;
+    return localStorage.getItem('ssCurrentId')||'';
+  }
+  function setCurrent(u, id){
+    sessionStorage.setItem('ssCurrentUser', u);
+    sessionStorage.setItem('ssCurrentId', id||'');
+    if(u){ localStorage.setItem('ssCurrentUser', u); localStorage.setItem('ssCurrentId', id||''); }
+    else { localStorage.removeItem('ssCurrentUser'); localStorage.removeItem('ssCurrentId'); }
+  }
+
+  window.authSwitchTab=function(t){
+    document.getElementById('formLogin').style.display=t==='login'?'':'none';
+    document.getElementById('formReg').style.display=t==='reg'?'':'none';
+    document.getElementById('tabLogin').classList.toggle('active',t==='login');
+    document.getElementById('tabReg').classList.toggle('active',t==='reg');
+    document.getElementById('authErr').textContent='';
+  };
+
+  window.doLogin=async function(){
+    const u=document.getElementById('loginUser').value.trim();
+    const p=document.getElementById('loginPw').value;
+    const err=document.getElementById('authErr');
+    const btn=document.querySelector('#formLogin .auth-btn');
+    if(!u||!p){err.textContent='請輸入用戶名和密碼';return;}
+    err.textContent='登入中…'; btn.disabled=true;
+    try{
+      const rows = await sbFetch('users?username=eq.'+encodeURIComponent(u)+'&select=id,username,password_hash');
+      if(!rows||!rows.length){err.textContent='賬號不存在，請先注冊';btn.disabled=false;return;}
+      const row=rows[0];
+      if(row.password_hash!==hashPw(p)){err.textContent='密碼錯誤';btn.disabled=false;return;}
+      setCurrent(row.username, row.id);
+      // 載入並套用雲端主題
+      await loadCloudSettings(row.id);
+      afterLogin(row.username);
+    }catch(e){
+      err.textContent='連線錯誤：'+e.message;
+    }
+    btn.disabled=false;
+  };
+
+  window.doRegister=async function(){
+    const u=document.getElementById('regUser').value.trim();
+    const p=document.getElementById('regPw').value;
+    const p2=document.getElementById('regPw2').value;
+    const err=document.getElementById('authErr');
+    const btn=document.querySelector('#formReg .auth-btn');
+    if(!/^[A-Za-z0-9\u4e00-\u9fa5_]{3,16}$/.test(u)){err.textContent='用戶名需3-16個字，只允許字母/數字/中文/底線';return;}
+    if(p.length<4){err.textContent='密碼至少4個字';return;}
+    if(p!==p2){err.textContent='兩次密碼不一致';return;}
+    err.textContent='注冊中…'; btn.disabled=true;
+    try{
+      // 檢查用戶名重複
+      const existing = await sbFetch('users?username=eq.'+encodeURIComponent(u)+'&select=id');
+      if(existing&&existing.length){err.textContent='此用戶名已被使用';btn.disabled=false;return;}
+      // 插入新用戶（Prefer: return=representation 確保返回新行）
+      const rows = await sbFetch('users', {
+        method:'POST',
+        prefer:'return=representation',
+        body:{username:u, password_hash:hashPw(p)}
+      });
+      if(!rows||!rows.length){err.textContent='注冊失敗：伺服器未返回用戶資料，請稍後重試';btn.disabled=false;return;}
+      const row=rows[0];
+      // 建立預設設定（失敗不阻斷流程）
+      try{
+        await sbFetch('user_settings', {
+          method:'POST',
+          prefer:'return=minimal',
+          body:{user_id:row.id, bg_theme:'star', color_theme:'dark'}
+        });
+      }catch(e2){ console.warn('user_settings init failed:', e2); }
+      setCurrent(row.username, row.id);
+      afterLogin(row.username);
+    }catch(e){
+      err.textContent='注冊失敗：'+e.message;
+    }
+    btn.disabled=false;
+  };
+
+  window.guestMode=function(){
+    setCurrent('','');
+    afterLogin('');
+  };
+
+  window.authLogout=function(){
+    setCurrent('','');
+    document.getElementById('authOverlay').style.display='';
+    document.getElementById('navUser').style.display='none';
+    document.getElementById('navBadge').style.display='';
+    document.getElementById('loginUser').value='';
+    document.getElementById('loginPw').value='';
+    document.getElementById('authErr').textContent='';
+    authSwitchTab('login');
+  };
+
+  function afterLogin(u){
+    document.getElementById('authOverlay').style.display='none';
+    if(u){
+      document.getElementById('navUsername').textContent='👤 '+u;
+      document.getElementById('navUser').style.display='';
+      document.getElementById('navBadge').style.display='none';
+      document.getElementById('mobileNavUsername').textContent='👤 '+u;
+      document.getElementById('mobileNavUser').style.display='';
+    } else {
+      document.getElementById('navUser').style.display='none';
+      document.getElementById('navBadge').style.display='';
+      document.getElementById('mobileNavUser').style.display='none';
+    }
+  }
+
+  // 鍵盤 Enter 觸發
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Enter') return;
+    if(document.getElementById('authOverlay').style.display==='none') return;
+    const isLogin=document.getElementById('formLogin').style.display!=='none';
+    if(isLogin) window.doLogin(); else window.doRegister();
+  });
+
+  // 初始化：已登入就直接顯示
+  const cur=getCurrent();
+  if(localStorage.getItem('ssCurrentUser')!==null){
+    const curId=getCurId();
+    if(curId) loadCloudSettings(curId).catch(()=>{});
+    afterLogin(cur);
+  }
+})();
+
+// =====================================================
+// 雲端主題設定 讀寫
+// =====================================================
+async function loadCloudSettings(userId){
+  if(!userId) return;
+  try{
+    const rows = await sbFetch('user_settings?user_id=eq.'+userId+'&select=bg_theme,color_theme');
+    if(rows&&rows.length){
+      const s=rows[0];
+      if(s.bg_theme){ localStorage.setItem('ssBg', s.bg_theme); }
+      if(s.color_theme){ localStorage.setItem('ssTheme', s.color_theme); }
+    }
+  }catch(e){ console.warn('loadCloudSettings:', e); }
+}
+
+async function saveCloudSettings(){
+  const userId = localStorage.getItem('ssCurrentId');
+  if(!userId) return;
+  const bg = localStorage.getItem('ssBg')||'star';
+  const theme = localStorage.getItem('ssTheme')||'dark';
+  try{
+    // upsert
+    await sbFetch('user_settings?user_id=eq.'+userId, {
+      method:'PATCH',
+      prefer:'return=minimal',
+      body:{bg_theme:bg, color_theme:theme, updated_at:'now()'}
+    });
+  }catch(e){ console.warn('saveCloudSettings:', e); }
+}
+
+function applyTheme(mode){
+  document.body.classList.toggle('light-mode', mode==='light');
+  document.getElementById('themeBtn').textContent = mode==='light' ? '🌙' : '☀️';
+}
+function toggleTheme(){
+  const next = document.body.classList.contains('light-mode') ? 'dark' : 'light';
+  localStorage.setItem('ssTheme', next);
+  applyTheme(next);
+  saveCloudSettings();
+}
+(function(){ applyTheme(localStorage.getItem('ssTheme')||'dark'); })();
+
+// =====================================================
+// 背景主題切換器
+// =====================================================
+const BG_THEMES = ['star','geo','noise','mountain'];
+const BG_BODY_CLASSES = {
+  star:     [],
+  geo:      ['bg-geo'],
+  noise:    ['bg-noise'],
+  mountain: ['bg-mountain'],
+};
+let currentBg = localStorage.getItem('ssBg') || 'star';
+let bgRaf = null;
+
+function applyBgTheme(name){
+  // 移除所有主題 class
+  document.body.classList.remove('bg-geo','bg-noise','bg-mountain');
+  (BG_BODY_CLASSES[name]||[]).forEach(c=>document.body.classList.add(c));
+  // 更新按鈕狀態
+  document.querySelectorAll('.bg-picker-btn').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.bg===name);
+  });
+  currentBg = name;
+  localStorage.setItem('ssBg', name);
+  // 重啟 canvas 繪製
+  if(bgRaf) cancelAnimationFrame(bgRaf);
+  startBgCanvas(name);
+  saveCloudSettings();
+}
+
+// 綁定按鈕
+document.getElementById('bgSwitcher').addEventListener('click', e=>{
+  const btn = e.target.closest('.bg-picker-btn');
+  if(btn && btn.dataset.bg!=='custom') applyBgTheme(btn.dataset.bg);
+});
+
+// ===== 自定義圖片背景 =====
+function getBgCustomKey(){ const uid=localStorage.getItem('ssCurrentId')||'guest'; return 'ssBgCustomImg_app_'+uid; }
+function bgIsBase64(s){ return s&&s.startsWith('data:'); }
+function _applyBgVisual(dataUrl){
+  document.body.style.backgroundImage='url('+dataUrl+')';
+  document.body.classList.add('bg-custom-img');
+  document.querySelectorAll('.bg-picker-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('bgCustomBtn').classList.add('active');
+  document.getElementById('bgCustomPreviewImg').src=dataUrl;
+  document.getElementById('bgCustomPreview').style.display='block';
+}
+async function applyCustomBg(dataUrl){
+  _applyBgVisual(dataUrl);
+  localStorage.setItem(getBgCustomKey(),dataUrl);
+  if(!bgIsBase64(dataUrl)){
+    const uid=ssGetId();
+    if(uid){
+      try{ await sbFetch('users?id=eq.'+uid,{method:'PATCH',prefer:'return=minimal',body:{bg_url:dataUrl}}); }
+      catch(e){ console.warn('bgSync:',e); }
+    }
+  }
+}
+(async function initCustomBg(){
+  const uid=ssGetId();
+  if(uid){
+    try{
+      const rows=await sbFetch('users?id=eq.'+uid+'&select=bg_url');
+      if(rows&&rows[0]&&rows[0].bg_url){ localStorage.setItem(getBgCustomKey(),rows[0].bg_url); _applyBgVisual(rows[0].bg_url); return; }
+    }catch(e){ console.warn('bgSync init:',e); }
+  }
+  const saved=localStorage.getItem(getBgCustomKey());
+  if(saved) _applyBgVisual(saved);
+})();
+function bgCustomOpen(){ document.getElementById('bgCustomOverlay').style.display='flex'; }
+function bgCustomClose(){ document.getElementById('bgCustomOverlay').style.display='none'; }
+function bgHandleFile(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>applyCustomBg(e.target.result);
+  reader.readAsDataURL(file);
+  bgCustomClose();
+}
+function bgApplyUrl(){
+  const url=document.getElementById('bgUrlInput').value.trim();
+  if(!url)return;
+  applyCustomBg(url);
+  bgCustomClose();
+}
+async function bgCustomClear(){
+  localStorage.removeItem(getBgCustomKey());
+  document.body.style.backgroundImage='';
+  document.body.classList.remove('bg-custom-img');
+  document.getElementById('bgCustomBtn').classList.remove('active');
+  document.getElementById('bgCustomPreview').style.display='none';
+  applyBgTheme(currentBg);
+  bgCustomClose();
+  const uid=ssGetId();
+  if(uid){ try{ await sbFetch('users?id=eq.'+uid,{method:'PATCH',prefer:'return=minimal',body:{bg_url:null}}); }catch(e){} }
+}
+
+// =====================================================
+// Canvas 背景引擎
+// =====================================================
+(function(){
+  const cv = document.getElementById('bgCanvas');
+  const ctx = cv.getContext('2d');
+  let W, H;
+  function resize(){
+    W = cv.width = window.innerWidth;
+    H = cv.height = window.innerHeight;
+  }
+  window.addEventListener('resize', ()=>{ resize(); if(currentBg) startBgCanvas(currentBg); });
+  resize();
+
+  // ── 1. 星空流星 ───────────────────────
+  function bgStar(){
+    let stars=[], comets=[], lastComet=0;
+    const n = Math.floor(W*H/4800);
+    for(let i=0;i<n;i++){
+      stars.push({x:Math.random()*W, y:Math.random()*H,
+        r:Math.random()*1.5+0.2, a:Math.random(), da:(Math.random()-0.5)*0.009,
+        color:['#ffffff','#4ecdc4','#3a86ff','#ffd700'][Math.floor(Math.random()*4)]});
+    }
+    function spawnComet(){
+      const y = Math.random()*H*0.65, len=90+Math.random()*130, spd=4+Math.random()*3.5;
+      comets.push({x:-60, y, vx:spd, vy:spd*0.38, len});
+    }
+    return function draw(){
+      ctx.clearRect(0,0,W,H);
+      stars.forEach(s=>{
+        s.a+=s.da; if(s.a<=0||s.a>=1) s.da=-s.da;
+        ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+        ctx.fillStyle=s.color; ctx.globalAlpha=s.a*0.78; ctx.fill();
+      });
+      const now=performance.now();
+      if(now-lastComet > 1800+Math.random()*3500){ spawnComet(); lastComet=now; }
+      ctx.globalAlpha=1;
+      comets.forEach(c=>{
+        const g=ctx.createLinearGradient(c.x,c.y, c.x-c.len, c.y-c.len*0.38);
+        g.addColorStop(0,'rgba(255,255,255,0.92)');
+        g.addColorStop(1,'rgba(255,255,255,0)');
+        ctx.strokeStyle=g; ctx.lineWidth=2.4; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(c.x,c.y); ctx.lineTo(c.x-c.len, c.y-c.len*0.38); ctx.stroke();
+        c.x+=c.vx; c.y+=c.vy;
+      });
+      comets=comets.filter(c=>c.x<W+200&&c.y<H+200);
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+
+  // ── 2. 幾何微網格 ─────────────────────
+  function bgGeo(){
+    const CELL = 52, DOT = 1.3;
+    // 幾何節點，帶緩慢漂移
+    let nodes=[];
+    const cols=Math.ceil(W/CELL)+2, rows=Math.ceil(H/CELL)+2;
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+      nodes.push({
+        bx:(c-0.5)*CELL, by:(r-0.5)*CELL,
+        ox:0, oy:0,
+        vx:(Math.random()-0.5)*0.15, vy:(Math.random()-0.5)*0.15,
+        a:Math.random()*Math.PI*2, da:(Math.random()-0.5)*0.008,
+        amp:4+Math.random()*6
+      });
+    }
+    return function draw(){
+      ctx.clearRect(0,0,W,H);
+      // 更新節點位置
+      nodes.forEach(n=>{
+        n.a+=n.da;
+        n.ox=Math.cos(n.a)*n.amp; n.oy=Math.sin(n.a)*n.amp;
+      });
+      // 連線
+      for(let r=0;r<rows;r++){
+        for(let c=0;c<cols;c++){
+          const i=r*cols+c;
+          const n=nodes[i];
+          const nx=n.bx+n.ox, ny=n.by+n.oy;
+          // 右
+          if(c+1<cols){
+            const m=nodes[i+1], mx=m.bx+m.ox, my=m.by+m.oy;
+            ctx.beginPath(); ctx.moveTo(nx,ny); ctx.lineTo(mx,my);
+            ctx.strokeStyle='rgba(58,134,255,0.07)'; ctx.lineWidth=0.9; ctx.stroke();
+          }
+          // 下
+          if(r+1<rows){
+            const m=nodes[i+cols], mx=m.bx+m.ox, my=m.by+m.oy;
+            ctx.beginPath(); ctx.moveTo(nx,ny); ctx.lineTo(mx,my);
+            ctx.strokeStyle='rgba(78,205,196,0.07)'; ctx.lineWidth=0.9; ctx.stroke();
+          }
+          // 斜線
+          if(c+1<cols&&r+1<rows){
+            const m=nodes[i+cols+1], mx=m.bx+m.ox, my=m.by+m.oy;
+            ctx.beginPath(); ctx.moveTo(nx,ny); ctx.lineTo(mx,my);
+            ctx.strokeStyle='rgba(255,215,0,0.035)'; ctx.lineWidth=0.7; ctx.stroke();
+          }
+          // 節點
+          ctx.beginPath(); ctx.arc(nx,ny,DOT,0,Math.PI*2);
+          ctx.fillStyle='rgba(58,134,255,0.25)'; ctx.globalAlpha=1; ctx.fill();
+        }
+      }
+      // 放射光束（從中心出發）
+      const cx=W/2, cy=H/2;
+      for(let i=0;i<8;i++){
+        const angle=i*Math.PI/4+(performance.now()*0.0001);
+        const g=ctx.createLinearGradient(cx,cy, cx+Math.cos(angle)*W*0.7, cy+Math.sin(angle)*H*0.7);
+        g.addColorStop(0,'rgba(58,134,255,0.06)'); g.addColorStop(1,'rgba(58,134,255,0)');
+        ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(cx+Math.cos(angle)*W, cy+Math.sin(angle)*H);
+        ctx.strokeStyle=g; ctx.lineWidth=60; ctx.stroke();
+      }
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+
+  // ── 3. 噪點紙感 ──────────────────────
+  function bgNoise(){
+    // 預先生成靜態噪點紋理到 offscreen canvas
+    const offC=document.createElement('canvas');
+    offC.width=offC.height=256;
+    const offCtx=offC.getContext('2d');
+    const imgData=offCtx.createImageData(256,256);
+    for(let i=0;i<imgData.data.length;i+=4){
+      const v=Math.random()*255|0;
+      imgData.data[i]=v; imgData.data[i+1]=v; imgData.data[i+2]=v;
+      imgData.data[i+3]=18; // 超低不透明度
+    }
+    offCtx.putImageData(imgData,0,0);
+    const noisePat=ctx.createPattern(offC,'repeat');
+
+    // 漂浮光斑
+    let blobs=[];
+    for(let i=0;i<5;i++) blobs.push({
+      x:Math.random()*W, y:Math.random()*H,
+      r:180+Math.random()*200, a:Math.random()*Math.PI*2,
+      spd:0.004+Math.random()*0.006,
+      col:['rgba(255,215,0,', 'rgba(58,134,255,', 'rgba(78,205,196,'][i%3],
+      opa:0.04+Math.random()*0.04
+    });
+
+    return function draw(){
+      ctx.clearRect(0,0,W,H);
+      // 噪點底紋
+      ctx.globalAlpha=0.9;
+      ctx.fillStyle=noisePat;
+      ctx.fillRect(0,0,W,H);
+      // 漂浮光斑
+      blobs.forEach(b=>{
+        b.a+=b.spd;
+        const bx=b.x+Math.cos(b.a)*60, by=b.y+Math.sin(b.a)*40;
+        const g=ctx.createRadialGradient(bx,by,0,bx,by,b.r);
+        g.addColorStop(0,b.col+b.opa+')');
+        g.addColorStop(1,b.col+'0)');
+        ctx.globalAlpha=1; ctx.fillStyle=g; ctx.beginPath(); ctx.arc(bx,by,b.r,0,Math.PI*2); ctx.fill();
+      });
+      // 紙感橫紋（極淡）
+      for(let y=0;y<H;y+=3){
+        ctx.globalAlpha=0.012;
+        ctx.fillStyle=y%6===0?'rgba(255,255,255,1)':'rgba(0,0,0,1)';
+        ctx.fillRect(0,y,W,1);
+      }
+      ctx.globalAlpha=1;
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+
+  // ── 4. 視差山脈 ───────────────────────
+  function bgMountain(){
+    // 生成山脊折線
+    function makeMountain(n, minH, maxH, seed){
+      const pts=[{x:0,y:H}];
+      for(let i=0;i<=n;i++){
+        const x=i*W/n;
+        const y=H-(minH+(Math.sin(i*seed+seed)*0.5+0.5)*(maxH-minH));
+        pts.push({x,y});
+      }
+      pts.push({x:W,y:H});
+      return pts;
+    }
+    const layers=[
+      {pts:makeMountain(12,H*0.52,H*0.72,1.7), col:'rgba(10,30,60,0.85)', speed:0},
+      {pts:makeMountain(10,H*0.42,H*0.62,2.3), col:'rgba(15,40,80,0.80)', speed:0.08},
+      {pts:makeMountain(8, H*0.32,H*0.52,3.1), col:'rgba(20,55,110,0.70)', speed:0.18},
+      {pts:makeMountain(6, H*0.22,H*0.42,4.2), col:'rgba(30,70,140,0.55)', speed:0.30},
+      {pts:makeMountain(5, H*0.14,H*0.30,5.8), col:'rgba(50,100,180,0.35)', speed:0.44},
+    ];
+    let prevTS=0;
+    // 星點（少量）
+    let stars=[];
+    const ns=Math.floor(W*H/9000);
+    for(let i=0;i<ns;i++) stars.push({x:Math.random()*W, y:Math.random()*H*0.55,
+      r:Math.random()+0.3, a:Math.random(), da:(Math.random()-0.5)*0.006,
+      color:'#ffffff'});
+
+    return function draw(ts){
+      const dt=ts-prevTS; prevTS=ts;
+      ctx.clearRect(0,0,W,H);
+      // 星點
+      stars.forEach(s=>{
+        s.a+=s.da; if(s.a<=0||s.a>=1) s.da=-s.da;
+        ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+        ctx.fillStyle=s.color; ctx.globalAlpha=s.a*0.6; ctx.fill();
+      });
+      ctx.globalAlpha=1;
+      // 地面漸層
+      const gh=ctx.createLinearGradient(0,H*0.55,0,H);
+      gh.addColorStop(0,'rgba(5,15,40,0)'); gh.addColorStop(1,'rgba(5,15,40,0.95)');
+      ctx.fillStyle=gh; ctx.fillRect(0,H*0.55,W,H*0.45);
+      // 畫山層（由遠到近）
+      const scrollY = window._mountainScrollY || 0;
+      [...layers].reverse().forEach(layer=>{
+        const off=scrollY*layer.speed;
+        ctx.beginPath();
+        ctx.moveTo(layer.pts[0].x, layer.pts[0].y+off);
+        layer.pts.forEach(p=>ctx.lineTo(p.x, p.y+off));
+        ctx.closePath();
+        ctx.fillStyle=layer.col; ctx.fill();
+      });
+      // 月光暈（頂部橢圓光）
+      const mg=ctx.createRadialGradient(W*0.78, H*0.12, 0, W*0.78, H*0.12, W*0.28);
+      mg.addColorStop(0,'rgba(180,210,255,0.10)'); mg.addColorStop(1,'rgba(180,210,255,0)');
+      ctx.fillStyle=mg; ctx.fillRect(0,0,W,H);
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+
+  // ── 啟動對應引擎 ─────────────────────
+  window.startBgCanvas = function(name){
+    if(bgRaf) cancelAnimationFrame(bgRaf);
+    resize();
+    let drawFn;
+    if(name==='star')     drawFn=bgStar();
+    else if(name==='geo') drawFn=bgGeo();
+    else if(name==='noise') drawFn=bgNoise();
+    else if(name==='mountain') drawFn=bgMountain();
+    if(drawFn) bgRaf=requestAnimationFrame(drawFn);
+  };
+
+  // 初始啟動
+  startBgCanvas(currentBg);
+})();
+
+// 套用初始主題（含 body class）
+applyBgTheme(currentBg);
+
+// =====================================================
+// 漢堡選單
+// =====================================================
+function toggleMobileNav(){
+  const nav = document.getElementById('mobileNav');
+  const btn = document.getElementById('hamburger');
+  const open = nav.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+// 點擊頁面其他地方關閉
+document.addEventListener('click', function(e){
+  const nav = document.getElementById('mobileNav');
+  const btn = document.getElementById('hamburger');
+  if(nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)){
+    nav.classList.remove('open');
+    btn.classList.remove('open');
+  }
+});
+
+// =====================================================
+// Nav 當前頁高亮
+// =====================================================
+(function(){
+  const cur = location.pathname.split('/').pop() || 'app.html';
+  document.querySelectorAll('.nav-a').forEach(a=>{
+    const href = a.getAttribute('href').split('#')[0];
+    if(href === cur) a.classList.add('nav-active');
+  });
+})();
+
+// =====================================================
+// 視差山脈 scroll 更新
+// =====================================================
+window._mountainScrollY = 0;
+window.addEventListener('scroll', ()=>{ window._mountainScrollY = window.scrollY; }, {passive:true});
+</script>
+</body>
+</html>

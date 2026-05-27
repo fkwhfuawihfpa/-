@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>課堂抽籤器</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    /* ── 背景 Canvas ── */
+    #bgCanvas{position:fixed;inset:0;pointer-events:none;z-index:0;}
+    body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+      background:radial-gradient(ellipse 60% 50% at 15% 20%, rgba(255,215,0,0.10) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 85% 75%, rgba(58,134,255,0.09) 0%, transparent 65%);
+      transition:opacity 0.6s;}
+    body::after{content:'';position:fixed;inset:-10% -10% -5% -10%;z-index:0;pointer-events:none;
+      background:conic-gradient(from 100deg at 20% 25%, rgba(255,215,0,0.12), transparent 40%),conic-gradient(from -30deg at 80% 75%, rgba(58,134,255,0.10), transparent 40%);
+      filter:blur(40px);animation:auroraShift 18s ease-in-out infinite alternate;transition:opacity 0.6s;}
+    @keyframes auroraShift{0%{transform:translate3d(0,0,0) rotate(0deg);}50%{transform:translate3d(1.5%,-1.5%,0) rotate(2deg);}100%{transform:translate3d(-1%,1%,0) rotate(-2deg);}}
+    .bg-noise body::before{background:radial-gradient(ellipse 70% 60% at 25% 30%, rgba(255,215,0,0.06) 0%, transparent 65%),radial-gradient(ellipse 55% 50% at 75% 70%, rgba(58,134,255,0.06) 0%, transparent 62%);}
+    .bg-noise body::after{opacity:0.5;}
+    .bg-noise #bgCanvas{opacity:0.9;}
+    .bg-mountain body::before{background:radial-gradient(ellipse 100% 60% at 50% 100%, rgba(0,30,60,0.95) 0%, transparent 70%),radial-gradient(ellipse 80% 50% at 50% 50%, rgba(10,20,40,0.5) 0%, transparent 100%);}
+    .bg-mountain body::after{background:radial-gradient(ellipse 80% 40% at 50% 95%, rgba(255,215,0,0.15) 0%, transparent 60%),conic-gradient(from 160deg at 50% 80%, rgba(58,134,255,0.10), transparent 30%);filter:blur(30px);animation:mountainGlow 8s ease-in-out infinite alternate;}
+    @keyframes mountainGlow{0%{opacity:0.7;}100%{opacity:1;}}
+    .bg-geo body::before{background:radial-gradient(ellipse 60% 50% at 15% 20%, rgba(255,215,0,0.10) 0%, transparent 70%),radial-gradient(ellipse 50% 40% at 85% 75%, rgba(58,134,255,0.09) 0%, transparent 65%);}
+    .bg-geo body::after{opacity:0.6;filter:blur(38px);}
+    /* 切換器浮窗 */
+    .bg-float{position:fixed;top:14px;right:14px;z-index:200;display:flex;gap:5px;background:rgba(0,0,0,0.55);border:1px solid rgba(255,255,255,0.12);border-radius:30px;padding:5px 8px;backdrop-filter:blur(8px);}
+    .bg-picker-btn{width:26px;height:26px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;position:relative;overflow:hidden;flex-shrink:0;}
+    .bg-picker-btn:hover{transform:scale(1.18);box-shadow:0 0 8px rgba(255,255,255,0.3);}
+    .bg-picker-btn.active{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,0.5);}
+    .bg-picker-btn[data-bg="star"]{background:radial-gradient(circle at 40% 35%, #3a86ff 0%, #0d0d1a 70%);}
+    .bg-picker-btn[data-bg="geo"]{background:linear-gradient(135deg, #1e1e40 0%, #3a86ff 50%, #4ecdc4 100%);}
+    .bg-picker-btn[data-bg="noise"]{background:radial-gradient(circle, #c8a24a 0%, #3d2c08 60%, #1a1000 100%);}
+    .bg-picker-btn[data-bg="mountain"]{background:linear-gradient(to bottom, #0d0d1a 0%, #1a3050 55%, #3a86ff 100%);}
+    /* 讓內容在 canvas 之上 */
+    h1,h2,.input-section,.draw-section,.results-section{position:relative;z-index:1;}
+
+    body {
+      font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 16px;
+      color: #fff;
+    }
+
+    h1 {
+      font-size: 2rem;
+      letter-spacing: 4px;
+      color: #ffd700;
+      text-shadow: 0 0 20px rgba(255,215,0,0.5);
+      margin-bottom: 20px;
+    }
+
+    /* 名單輸入區 */
+    .input-section {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 20px;
+      width: 100%;
+      max-width: 700px;
+      margin-bottom: 20px;
+    }
+
+    .input-section h2 {
+      font-size: 1rem;
+      letter-spacing: 2px;
+      color: #aaa;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .name-textarea {
+      width: 100%;
+      height: 100px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 1rem;
+      padding: 10px 14px;
+      resize: vertical;
+      outline: none;
+      line-height: 1.8;
+    }
+    .name-textarea::placeholder { color: #666; }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: bold;
+      padding: 9px 20px;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    .btn:active { transform: scale(0.94); }
+
+    .btn-load    { background: #3498db; color: #fff; }
+    .btn-clear   { background: rgba(255,255,255,0.12); color: #ccc; }
+    .btn-sample  { background: rgba(255,255,255,0.08); color: #aaa; font-size: 0.85rem; }
+
+    .name-count { color: #888; font-size: 0.85rem; margin-top: 6px; }
+
+    /* 名牌列表 */
+    .name-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .name-tag {
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.9rem;
+      color: #ccc;
+      transition: background 0.2s, opacity 0.3s;
+    }
+    .name-tag.drawn {
+      background: rgba(255,255,255,0.03);
+      border-color: rgba(255,255,255,0.07);
+      color: #444;
+      text-decoration: line-through;
+    }
+
+    /* 抽籤主區 */
+    .draw-section {
+      width: 100%;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+    }
+
+    /* 滾動顯示框 */
+    .rolling-box {
+      width: 100%;
+      background: rgba(0,0,0,0.4);
+      border: 2px solid rgba(255,215,0,0.3);
+      border-radius: 24px;
+      padding: 30px 20px;
+      text-align: center;
+      min-height: 160px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .rolling-label {
+      font-size: 0.8rem;
+      letter-spacing: 3px;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .rolling-name {
+      font-size: 4rem;
+      font-weight: 900;
+      color: #fff;
+      transition: color 0.1s;
+      min-height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .rolling-name.rolling { color: #ffd700; animation: shake 0.08s infinite; }
+
+    @keyframes shake {
+      0%   { transform: translateX(-3px); }
+      50%  { transform: translateX(3px); }
+      100% { transform: translateX(-3px); }
+    }
+
+    .rolling-name.result {
+      color: #ffd700;
+      text-shadow: 0 0 30px rgba(255,215,0,0.8);
+      animation: popIn 0.4s ease;
+    }
+
+    @keyframes popIn {
+      0%  { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.15); }
+      100%{ transform: scale(1); opacity: 1; }
+    }
+
+    /* 抽籤按鈕 */
+    .btn-draw {
+      background: linear-gradient(135deg, #f7971e, #ffd200);
+      color: #1a1a2e;
+      font-size: 1.5rem;
+      font-weight: 900;
+      padding: 16px 60px;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 3px;
+      box-shadow: 0 6px 24px rgba(255,210,0,0.4);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .btn-draw:hover { transform: translateY(-2px); box-shadow: 0 10px 32px rgba(255,210,0,0.5); }
+    .btn-draw:active { transform: scale(0.96); }
+    .btn-draw:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+    /* 控制列 */
+    .control-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .btn-reset-draw  { background: rgba(255,255,255,0.1); color: #ccc; }
+    .btn-remove-last { background: rgba(231,76,60,0.3); color: #ff8888; border: 1px solid rgba(231,76,60,0.4); }
+
+    /* 已抽結果 */
+    .results-section {
+      width: 100%;
+      max-width: 700px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 20px;
+      padding: 16px 20px;
+    }
+
+    .results-section h2 {
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      color: #888;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .results-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .result-tag {
+      background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,165,0,0.15));
+      border: 1px solid rgba(255,215,0,0.4);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.9rem;
+      color: #ffd700;
+      animation: fadeIn 0.4s ease;
+    }
+    @keyframes fadeIn { from{opacity:0;transform:scale(0.7)} to{opacity:1;transform:scale(1)} }
+
+    .empty-hint { color: #444; font-size: 0.9rem; }
+
+    /* 彩帶 */
+    .confetti-container {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 999;
+      overflow: hidden;
+    }
+
+    .confetti-piece {
+      position: absolute;
+      width: 10px;
+      height: 14px;
+      top: -20px;
+      animation: fall linear forwards;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(105vh) rotate(720deg); opacity: 0; }
+    }
+
+    @media (max-width: 500px) {
+      .rolling-name { font-size: 2.8rem; }
+      h1 { font-size: 1.5rem; }
+      .btn-draw { font-size: 1.2rem; padding: 14px 40px; }
+    }
+
+    /* 班別管理 */
+    .class-manager {
+      width: 100%;
+      max-width: 700px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+    }
+    .class-manager h2 {
+      font-size: 0.85rem;
+      letter-spacing: 2px;
+      color: #aaa;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+    .class-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .class-tab {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 20px;
+      padding: 4px 14px;
+      font-size: 0.88rem;
+      color: #ccc;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .class-tab.active {
+      background: rgba(58,134,255,0.25);
+      border-color: rgba(58,134,255,0.6);
+      color: #7ec8ff;
+    }
+    .class-tab .del-cls {
+      color: #ff8888; background: none; border: none;
+      cursor: pointer; font-size: 0.9rem; padding: 0; line-height: 1;
+    }
+    .class-add-row {
+      display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap;
+    }
+    .class-inp {
+      flex: 1; min-width: 120px;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 10px;
+      color: #fff; font-size: 0.9rem;
+      padding: 7px 12px; outline: none;
+    }
+    .class-inp:focus { border-color: #3a86ff; }
+    .btn-add-class {
+      background: rgba(58,134,255,0.25);
+      border: 1px solid rgba(58,134,255,0.5);
+      color: #7ec8ff;
+      border-radius: 10px;
+      padding: 7px 16px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-save-class {
+      background: rgba(46,204,113,0.22);
+      border: 1px solid rgba(46,204,113,0.45);
+      color: #7effa0;
+      border-radius: 10px;
+      padding: 7px 16px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .cloud-status {
+      font-size: 0.75rem;
+      color: #888;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<canvas id="bgCanvas"></canvas>
+<div class="bg-float" id="bgSwitcher">
+  <button class="bg-picker-btn active" data-bg="star"     title="星空流星"></button>
+  <button class="bg-picker-btn"        data-bg="geo"      title="幾何網格"></button>
+  <button class="bg-picker-btn"        data-bg="noise"    title="噪點紙感"></button>
+  <button class="bg-picker-btn"        data-bg="mountain" title="視差山脈"></button>
+</div>
+<body>
+
+  <h1>🎲 課堂抽籤器</h1>
+
+  <!-- 班別管理 -->
+  <div class="class-manager">
+    <h2>📚 班別管理</h2>
+    <div class="class-tabs" id="classTabs">
+      <span style="color:#555;font-size:0.82rem;">載入中…</span>
+    </div>
+    <div class="class-add-row">
+      <input class="class-inp" id="newClassName" placeholder="新班別名稱（如：三年甲班）" onkeydown="if(event.key==='Enter')addClass()">
+      <button class="btn-add-class" onclick="addClass()">＋ 新增班別</button>
+      <button class="btn-save-class" onclick="saveCurrentClass()">💾 儲存目前名單</button>
+    </div>
+    <div class="cloud-status" id="cloudStatus">
+      <span id="loginHint">檢查中…</span>
+    </div>
+  </div>
+
+  <!-- 名單輸入 -->
+  <div class="input-section">
+    <h2>📋 學生名單</h2>
+    <textarea class="name-textarea" id="nameInput" placeholder="請輸入學生姓名，每行一位，或以逗號分隔&#10;例：小明, 小美, 小華&#10;或每行一個名字"></textarea>
+    <div class="input-row">
+      <button class="btn btn-load"   onclick="loadNames()">✅ 載入名單</button>
+      <button class="btn btn-clear"  onclick="clearNames()">🗑 清除</button>
+      <button class="btn btn-sample" onclick="loadSample()">範例名單</button>
+    </div>
+    <div class="name-count" id="nameCount">尚未載入名單</div>
+    <div class="name-tags" id="nameTags"></div>
+  </div>
+
+  <!-- 抽籤區 -->
+  <div class="draw-section">
+    <div class="rolling-box">
+      <div class="rolling-label">✨ 幸運兒是...</div>
+      <div class="rolling-name" id="rollingName">？</div>
+    </div>
+
+    <button class="btn-draw" id="drawBtn" onclick="startDraw()">🎰 開始抽籤</button>
+
+    <div class="control-row">
+      <button class="btn btn-reset-draw"  onclick="resetDraw()">🔄 重置抽籤</button>
+      <button class="btn btn-remove-last" onclick="removeLast()">↩ 取消上一位</button>
+    </div>
+  </div>
+
+  <!-- 已抽名單 -->
+  <div class="results-section" style="margin-top:16px">
+    <h2>🏅 已抽出</h2>
+    <div class="results-list" id="resultsList">
+      <span class="empty-hint">尚未抽出任何人</span>
+    </div>
+  </div>
+
+  <!-- 彩帶容器 -->
+  <div class="confetti-container" id="confettiContainer"></div>
+
+  <script>
+    // ===== Supabase 設定（與 english.html 共用）=====
+    const SB_URL = 'https://lqpuffsjirsnusjxtwin.supabase.co';
+    const SB_KEY = 'sb_publishable_QW-2DPyUIrzMwIkug8Tliw_cf1tx0qH';
+    async function sbFetch(path, options={}){
+      const headers={
+        'apikey':SB_KEY,
+        'Authorization':'Bearer '+SB_KEY,
+        'Content-Type':'application/json',
+      };
+      if(options.prefer) headers['Prefer']=options.prefer;
+      if(options.headers) Object.assign(headers,options.headers);
+      const res=await fetch(SB_URL+'/rest/v1/'+path,{
+        method:options.method||'GET',
+        headers,
+        body:options.body!==undefined?JSON.stringify(options.body):undefined,
+      });
+      if(!res.ok&&res.status!==204){const t=await res.text();throw new Error(t||String(res.status));}
+      if(res.status===204)return null;
+      const text=await res.text();
+      if(!text||!text.trim())return null;
+      try{return JSON.parse(text);}catch(e){throw new Error('Invalid JSON: '+text.slice(0,120));}
+    }
+    function ssGetId(){ return localStorage.getItem('ssCurrentId')||''; }
+    function ssGetUser(){ return localStorage.getItem('ssCurrentUser')||''; }
+
+    // ===== 班別管理 =====
+    let classes = JSON.parse(localStorage.getItem('ldClasses')||'{}');
+    let currentClass = localStorage.getItem('ldCurrentClass')||'';
+
+    // 把名單填入 textarea 並載入（等 DOM+函數就緒後呼叫）
+    function ldApplyClass(name){
+      if(!name||!classes[name]) return;
+      const members=classes[name];
+      if(!members.length) return;
+      document.getElementById('nameInput').value=members.join('\n');
+      if(typeof loadNames==='function') loadNames();
+    }
+
+    async function ldLoadCloud(){
+      const userId=ssGetId();
+      const hint=document.getElementById('loginHint');
+      if(!userId){
+        hint.textContent='⚠️ 未登入，班別僅儲存在本機';
+        return;
+      }
+      hint.textContent='☁️ 載入雲端班別中…';
+      try{
+        const rows=await sbFetch('lucky_classes?user_id=eq.'+userId+'&select=name,members&order=name');
+        if(rows&&rows.length){
+          classes={};
+          rows.forEach(r=>{ classes[r.name]=r.members||[]; });
+          localStorage.setItem('ldClasses',JSON.stringify(classes));
+          renderClassTabs();
+          // 自動還原名單（優先 currentClass，否則第一個）
+          let target=currentClass;
+          if(!target||!classes[target]){ const k=Object.keys(classes); if(k.length) target=k[0]; }
+          if(target&&classes[target]&&classes[target].length){
+            currentClass=target;
+            localStorage.setItem('ldCurrentClass',target);
+            renderClassTabs();
+            document.getElementById('nameInput').value=classes[target].join('\n');
+            if(typeof loadNames==='function') loadNames();
+          }
+        }
+        hint.textContent='👤 '+ssGetUser()+'　☁️ 雲端已同步';
+      }catch(e){
+        let msg=e.message||'';
+        if(msg.includes('row-level security')) msg='請去 Supabase 關閉 lucky_classes 的 RLS';
+        hint.textContent='⚠️ 雲端載入失敗：'+msg;
+      }
+    }
+
+    async function ldSyncCloud(name, members){
+      const userId=ssGetId();
+      if(!userId){
+        showToast('⚠️ 未登入，只儲存在本機');
+        return;
+      }
+      try{
+        await sbFetch('lucky_classes?user_id=eq.'+userId+'&name=eq.'+encodeURIComponent(name),{method:'DELETE'});
+        await sbFetch('lucky_classes',{
+          method:'POST',
+          prefer:'return=minimal',
+          body:{user_id:userId, name, members}
+        });
+      }catch(e){
+        console.warn('ldSyncCloud:', e);
+        let msg=e.message||'';
+        if(msg.includes('row-level security')) msg='Supabase RLS 未關閉，請去 Supabase 關閉 lucky_classes 的 RLS';
+        else if(msg.includes('does not exist')) msg='Supabase 表不存在，請建立 lucky_classes 表';
+        showToast('⚠️ 雲端同步失敗：'+msg);
+        throw new Error(msg);
+      }
+    }
+
+    async function ldDeleteCloud(name){
+      const userId=ssGetId();
+      if(!userId) return;
+      try{
+        await sbFetch('lucky_classes?user_id=eq.'+userId+'&name=eq.'+encodeURIComponent(name),{method:'DELETE'});
+      }catch(e){}
+    }
+
+    function renderClassTabs(){
+      const el=document.getElementById('classTabs');
+      const keys=Object.keys(classes);
+      if(!keys.length){
+        el.innerHTML='<span style="color:#555;font-size:0.82rem;">尚無班別，請新增</span>';
+        return;
+      }
+      el.innerHTML=keys.map(k=>`
+        <span class="class-tab${k===currentClass?' active':''}" onclick="switchClass('${k}')">
+          ${k}
+          <button class="del-cls" onclick="event.stopPropagation();deleteClass('${k}')" title="刪除此班別">×</button>
+        </span>`).join('');
+    }
+
+    function switchClass(name){
+      currentClass=name;
+      localStorage.setItem('ldCurrentClass',name);
+      renderClassTabs();
+      // 載入該班名單到 textarea
+      const members=classes[name]||[];
+      document.getElementById('nameInput').value=members.join('\n');
+      if(members.length) loadNames();
+      showToast('📂 已切換到：'+name);
+    }
+
+    async function saveCurrentClass(){
+      if(!currentClass){ showToast('⚠️ 請先選擇或新增班別'); return; }
+      const raw=document.getElementById('nameInput').value;
+      const members=raw.split(/[\n,，]+/).map(n=>n.trim()).filter(n=>n.length>0);
+      if(!members.length){ showToast('⚠️ 名單是空的'); return; }
+      classes[currentClass]=members;
+      localStorage.setItem('ldClasses',JSON.stringify(classes));
+      renderClassTabs();
+      try{
+        await ldSyncCloud(currentClass, members);
+        showToast('✅ 已儲存「'+currentClass+'」（'+members.length+' 人）☁️');
+      }catch(e){
+        showToast('✅ 已儲存本機「'+currentClass+'」，但雲端失敗：'+e.message);
+      }
+    }
+
+    async function addClass(){
+      const inp=document.getElementById('newClassName');
+      const name=inp.value.trim();
+      if(!name){ showToast('⚠️ 請輸入班別名稱'); return; }
+      if(classes[name]!==undefined){ showToast('⚠️ 此班別已存在'); return; }
+      classes[name]=[];
+      localStorage.setItem('ldClasses',JSON.stringify(classes));
+      currentClass=name;
+      localStorage.setItem('ldCurrentClass',name);
+      inp.value='';
+      renderClassTabs();
+      showToast('✅ 已新增班別：'+name+'，請輸入名單後按「儲存目前名單」');
+    }
+
+    async function deleteClass(name){
+      if(!confirm('確定刪除班別「'+name+'」？')) return;
+      delete classes[name];
+      localStorage.setItem('ldClasses',JSON.stringify(classes));
+      if(currentClass===name){ currentClass=''; localStorage.removeItem('ldCurrentClass'); }
+      await ldDeleteCloud(name);
+      renderClassTabs();
+      showToast('🗑 已刪除：'+name);
+    }
+
+    function showToast(msg){
+      let t=document.getElementById('ldToast');
+      if(!t){
+        t=document.createElement('div');
+        t.id='ldToast';
+        t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(30,30,60,0.95);color:#fff;padding:10px 22px;border-radius:30px;font-size:0.9rem;z-index:9999;border:1px solid rgba(255,255,255,0.15);pointer-events:none;transition:opacity 0.3s;';
+        document.body.appendChild(t);
+      }
+      t.textContent=msg; t.style.opacity='1';
+      clearTimeout(t._timer);
+      t._timer=setTimeout(()=>t.style.opacity='0', 2500);
+    }
+
+    // 初始化：先從 localStorage 立刻渲染，再背景同步雲端
+    renderClassTabs();
+    ldLoadCloud(); // 背景同步，不阻塞頁面
+
+    let allNames    = [];
+    let remaining   = [];
+    let drawn       = [];
+    let isRolling   = false;
+    let rollInterval = null;
+
+    const SAMPLE_NAMES = [
+      '小明','小美','小華','小強','小玲',
+      '大衛','安娜','傑克','凱莉','阿偉',
+      '曉晴','俊傑','淑芬','志豪','雅婷'
+    ];
+
+    function loadSample() {
+      document.getElementById('nameInput').value = SAMPLE_NAMES.join('\n');
+      loadNames();
+    }
+
+    function loadNames() {
+      const raw = document.getElementById('nameInput').value;
+      const parsed = raw.split(/[\n,，]+/).map(n => n.trim()).filter(n => n.length > 0);
+      if (parsed.length === 0) {
+        alert('請先輸入至少一個名字！');
+        return;
+      }
+      allNames  = [...parsed];
+      remaining = [...parsed];
+      drawn     = [];
+      renderTags();
+      renderResults();
+      document.getElementById('rollingName').textContent = '？';
+      document.getElementById('rollingName').className = 'rolling-name';
+      document.getElementById('drawBtn').disabled = false;
+    }
+
+    // loadNames 和所有函數都定義完後，自動還原上次班別名單
+    function autoRestoreClass(){
+      const saved = JSON.parse(localStorage.getItem('ldClasses')||'{}');
+      const lastClass = localStorage.getItem('ldCurrentClass')||'';
+      const keys = Object.keys(saved);
+      if(!keys.length) return; // localStorage 真的沒有資料
+      // 優先用上次選的，否則用第一個
+      const target = (lastClass && saved[lastClass]) ? lastClass : keys[0];
+      const members = saved[target] || [];
+      if(!members.length) return;
+      // 更新 JS 變數
+      classes = saved;
+      currentClass = target;
+      localStorage.setItem('ldCurrentClass', target);
+      renderClassTabs();
+      document.getElementById('nameInput').value = members.join('\n');
+      loadNames();
+    }
+    autoRestoreClass();
+
+    function clearNames() {
+      document.getElementById('nameInput').value = '';
+      allNames = remaining = drawn = [];
+      renderTags();
+      renderResults();
+      document.getElementById('nameCount').textContent = '尚未載入名單';
+      document.getElementById('rollingName').textContent = '？';
+    }
+
+    function renderTags() {
+      const container = document.getElementById('nameTags');
+      document.getElementById('nameCount').textContent =
+        `共 ${allNames.length} 人，剩餘 ${remaining.length} 人`;
+
+      container.innerHTML = '';
+      allNames.forEach(name => {
+        const tag = document.createElement('span');
+        tag.className = 'name-tag' + (drawn.includes(name) ? ' drawn' : '');
+        tag.textContent = name;
+        container.appendChild(tag);
+      });
+    }
+
+    function renderResults() {
+      const list = document.getElementById('resultsList');
+      if (drawn.length === 0) {
+        list.innerHTML = '<span class="empty-hint">尚未抽出任何人</span>';
+        return;
+      }
+      list.innerHTML = '';
+      drawn.forEach((name, i) => {
+        const tag = document.createElement('span');
+        tag.className = 'result-tag';
+        tag.textContent = `${i + 1}. ${name}`;
+        list.appendChild(tag);
+      });
+    }
+
+    function startDraw() {
+      if (isRolling) return;
+      if (remaining.length === 0) {
+        alert('所有人都已經抽完了！請重置後再試。');
+        return;
+      }
+
+      isRolling = true;
+      document.getElementById('drawBtn').disabled = true;
+      const nameEl = document.getElementById('rollingName');
+      nameEl.className = 'rolling-name rolling';
+
+      let count = 0;
+      const totalRolls = 20 + Math.floor(Math.random() * 15); // 20~34 次
+      let interval = 60;
+
+      function roll() {
+        const randName = remaining[Math.floor(Math.random() * remaining.length)];
+        nameEl.textContent = randName;
+        count++;
+
+        // 逐漸減速
+        if (count >= totalRolls * 0.6) interval = 120;
+        if (count >= totalRolls * 0.8) interval = 220;
+
+        if (count >= totalRolls) {
+          finalizeDraw(randName);
+        } else {
+          setTimeout(roll, interval);
+        }
+      }
+
+      roll();
+    }
+
+    function finalizeDraw(name) {
+      // 從剩餘中隨機選（確保最後結果一定在剩餘名單裡）
+      const finalIndex = Math.floor(Math.random() * remaining.length);
+      const winner = remaining[finalIndex];
+
+      remaining.splice(finalIndex, 1);
+      drawn.push(winner);
+
+      const nameEl = document.getElementById('rollingName');
+      nameEl.textContent = winner;
+      nameEl.className = 'rolling-name result';
+
+      isRolling = false;
+      document.getElementById('drawBtn').disabled = remaining.length === 0;
+
+      renderTags();
+      renderResults();
+      launchConfetti();
+    }
+
+    function resetDraw() {
+      if (allNames.length === 0) return;
+      remaining = [...allNames];
+      drawn     = [];
+      renderTags();
+      renderResults();
+      document.getElementById('rollingName').textContent = '？';
+      document.getElementById('rollingName').className = 'rolling-name';
+      document.getElementById('drawBtn').disabled = false;
+    }
+
+    function removeLast() {
+      if (drawn.length === 0) return;
+      const last = drawn.pop();
+      remaining.push(last);
+      renderTags();
+      renderResults();
+      document.getElementById('rollingName').textContent = drawn.length > 0 ? drawn[drawn.length-1] : '？';
+      document.getElementById('drawBtn').disabled = false;
+    }
+
+  // --- 背景主題切換器 ---
+  const BG_BODY_CLASSES={star:[],geo:['bg-geo'],noise:['bg-noise'],mountain:['bg-mountain']};
+  let currentBg=localStorage.getItem('ssBg')||'star';
+  let bgRaf=null;
+  function applyBgTheme(name){
+    document.body.classList.remove('bg-geo','bg-noise','bg-mountain');
+    (BG_BODY_CLASSES[name]||[]).forEach(c=>document.body.classList.add(c));
+    document.querySelectorAll('.bg-picker-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.bg===name));
+    currentBg=name; localStorage.setItem('ssBg',name);
+    if(bgRaf) cancelAnimationFrame(bgRaf);
+    startBgCanvas(name);
+  }
+  document.getElementById('bgSwitcher').addEventListener('click',e=>{
+    const btn=e.target.closest('.bg-picker-btn');
+    if(btn) applyBgTheme(btn.dataset.bg);
+  });
+  (function(){
+    const cv=document.getElementById('bgCanvas');
+    const ctx=cv.getContext('2d');
+    let W,H;
+    function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+    window.addEventListener('resize',()=>{resize();if(currentBg)startBgCanvas(currentBg);});
+    resize();
+    function bgStar(){
+      let stars=[],comets=[],lastComet=0;
+      const n=Math.floor(W*H/4800);
+      for(let i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.2,a:Math.random(),da:(Math.random()-0.5)*0.009,color:['#ffffff','#ffd700','#3a86ff','#4ecdc4'][Math.floor(Math.random()*4)]});
+      function spawnComet(){const y=Math.random()*H*0.65,len=90+Math.random()*130,spd=4+Math.random()*3.5;comets.push({x:-60,y,vx:spd,vy:spd*0.38,len});}
+      return function draw(){
+        ctx.clearRect(0,0,W,H);
+        stars.forEach(s=>{s.a+=s.da;if(s.a<=0||s.a>=1)s.da=-s.da;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=s.color;ctx.globalAlpha=s.a*0.78;ctx.fill();});
+        const now=performance.now();if(now-lastComet>1800+Math.random()*3500){spawnComet();lastComet=now;}
+        ctx.globalAlpha=1;
+        comets.forEach(c=>{const g=ctx.createLinearGradient(c.x,c.y,c.x-c.len,c.y-c.len*0.38);g.addColorStop(0,'rgba(255,255,255,0.92)');g.addColorStop(1,'rgba(255,255,255,0)');ctx.strokeStyle=g;ctx.lineWidth=2.4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x-c.len,c.y-c.len*0.38);ctx.stroke();c.x+=c.vx;c.y+=c.vy;});
+        comets=comets.filter(c=>c.x<W+200&&c.y<H+200);
+        bgRaf=requestAnimationFrame(draw);
+      };
+    }
+    function bgGeo(){
+      const CELL=52,DOT=1.3;let nodes=[];
+      const cols=Math.ceil(W/CELL)+2,rows=Math.ceil(H/CELL)+2;
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) nodes.push({bx:(c-0.5)*CELL,by:(r-0.5)*CELL,ox:0,oy:0,a:Math.random()*Math.PI*2,da:(Math.random()-0.5)*0.008,amp:4+Math.random()*6});
+      return function draw(){
+        ctx.clearRect(0,0,W,H);
+        nodes.forEach(n=>{n.a+=n.da;n.ox=Math.cos(n.a)*n.amp;n.oy=Math.sin(n.a)*n.amp;});
+        for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){const i=r*cols+c,n=nodes[i],nx=n.bx+n.ox,ny=n.by+n.oy;
+          if(c+1<cols){const m=nodes[i+1];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(255,215,0,0.07)';ctx.lineWidth=0.9;ctx.stroke();}
+          if(r+1<rows){const m=nodes[i+cols];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(58,134,255,0.07)';ctx.lineWidth=0.9;ctx.stroke();}
+          ctx.beginPath();ctx.arc(nx,ny,DOT,0,Math.PI*2);ctx.fillStyle='rgba(255,215,0,0.22)';ctx.globalAlpha=1;ctx.fill();
+        }}
+        const cx=W/2,cy=H/2;
+        for(let i=0;i<8;i++){const angle=i*Math.PI/4+(performance.now()*0.0001);const g=ctx.createLinearGradient(cx,cy,cx+Math.cos(angle)*W*0.7,cy+Math.sin(angle)*H*0.7);g.addColorStop(0,'rgba(255,215,0,0.05)');g.addColorStop(1,'rgba(255,215,0,0)');ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(angle)*W,cy+Math.sin(angle)*H);ctx.strokeStyle=g;ctx.lineWidth=60;ctx.stroke();}
+        bgRaf=requestAnimationFrame(draw);
+      };
+    }
+    function bgNoise(){
+      const offC=document.createElement('canvas');offC.width=offC.height=256;
+      const offCtx=offC.getContext('2d'),imgData=offCtx.createImageData(256,256);
+      for(let i=0;i<imgData.data.length;i+=4){const v=Math.random()*255|0;imgData.data[i]=v;imgData.data[i+1]=v;imgData.data[i+2]=v;imgData.data[i+3]=18;}
+      offCtx.putImageData(imgData,0,0);
+      const noisePat=ctx.createPattern(offC,'repeat');
+      let blobs=[];
+      for(let i=0;i<5;i++) blobs.push({x:Math.random()*W,y:Math.random()*H,r:180+Math.random()*200,a:Math.random()*Math.PI*2,spd:0.004+Math.random()*0.006,col:['rgba(255,215,0,','rgba(58,134,255,','rgba(78,205,196,'][i%3],opa:0.04+Math.random()*0.04});
+      return function draw(){
+        ctx.clearRect(0,0,W,H);ctx.globalAlpha=0.9;ctx.fillStyle=noisePat;ctx.fillRect(0,0,W,H);
+        blobs.forEach(b=>{b.a+=b.spd;const bx=b.x+Math.cos(b.a)*60,by=b.y+Math.sin(b.a)*40;const g=ctx.createRadialGradient(bx,by,0,bx,by,b.r);g.addColorStop(0,b.col+b.opa+')');g.addColorStop(1,b.col+'0)');ctx.globalAlpha=1;ctx.fillStyle=g;ctx.beginPath();ctx.arc(bx,by,b.r,0,Math.PI*2);ctx.fill();});
+        for(let y=0;y<H;y+=3){ctx.globalAlpha=0.012;ctx.fillStyle=y%6===0?'rgba(255,255,255,1)':'rgba(0,0,0,1)';ctx.fillRect(0,y,W,1);}
+        ctx.globalAlpha=1;bgRaf=requestAnimationFrame(draw);
+      };
+    }
+    function bgMountain(){
+      function makeMountain(n,minH,maxH,seed){const pts=[{x:0,y:H}];for(let i=0;i<=n;i++){const x=i*W/n,y=H-(minH+(Math.sin(i*seed+seed)*0.5+0.5)*(maxH-minH));pts.push({x,y});}pts.push({x:W,y:H});return pts;}
+      const layers=[{pts:makeMountain(12,H*0.52,H*0.72,1.7),col:'rgba(10,30,60,0.85)',speed:0},{pts:makeMountain(10,H*0.42,H*0.62,2.3),col:'rgba(15,40,80,0.80)',speed:0.08},{pts:makeMountain(8,H*0.32,H*0.52,3.1),col:'rgba(20,55,110,0.70)',speed:0.18},{pts:makeMountain(6,H*0.22,H*0.42,4.2),col:'rgba(30,70,140,0.55)',speed:0.30},{pts:makeMountain(5,H*0.14,H*0.30,5.8),col:'rgba(50,100,180,0.35)',speed:0.44}];
+      let prevTS=0;let stars2=[];const ns=Math.floor(W*H/9000);
+      for(let i=0;i<ns;i++) stars2.push({x:Math.random()*W,y:Math.random()*H*0.55,r:Math.random()+0.3,a:Math.random(),da:(Math.random()-0.5)*0.006});
+      return function draw(ts){
+        prevTS=ts;ctx.clearRect(0,0,W,H);
+        stars2.forEach(s=>{s.a+=s.da;if(s.a<=0||s.a>=1)s.da=-s.da;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle='#ffffff';ctx.globalAlpha=s.a*0.6;ctx.fill();});
+        ctx.globalAlpha=1;
+        const gh=ctx.createLinearGradient(0,H*0.55,0,H);gh.addColorStop(0,'rgba(5,15,40,0)');gh.addColorStop(1,'rgba(5,15,40,0.95)');ctx.fillStyle=gh;ctx.fillRect(0,H*0.55,W,H*0.45);
+        [...layers].reverse().forEach(layer=>{ctx.beginPath();ctx.moveTo(layer.pts[0].x,layer.pts[0].y);layer.pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.closePath();ctx.fillStyle=layer.col;ctx.fill();});
+        const mg=ctx.createRadialGradient(W*0.78,H*0.12,0,W*0.78,H*0.12,W*0.28);mg.addColorStop(0,'rgba(180,210,255,0.10)');mg.addColorStop(1,'rgba(180,210,255,0)');ctx.fillStyle=mg;ctx.fillRect(0,0,W,H);
+        bgRaf=requestAnimationFrame(draw);
+      };
+    }
+    window.startBgCanvas=function(name){
+      if(bgRaf) cancelAnimationFrame(bgRaf);
+      resize();
+      let drawFn;
+      if(name==='star') drawFn=bgStar();
+      else if(name==='geo') drawFn=bgGeo();
+      else if(name==='noise') drawFn=bgNoise();
+      else if(name==='mountain') drawFn=bgMountain();
+      if(drawFn) bgRaf=requestAnimationFrame(drawFn);
+    };
+    startBgCanvas(currentBg);
+  })();
+  applyBgTheme(currentBg);
+
+  // --- 彩帶 ---
+    const CONFETTI_COLORS = [
+      '#ffd700','#ff6b6b','#4ecdc4','#45b7d1',
+      '#96ceb4','#ff9ff3','#54a0ff','#ffeaa7'
+    ];
+
+    function launchConfetti() {
+      const container = document.getElementById('confettiContainer');
+      container.innerHTML = '';
+
+      for (let i = 0; i < 80; i++) {
+        const piece = document.createElement('div');
+        piece.className = 'confetti-piece';
+        piece.style.left       = Math.random() * 100 + 'vw';
+        piece.style.background = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)];
+        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '0';
+        piece.style.width  = (8 + Math.random() * 8) + 'px';
+        piece.style.height = (10 + Math.random() * 10) + 'px';
+        piece.style.animationDuration  = (1.5 + Math.random() * 2) + 's';
+        piece.style.animationDelay     = (Math.random() * 0.5) + 's';
+        piece.style.opacity = Math.random() * 0.6 + 0.4;
+        piece.style.transform = `rotate(${Math.random() * 360}deg)`;
+        container.appendChild(piece);
+      }
+
+      setTimeout(() => { container.innerHTML = ''; }, 4000);
+    }
+  </script>
+</body>
+</html>

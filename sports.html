@@ -1,0 +1,1895 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>體育專區 | 文武雙全</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--gold:#ffd700;--teal:#4ecdc4;--red:#ff6b6b;--green:#2ecc71;--bg:#0d0d1a;--bg2:#12122a;--card:#1e1e40;--border:rgba(255,255,255,0.1);--muted:#888;--radius:16px;--text:#fff;--text2:#ccc;--nav-bg:rgba(13,13,26,0.97);}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background 0.3s,color 0.3s;}
+button{cursor:pointer;border:none;outline:none;font-family:inherit;}
+input{font-family:inherit;outline:none;}
+.hidden{display:none!important;}
+/* ── 背景 Canvas 層 ─────────────────────── */
+#bgCanvas{position:fixed;inset:0;pointer-events:none;z-index:0;transition:opacity 0.6s;}
+nav,.page-wrap{position:relative;z-index:1;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;transition:opacity 0.6s;
+  background:
+    radial-gradient(ellipse 55% 45% at 10% 15%, rgba(78,205,196,0.12) 0%, transparent 67%),
+    radial-gradient(ellipse 50% 40% at 90% 80%, rgba(255,215,0,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 35% at 55% 45%, rgba(255,107,107,0.06) 0%, transparent 55%);}
+body::after{content:'';position:fixed;inset:-10% -10% -5% -10%;z-index:0;pointer-events:none;
+  background:
+    conic-gradient(from 110deg at 15% 25%, rgba(78,205,196,0.13), transparent 45%),
+    conic-gradient(from -30deg at 85% 75%, rgba(255,215,0,0.10), transparent 40%),
+    radial-gradient(60% 40% at 50% 85%, rgba(255,107,107,0.05), transparent 60%);
+  filter:blur(42px) saturate(120%);
+  animation:auroraShift 18s ease-in-out infinite alternate;
+  transition:opacity 0.6s;}
+@keyframes auroraShift{0%{transform:translate3d(0,0,0) rotate(0deg);}50%{transform:translate3d(1.5%,-1.5%,0) rotate(2deg);}100%{transform:translate3d(-1%,1%,0) rotate(-2deg);}}
+.bg-noise body::before{background:radial-gradient(ellipse 70% 60% at 30% 30%, rgba(78,205,196,0.07) 0%, transparent 65%),radial-gradient(ellipse 55% 50% at 70% 75%, rgba(255,215,0,0.07) 0%, transparent 62%);}
+.bg-noise body::after{opacity:0.5;}
+.bg-noise #bgCanvas{opacity:0.9;}
+.bg-mountain body::before{background:radial-gradient(ellipse 100% 60% at 50% 100%, rgba(0,30,60,0.95) 0%, transparent 70%),radial-gradient(ellipse 80% 50% at 50% 50%, rgba(10,20,40,0.5) 0%, transparent 100%);}
+.bg-mountain body::after{background:radial-gradient(ellipse 80% 40% at 50% 95%, rgba(78,205,196,0.18) 0%, transparent 60%),conic-gradient(from 160deg at 50% 80%, rgba(58,134,255,0.12), transparent 30%);filter:blur(30px);animation:mountainGlow 8s ease-in-out infinite alternate;}
+@keyframes mountainGlow{0%{opacity:0.7;}100%{opacity:1;}}
+.bg-geo body::before{background:radial-gradient(ellipse 60% 50% at 15% 20%, rgba(78,205,196,0.10) 0%, transparent 70%),radial-gradient(ellipse 50% 40% at 85% 75%, rgba(58,134,255,0.09) 0%, transparent 65%),radial-gradient(ellipse 40% 35% at 50% 50%, rgba(255,215,0,0.04) 0%, transparent 60%);}
+.bg-geo body::after{opacity:0.6;filter:blur(38px);}
+body.light-mode #bgCanvas{opacity:0.55;filter:invert(1) hue-rotate(180deg) saturate(0.6) brightness(1.1);}
+body.light-mode::before{
+  opacity:1;
+  background:
+    radial-gradient(ellipse 65% 55% at 10% 18%, rgba(78,205,196,0.22) 0%, transparent 68%),
+    radial-gradient(ellipse 55% 45% at 88% 75%, rgba(58,134,255,0.16) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 40% at 50% 45%, rgba(255,215,0,0.10) 0%, transparent 60%);
+}
+body.light-mode::after{opacity:0.55;filter:blur(40px) saturate(160%) brightness(1.3);}
+body.light-mode.bg-noise #bgCanvas{opacity:0.35;filter:none;}
+body.light-mode.bg-mountain #bgCanvas{opacity:0.45;filter:none;}
+body.light-mode.bg-mountain::before{
+  background:
+    radial-gradient(ellipse 100% 50% at 50% 100%, rgba(78,205,196,0.22) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 50% at 50% 50%, rgba(58,134,255,0.12) 0%, transparent 100%);
+}
+/* ── 背景切換器按鈕 ─────────────────────── */
+.bg-switcher{display:flex;align-items:center;gap:4px;margin-left:6px;}
+.bg-picker-btn{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;position:relative;overflow:hidden;flex-shrink:0;}
+.bg-picker-btn:hover{transform:scale(1.18);box-shadow:0 0 8px rgba(255,255,255,0.3);}
+.bg-picker-btn.active{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,0.5);}
+.bg-picker-btn[data-bg="star"]{background:radial-gradient(circle at 40% 35%, #3a86ff 0%, #0d0d1a 70%);}
+.bg-picker-btn[data-bg="geo"]{background:linear-gradient(135deg, #1e1e40 0%, #3a86ff 50%, #4ecdc4 100%);}
+.bg-picker-btn[data-bg="noise"]{background:radial-gradient(circle, #c8a24a 0%, #3d2c08 60%, #1a1000 100%);}
+.bg-picker-btn[data-bg="mountain"]{background:linear-gradient(to bottom, #0d0d1a 0%, #1a3050 55%, #3a86ff 100%);}
+.bg-picker-btn::after{content:attr(data-label);position:absolute;bottom:-32px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.82);color:#fff;font-size:0.7rem;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.2s;}
+.bg-picker-btn:hover::after{opacity:1;}
+/* 自定義圖片背景 */
+.bg-custom-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.bg-custom-panel{background:var(--card,#1e1e40);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:20px;padding:28px 28px 24px;width:min(480px,92vw);box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.bg-custom-panel h3{font-size:1rem;font-weight:800;color:var(--gold,#ffd700);margin-bottom:16px;}
+.bg-upload-zone{border:2px dashed var(--border,rgba(255,255,255,0.18));border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:12px;}
+.bg-upload-zone:hover{border-color:rgba(58,134,255,0.6);background:rgba(58,134,255,0.05);}
+.bg-upload-zone input{display:none;}
+.bg-url-inp{width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:10px;color:var(--text,#fff);font-size:0.88rem;padding:9px 13px;margin-bottom:10px;}
+.bg-url-inp:focus{border-color:var(--blue,#3a86ff);outline:none;}
+body.light-mode .bg-custom-panel{background:#fff;}
+body.light-mode .bg-url-inp{color:#1a1a2e;background:rgba(0,0,0,0.05);}
+body.bg-custom-img{background-size:cover;background-position:center;background-attachment:scroll;}
+body.bg-custom-img::before{opacity:0.3!important;}
+body.bg-custom-img::after{opacity:0.25!important;}
+body.bg-custom-img #bgCanvas{opacity:0.15!important;}
+
+/* LIGHT MODE */
+body.light-mode{--bg:#edf5f4;--bg2:#e2f0ef;--card:#ffffff;--border:rgba(0,0,0,0.1);--muted:#555;--text:#1a1a2e;--text2:#444;--nav-bg:rgba(237,245,244,0.96);--gold:#d4a017;
+  background:radial-gradient(ellipse 70% 55% at 8% 15%, rgba(78,205,196,0.16) 0%, transparent 65%),radial-gradient(ellipse 60% 50% at 92% 80%, rgba(58,134,255,0.12) 0%, transparent 65%),radial-gradient(ellipse 50% 45% at 50% 45%, rgba(255,215,0,0.08) 0%, transparent 60%),#edf5f4;}
+body.light-mode .nav-a{color:#555;}
+body.light-mode .nav-a:hover{color:#000;background:rgba(0,0,0,0.06);}
+body.light-mode .sb-name{color:#1a1a2e;background:rgba(0,0,0,0.06);border-color:rgba(0,0,0,0.15);}
+body.light-mode .ft-in{color:#1a1a2e;background:rgba(0,0,0,0.05);border-color:rgba(0,0,0,0.15);}
+body.light-mode .ni{color:#1a1a2e;background:rgba(0,0,0,0.05);}
+body.light-mode .t-pre{color:#333;background:rgba(0,0,0,0.06);}
+body.light-mode .btn-grey{background:rgba(0,0,0,0.08);color:#444;}
+body.light-mode .sb-zero{background:rgba(0,0,0,0.08);color:#666;}
+body.light-mode .tab-btn{background:rgba(0,0,0,0.06);color:#555;border-color:rgba(0,0,0,0.12);}
+body.light-mode .tab-btn.active{background:#0da89e;color:#fff;border-color:#0da89e;box-shadow:0 3px 12px rgba(13,168,158,0.40);}
+body.light-mode .sport-btn{background:rgba(0,0,0,0.06);color:#555;border-color:rgba(0,0,0,0.12);}
+body.light-mode .sport-btn.active{background:#0da89e;color:#fff;border-color:#0da89e;box-shadow:0 2px 10px rgba(13,168,158,0.35);}
+body.light-mode .rule-txt{color:#444;}
+body.light-mode .total-score{color:#1a1a2e;}
+body.light-mode .total-label{color:#666;}
+/* Accordion light */
+body.light-mode .acc-header{background:rgba(0,0,0,0.04);color:#1a1a2e;border-color:rgba(0,0,0,0.1);}
+body.light-mode .acc-header:hover{background:rgba(78,205,196,0.1);}
+body.light-mode .acc-body{background:rgba(0,0,0,0.02);color:#333;}
+body.light-mode .rules-block{background:rgba(0,0,0,0.03);}
+body.light-mode .rules-img-wrap img{border-color:rgba(0,0,0,0.1);background:#f0f2f8;}
+body.light-mode .rules-img-fallback{background:rgba(78,205,196,0.05);border-color:rgba(78,205,196,0.3);}
+/* light-mode 補丁 */
+body.light-mode .ft-hist-row{color:#333;}
+body.light-mode .score-bar-label{color:#333;}
+body.light-mode .bmi-label{color:#333;}
+body.light-mode .bmi-sub{color:#555;}
+body.light-mode .sb-score{color:#1a1a2e;}
+body.light-mode .sb-team{color:#1a1a2e;}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--nav-bg);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:56px;gap:4px;transition:background 0.3s;}
+.logo{font-size:1rem;font-weight:900;color:var(--gold);letter-spacing:2px;margin-right:14px;white-space:nowrap;}
+.nav-a{padding:7px 13px;border-radius:20px;font-size:0.83rem;font-weight:600;color:var(--muted);transition:all 0.2s;white-space:nowrap;}
+.nav-a:hover{color:#fff;background:rgba(255,255,255,0.08);}
+.nav-a.active{background:var(--teal);color:#000;}
+.theme-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;font-size:1rem;color:var(--gold);transition:all 0.2s;margin-left:4px;}
+.theme-btn:hover{background:rgba(255,215,0,0.12);}
+/* Nav 用戶 */
+.nav-username{font-size:0.82rem;font-weight:700;color:var(--gold);padding:5px 12px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.25);border-radius:20px;white-space:nowrap;}
+.nav-logout{font-size:0.78rem;font-weight:600;color:var(--muted);padding:5px 10px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:none;transition:all .2s;margin-left:4px;}
+.nav-logout:hover{color:#fff;background:rgba(255,100,100,0.15);border-color:rgba(255,100,100,0.4);}
+@media(max-width:540px){.nav-username{display:none;}}
+.page-wrap{padding:72px 20px 40px;max-width:860px;margin:0 auto;}
+.page-banner{margin-bottom:20px;border-radius:16px;overflow:hidden;position:relative;}
+.banner-img{width:100%;height:160px;object-fit:cover;display:block;filter:brightness(0.5);}
+.banner-text{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 24px;}
+.page-banner h1{font-size:1.6rem;font-weight:900;color:var(--teal);margin-bottom:4px;}
+.page-banner p{color:rgba(255,255,255,0.7);font-size:0.88rem;}
+.tab-nav{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+.tab-btn{padding:9px 20px;border-radius:20px;font-size:0.88rem;font-weight:700;background:rgba(255,255,255,0.07);color:#ccc;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
+.tab-btn.active{background:var(--teal);color:#000;border-color:var(--teal);}
+
+/* SCOREBOARD */
+.sport-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px;}
+.sport-btn{padding:6px 14px;border-radius:20px;font-size:0.82rem;font-weight:600;background:rgba(255,255,255,0.07);color:#ccc;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
+.sport-btn.active{background:var(--teal);color:#000;border-color:var(--teal);}
+.rule-txt{font-size:0.8rem;color:var(--muted);margin-bottom:14px;min-height:18px;}
+.sb-box{background:var(--bg2);border-radius:20px;border:1px solid var(--border);padding:22px;margin-bottom:14px;}
+.sb-row{display:flex;gap:12px;align-items:stretch;}
+.sb-team{flex:1;background:var(--card);border-radius:16px;padding:18px;text-align:center;border:2px solid transparent;transition:all 0.3s;}
+.sb-team.lead{border-color:var(--gold);box-shadow:0 0 20px rgba(255,215,0,0.2);}
+.sb-name{width:100%;background:rgba(255,255,255,0.07);border:2px solid var(--border);border-radius:9px;color:#fff;font-size:1.1rem;font-weight:700;text-align:center;padding:6px;margin-bottom:10px;}
+.sb-name:focus{border-color:var(--gold);}
+.sb-score{font-size:5.5rem;font-weight:900;line-height:1;transition:transform 0.12s;}
+#scoreA{color:var(--red);}#scoreB{color:var(--teal);}
+.sb-score.bump{transform:scale(1.25);}
+.sb-btns{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:8px;}
+.sb-btn{border-radius:9px;padding:7px 15px;font-weight:700;font-size:0.88rem;color:#fff;}
+.sb-plus{background:var(--green);}
+.sb-minus{background:var(--red);}
+.sb-zero{background:rgba(255,255,255,0.1);color:#aaa;font-size:0.8rem;}
+.vs-mid{display:flex;align-items:center;justify-content:center;min-width:38px;font-size:1.3rem;font-weight:900;color:#444;}
+
+/* TIMER */
+.timer-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius);padding:20px;text-align:center;margin-bottom:12px;}
+.t-big{font-size:4.5rem;font-weight:900;letter-spacing:6px;transition:color 0.3s;}
+.t-big.warn{color:var(--red);animation:tblink 0.5s infinite;}
+@keyframes tblink{0%,100%{opacity:1}50%{opacity:0.4}}
+.t-presets{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin:10px 0;}
+.t-pre{padding:5px 12px;border-radius:7px;font-size:0.8rem;background:rgba(255,255,255,0.07);color:#ccc;border:1px solid var(--border);cursor:pointer;}
+.t-pre:hover{background:rgba(255,255,255,0.14);}
+.t-ctrl{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:8px;}
+.t-btn{border-radius:10px;padding:9px 20px;font-weight:700;font-size:0.9rem;color:#fff;}
+.t-start{background:var(--green);}
+.t-pause{background:#f39c12;}
+.t-stop{background:var(--red);}
+.ni{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:7px;color:#fff;font-size:0.85rem;text-align:center;padding:5px;width:50px;}
+
+/* FITNESS */
+.card-block{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:14px;}
+.sec-title{font-size:0.95rem;font-weight:700;color:var(--gold);margin-bottom:12px;}
+/* 用戶標示欄 */
+.user-bar{display:flex;align-items:center;gap:10px;background:rgba(255,215,0,0.07);border:1px solid rgba(255,215,0,0.18);border-radius:10px;padding:8px 14px;margin-bottom:18px;font-size:0.82rem;color:var(--gold);}
+.user-bar a{color:var(--muted);font-size:0.78rem;margin-left:auto;cursor:pointer;text-decoration:underline;}
+body.light-mode .user-bar{background:rgba(212,160,23,0.08);border-color:rgba(212,160,23,0.2);}
+.ft-table{width:100%;border-collapse:collapse;margin-top:8px;}
+.ft-table th{background:rgba(255,255,255,0.05);padding:8px 12px;text-align:left;font-size:0.8rem;color:var(--muted);}
+.ft-table td{padding:8px 12px;border-bottom:1px solid var(--border);font-size:0.87rem;}
+.ft-table tr:last-child td{border:none;}
+.ft-in{background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:7px;color:#fff;font-size:0.87rem;padding:5px 8px;width:86px;text-align:center;}
+.ft-in:focus{border-color:var(--gold);}
+.btn{cursor:pointer;border:none;font-family:inherit;border-radius:10px;padding:9px 22px;font-weight:700;font-size:0.88rem;transition:all 0.15s;}
+.btn:active{transform:scale(0.95);}
+.btn-gold{background:var(--gold);color:#000;}
+.btn-grey{background:rgba(255,255,255,0.08);color:#ccc;}
+.row-gap{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px;}
+
+/* RADAR */
+.radar-wrap{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start;justify-content:center;margin-top:8px;}
+.radar-canvas-box{position:relative;flex-shrink:0;}
+.radar-canvas-box canvas{display:block;}
+.total-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;}
+.total-score{font-size:2.6rem;font-weight:900;line-height:1;color:#fff;}
+.total-label{font-size:0.7rem;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+.radar-scores{flex:1;min-width:220px;}
+.rs-row{display:flex;align-items:center;gap:8px;margin-bottom:9px;}
+.rs-label{font-size:0.78rem;color:#ccc;width:120px;flex-shrink:0;}
+.rs-bar-bg{flex:1;height:8px;background:rgba(255,255,255,0.08);border-radius:4px;overflow:hidden;}
+.rs-bar{height:100%;border-radius:4px;transition:width 0.6s;}
+.rs-val{font-size:0.78rem;font-weight:700;width:32px;text-align:right;flex-shrink:0;}
+.grade-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.8rem;font-weight:700;margin-left:4px;}
+
+/* RULES ACCORDION */
+.rules-section{margin-top:8px;}
+.acc-item{margin-bottom:10px;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);}
+.acc-header{width:100%;background:rgba(255,255,255,0.04);border:none;color:var(--text);font-family:inherit;font-size:0.95rem;font-weight:700;padding:14px 18px;text-align:left;cursor:pointer;display:flex;justify-content:space-between;align-items:center;transition:background 0.2s;}
+.acc-header:hover{background:rgba(78,205,196,0.12);}
+.acc-header .acc-arrow{font-size:0.9rem;transition:transform 0.3s;color:var(--teal);}
+.acc-header.open{background:rgba(78,205,196,0.1);}
+.acc-header.open .acc-arrow{transform:rotate(180deg);}
+.acc-body{display:none;padding:16px 18px 18px;background:rgba(0,0,0,0.15);border-top:1px solid var(--border);}
+.acc-body.show{display:block;}
+.rules-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:12px;}
+.rules-block{background:rgba(255,255,255,0.04);border-radius:10px;padding:12px 14px;}
+.rules-block h4{font-size:0.82rem;font-weight:700;color:var(--teal);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;}
+.rules-block ul{padding-left:14px;margin:0;}
+.rules-block li{font-size:0.82rem;color:var(--text2);line-height:1.75;margin-bottom:2px;}
+.rules-img-wrap{text-align:center;margin-top:16px;}
+.rules-img-wrap img{max-width:100%;width:560px;border-radius:12px;box-shadow:0 6px 24px rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.08);max-height:260px;object-fit:contain;background:#1a1a35;padding:8px;}
+.rules-img-wrap p{font-size:0.75rem;color:var(--muted);margin-top:8px;}
+.rules-img-fallback{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;width:100%;max-width:560px;margin:0 auto;height:120px;background:rgba(78,205,196,0.05);border:1px dashed rgba(78,205,196,0.25);border-radius:12px;color:var(--muted);font-size:0.82rem;}
+.rules-img-fallback span{font-size:2.2rem;}
+.sport-badge{display:inline-block;font-size:1.4rem;margin-right:8px;}
+
+@media(max-width:540px){.sb-score{font-size:3.8rem;}nav{padding:0 8px;}.nav-a{padding:5px 8px;font-size:0.75rem;}.logo{font-size:0.85rem;margin-right:5px;}.total-score{font-size:1.8rem;}}
+
+/* ── 橫滑導航列 ─────────────────────── */
+.nav-links{display:flex;align-items:center;gap:4px;flex:1;overflow:hidden;}
+@media(max-width:600px){
+  nav{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap;padding:0 10px;gap:4px;}
+  nav::-webkit-scrollbar{display:none;}
+  .nav-links{overflow:visible;flex:none;}
+  .logo{font-size:0.88rem;white-space:nowrap;flex-shrink:0;}
+  .nav-a{flex-shrink:0;}
+  .bg-switcher{gap:2px;margin-left:4px;flex-shrink:0;}
+  .bg-picker-btn{width:22px;height:22px;}
+  .theme-btn{flex-shrink:0;}
+  .nav-username,.nav-logout{flex-shrink:0;}
+  .page-wrap{padding:68px 12px 32px;}
+  .tab-nav{gap:6px;}
+  .tab-btn{padding:8px 14px;font-size:0.82rem;}
+  /* 計分板：兩隊改垂直排列 */
+  .sb-row{flex-direction:column;gap:8px;}
+  .sb-team{padding:14px;}
+  .sb-score{font-size:3.5rem;}
+  .vs-mid{min-width:unset;font-size:1rem;text-align:center;}
+  .sport-row{gap:5px;}
+  .sport-btn{padding:5px 10px;font-size:0.78rem;}
+  /* 體適能表格 */
+  .ft-table th:nth-child(4),.ft-table td:nth-child(4),
+  .ft-table th:nth-child(5),.ft-table td:nth-child(5){display:none;}
+  .ft-in{width:70px;}
+  /* 雷達圖 */
+  .radar-wrap{flex-direction:column;align-items:center;}
+  .radar-canvas-box canvas{width:220px!important;height:220px!important;}
+  .total-score{font-size:1.6rem;}
+  /* BMI */
+  .bmi-grid{grid-template-columns:1fr;}
+  .bmi-bands{grid-template-columns:repeat(2,1fr);}
+  .row-gap .btn{padding:8px 14px;font-size:0.82rem;}
+}
+
+/* BMI */
+.bmi-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+@media(max-width:480px){.bmi-grid{grid-template-columns:1fr;}}
+.bmi-field label{display:block;font-size:0.78rem;color:var(--muted);margin-bottom:5px;font-weight:600;letter-spacing:.3px;}
+.bmi-input-wrap{position:relative;display:flex;align-items:center;}
+.bmi-inp{width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:1.1rem;font-weight:700;padding:11px 44px 11px 14px;transition:border-color .2s;}
+.bmi-inp:focus{border-color:var(--teal);}
+.bmi-unit{position:absolute;right:12px;font-size:0.78rem;color:var(--muted);font-weight:600;pointer-events:none;}
+.bmi-toggle{display:flex;gap:6px;margin-bottom:16px;}
+.bmi-toggle-btn{flex:1;padding:7px 0;border-radius:8px;font-size:0.82rem;font-weight:700;background:rgba(255,255,255,0.06);color:var(--muted);border:1px solid var(--border);cursor:pointer;transition:all .2s;}
+.bmi-toggle-btn.active{background:var(--teal);color:#000;border-color:var(--teal);}
+.bmi-result-wrap{display:none;animation:fadeUp .4s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.bmi-dial-area{display:flex;flex-direction:column;align-items:center;margin:10px 0 18px;}
+.bmi-svg{width:200px;height:110px;overflow:visible;}
+.bmi-arc-bg{fill:none;stroke:rgba(255,255,255,0.08);stroke-width:14;stroke-linecap:round;}
+.bmi-arc-fg{fill:none;stroke-width:14;stroke-linecap:round;transition:stroke-dashoffset .8s cubic-bezier(.4,0,.2,1),stroke .5s;}
+.bmi-category{text-align:center;font-size:1.05rem;font-weight:800;padding:8px 22px;border-radius:30px;display:inline-block;margin:6px auto 4px;border:2px solid transparent;}
+.bmi-ideal{font-size:0.8rem;color:var(--muted);text-align:center;margin-bottom:16px;}
+.bmi-bands{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-bottom:14px;}
+.bmi-band{border-radius:8px;padding:8px 4px;text-align:center;}
+.bmi-band-val{font-size:0.72rem;font-weight:800;display:block;}
+.bmi-band-lbl{font-size:0.65rem;color:rgba(255,255,255,0.55);display:block;margin-top:2px;}
+.bmi-band.active-band{outline:2px solid #fff;outline-offset:1px;}
+.bmi-history-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;border-radius:8px;background:rgba(255,255,255,0.04);margin-bottom:5px;font-size:0.8rem;}
+.bmi-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+body.light-mode .bmi-inp{color:#1a1a2e;background:rgba(0,0,0,0.05);}
+body.light-mode .bmi-toggle-btn{color:#555;background:rgba(0,0,0,0.05);border-color:rgba(0,0,0,0.12);}
+body.light-mode .bmi-toggle-btn.active{background:#0da89e;color:#fff;border-color:#0da89e;box-shadow:0 2px 10px rgba(13,168,158,0.35);}
+body.light-mode .bmi-band.active-band{outline:2px solid #0da89e;outline-offset:2px;}
+body.light-mode .bmi-history-row{background:rgba(0,0,0,0.04);}
+</style>
+</head>
+<canvas id="bgCanvas"></canvas>
+<body>
+<nav>
+  <a class="logo" href="app.html">文武雙全</a>
+  <div class="nav-links">
+    <a class="nav-a" href="app.html">🏠 主頁</a>
+    <a class="nav-a" href="english.html">📚 英文</a>
+    <a class="nav-a active" href="sports.html">🏆 體育</a>
+    <a class="nav-a" href="tools.html">🎲 教具</a>
+    <a class="nav-a" href="news.html">📰 體壇動態</a>
+  </div>
+  <div class="bg-switcher" id="bgSwitcher">
+    <button class="bg-picker-btn active" data-bg="star"     data-label="✨ 星空流星" title="星空流星"></button>
+    <button class="bg-picker-btn"        data-bg="geo"      data-label="⬡ 幾何網格" title="幾何網格"></button>
+    <button class="bg-picker-btn"        data-bg="noise"    data-label="📄 噪點紙感" title="噪點紙感"></button>
+    <button class="bg-picker-btn"        data-bg="mountain" data-label="🏔 視差山脈" title="視差山脈"></button>
+    <button class="bg-picker-btn" id="bgCustomBtn" data-bg="custom" data-label="🖼 自定義圖片" title="自定義圖片" style="background:linear-gradient(135deg,#ff6b6b,#ffd700,#4ecdc4);font-size:13px;display:flex;align-items:center;justify-content:center;" onclick="bgCustomOpen()">🖼</button>
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="切換深淺色模式">🌙</button>
+  <span class="nav-username" id="navUsername" style="display:none;"></span>
+  <button class="nav-logout" id="navLogout" onclick="ssLogout()" style="display:none;">登出</button>
+</nav>
+
+<!-- 自定義圖片背景面板 -->
+<div class="bg-custom-overlay" id="bgCustomOverlay" style="display:none;" onclick="if(event.target===this)bgCustomClose()">
+  <div class="bg-custom-panel">
+    <h3>🖼 自定義頁面背景</h3>
+    <label class="bg-upload-zone" for="bgFileInput">
+      <input type="file" id="bgFileInput" accept="image/*" onchange="bgHandleFile(this)">
+      <div style="font-size:2rem;margin-bottom:8px;">📁</div>
+      <div style="font-size:0.88rem;color:var(--muted,#888);">點擊選擇圖片（JPG / PNG / WebP）</div>
+      <div style="font-size:0.75rem;color:var(--muted,#888);margin-top:4px;">建議解析度 1920×1080 或以上</div>
+    </label>
+    <div style="text-align:center;font-size:0.8rem;color:var(--muted,#888);margin:8px 0;">— 或貼上圖片網址 —</div>
+    <input class="bg-url-inp" id="bgUrlInput" type="url" placeholder="https://... 圖片 URL">
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button onclick="bgApplyUrl()" style="flex:1;background:var(--blue,#3a86ff);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:0.88rem;">✅ 套用</button>
+      <button onclick="bgCustomClear()" style="background:rgba(255,100,100,0.15);color:#ff8888;border:1px solid rgba(255,100,100,0.3);border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:0.88rem;">🗑 清除自定義</button>
+      <button onclick="bgCustomClose()" style="background:rgba(255,255,255,0.07);color:var(--muted,#888);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:10px;padding:9px 14px;cursor:pointer;font-size:0.88rem;">關閉</button>
+    </div>
+    <div id="bgCustomPreview" style="margin-top:12px;border-radius:10px;overflow:hidden;display:none;max-height:130px;">
+      <img id="bgCustomPreviewImg" style="width:100%;height:130px;object-fit:cover;" src="" alt="">
+    </div>
+  </div>
+</div>
+
+
+
+<div class="page-wrap">
+  <!-- 用戶標示欄 -->
+  <div class="user-bar" id="userBar" style="display:none;">
+    <span>👤 目前登入：<b id="userBarName"></b></span>
+    <a href="app.html" onclick="event.preventDefault();ssLogout()">切換用戶</a>
+  </div>
+  <div class="page-banner">
+    <img class="banner-img" src="https://images.unsplash.com/photo-1517649763962-0c623066013b?w=860&q=80&auto=format&fit=crop" alt="體育專區">
+    <div class="banner-text">
+      <h1>🏆 體育專區 The Sports Field</h1>
+      <p>萬用計分板 · 倒數計時 · 體適能紀錄 · 球類規則百科 · BMI 計算</p>
+    </div>
+  </div>
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('scoreboard',this)">📊 萬用計分板</button>
+    <button class="tab-btn" onclick="switchTab('fitness',this)">💪 體適能紀錄</button>
+    <button class="tab-btn" onclick="switchTab('rules',this)">📖 球類規則百科</button>
+    <button class="tab-btn" onclick="switchTab('bmi',this)">⚖️ BMI 計算</button>
+  </div>
+
+  <!-- SCOREBOARD -->
+  <div id="tab-scoreboard">
+    <div class="sport-row">
+      <span style="font-size:0.8rem;color:var(--muted);align-self:center;">選擇項目：</span>
+      <button class="sport-btn active" onclick="setSport(this,'籃球','4節，每節12分鐘',720)">🏀 籃球</button>
+      <button class="sport-btn" onclick="setSport(this,'足球','上下半場各45分鐘',2700)">⚽ 足球</button>
+      <button class="sport-btn" onclick="setSport(this,'排球','先得25分獲勝，決勝局15分',null)">🏐 排球</button>
+      <button class="sport-btn" onclick="setSport(this,'羽球','三局兩勝，先得21分',null)">🏸 羽球</button>
+      <button class="sport-btn" onclick="setSport(this,'桌球','五局三勝，先得11分',null)">🏓 桌球</button>
+      <button class="sport-btn" onclick="setSport(this,'通用','自由計分',300)">⚡ 通用</button>
+    </div>
+    <div class="rule-txt" id="ruleText">籃球　規則：4節，每節12分鐘</div>
+    <div class="sb-box">
+      <div class="sb-row">
+        <div class="sb-team" id="teamA">
+          <input class="sb-name" id="nameA" value="隊伍 A" maxlength="10">
+          <div class="sb-score" id="scoreA">0</div>
+          <div class="sb-btns">
+            <button class="sb-btn sb-plus" onclick="sc('A',1)">+1</button>
+            <button class="sb-btn sb-minus" onclick="sc('A',-1)">−1</button>
+            <button class="sb-btn sb-zero" onclick="sc('A',0,true)">歸零</button>
+          </div>
+        </div>
+        <div class="vs-mid">VS</div>
+        <div class="sb-team" id="teamB">
+          <input class="sb-name" id="nameB" value="隊伍 B" maxlength="10">
+          <div class="sb-score" id="scoreB">0</div>
+          <div class="sb-btns">
+            <button class="sb-btn sb-plus" onclick="sc('B',1)">+1</button>
+            <button class="sb-btn sb-minus" onclick="sc('B',-1)">−1</button>
+            <button class="sb-btn sb-zero" onclick="sc('B',0,true)">歸零</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="timer-box">
+      <div style="font-size:0.75rem;letter-spacing:2px;color:var(--muted);margin-bottom:6px;text-transform:uppercase;">⏱ 倒數計時器</div>
+      <div class="t-big" id="timerDisp">05:00</div>
+      <div class="t-presets">
+        <button class="t-pre" onclick="tSet(60)">1分</button>
+        <button class="t-pre" onclick="tSet(180)">3分</button>
+        <button class="t-pre" onclick="tSet(300)">5分</button>
+        <button class="t-pre" onclick="tSet(600)">10分</button>
+        <button class="t-pre" onclick="tSet(720)">12分</button>
+        <button class="t-pre" onclick="tSet(2700)">45分</button>
+        <div style="display:flex;gap:5px;align-items:center;">
+          <input type="number" id="tMin" placeholder="分" class="ni">
+          <input type="number" id="tSecInput" placeholder="秒" class="ni">
+          <button class="t-pre" onclick="tCustom()">設定</button>
+        </div>
+      </div>
+      <div class="t-ctrl">
+        <button class="t-btn t-start" onclick="tStart()">▶ 開始</button>
+        <button class="t-btn t-pause" onclick="tPause()">⏸ 暫停</button>
+        <button class="t-btn t-stop" onclick="tStop()">⏹ 停止</button>
+      </div>
+    </div>
+    <div style="text-align:center;"><button class="btn btn-grey" onclick="fullReset()">🔄 全部重置</button></div>
+  </div>
+
+  <!-- FITNESS -->
+  <div id="tab-fitness" class="hidden">
+    <div class="card-block">
+      <div class="sec-title">💪 輸入體適能數據 — 對照中學標準評分</div>
+      <div style="margin-bottom:14px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <input id="ftName" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:9px;color:#fff;font-size:0.95rem;padding:8px 13px;width:160px;" placeholder="學生姓名（選填）">
+        <select id="ftGrade" onchange="updateFtHints()" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:9px;color:#fff;font-size:0.9rem;padding:7px 12px;cursor:pointer;">
+          <option value="s1">初一（中一）</option>
+          <option value="s2">初二（中二）</option>
+          <option value="s3">初三（中三）</option>
+          <option value="s4">高一（中四）</option>
+          <option value="s5">高二（中五）</option>
+          <option value="s6">高三（中六）</option>
+        </select>
+        <select id="ftGender" onchange="updateFtHints()" style="background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:9px;color:#fff;font-size:0.9rem;padding:7px 12px;cursor:pointer;">
+          <option value="m">男生</option>
+          <option value="f">女生</option>
+        </select>
+      </div>
+      <div id="ftStdNote" style="font-size:0.78rem;color:var(--teal);margin-bottom:10px;padding:6px 12px;background:rgba(78,205,196,0.06);border-radius:8px;border-left:3px solid rgba(78,205,196,0.4);">📋 已載入 初一男生 體適能標準（參考香港中學體適能測試指引）</div>
+      <table class="ft-table">
+        <thead><tr><th>測驗項目</th><th>成績</th><th>單位</th><th style="color:var(--teal);">優秀標準</th><th style="color:var(--muted);">合格標準</th></tr></thead>
+        <tbody id="ftBody"></tbody>
+      </table>
+      <div class="row-gap">
+        <button class="btn btn-gold" onclick="calcScore()">📊 計算分數</button>
+        <button class="btn" style="background:var(--green);color:#000;" onclick="saveFt()">💾 儲存紀錄</button>
+        <button class="btn btn-grey" onclick="clearFt()">清除欄位</button>
+      </div>
+    </div>
+
+    <!-- RADAR RESULT -->
+    <div class="card-block" id="radarCard" style="display:none;">
+      <div class="sec-title">🔷 體適能六邊形評分圖</div>
+      <div class="radar-wrap">
+        <div class="radar-canvas-box">
+          <canvas id="radarCanvas" width="280" height="280"></canvas>
+          <div class="total-badge">
+            <div class="total-score" id="totalScore">--</div>
+            <div class="total-label">綜合得分</div>
+          </div>
+        </div>
+        <div class="radar-scores" id="radarScores"></div>
+      </div>
+      <div style="margin-top:14px;text-align:center;" id="gradeRow"></div>
+      <div id="adviceRow"></div>
+    </div>
+
+    <div class="card-block">
+      <div class="sec-title">歷史紀錄</div>
+      <div id="ftHistory"><div style="color:var(--muted);font-size:0.88rem;">尚無紀錄</div></div>
+    </div>
+  </div>
+  <!-- RULES ENCYCLOPEDIA -->
+  <div id="tab-rules" class="hidden">
+    <div class="card-block">
+      <div class="sec-title">📖 球類與田徑規則百科</div>
+      <p style="font-size:0.83rem;color:var(--muted);margin-bottom:16px;">點擊各項目展開場地標準、核心規則與裁判手勢</p>
+
+      <div class="rules-section">
+
+        <!-- 籃球 -->
+        <div class="acc-item">
+          <button class="acc-header" onclick="toggleAcc(this)">
+            <span><span class="sport-badge">🏀</span>籃球 Basketball</span>
+            <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <div class="rules-grid">
+              <div class="rules-block">
+                <h4>🏟 場地標準</h4>
+                <ul>
+                  <li>場地尺寸：28m × 15m</li>
+                  <li>籃框高度：3.05m（10英尺）</li>
+                  <li>三分線距離：6.75m（FIBA）</li>
+                  <li>罰球線距籃框：4.6m</li>
+                  <li>禁區（油漆區）：5.8m × 4.9m</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>📋 核心規則</h4>
+                <ul>
+                  <li>全場4節，每節12分鐘（FIBA 10分鐘）</li>
+                  <li>走步違例：持球移動超過兩步</li>
+                  <li>三秒違例：進攻球員在禁區停留超過3秒</li>
+                  <li>五秒違例：持球不傳射超過5秒</li>
+                  <li>八秒違例：後場進前場超過8秒</li>
+                  <li>犯規滿5次（個人）即離場</li>
+                  <li>球隊累積4次犯規後，對方得罰球機會</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>🤚 常見裁判手勢</h4>
+                <ul>
+                  <li>走步：雙手轉圈</li>
+                  <li>犯規：一手握拳高舉</li>
+                  <li>三分：三根手指指向上方</li>
+                  <li>暫停：雙手呈T字形</li>
+                  <li>替換上場：雙手左右交叉</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>💡 歷史小知識</h4>
+                <ul>
+                  <li>1891年加拿大人 James Naismith 在美國發明</li>
+                  <li>最初用桃籃作球籃，每次得分要人工取球</li>
+                  <li>NBA成立於1946年，現有30支球隊</li>
+                  <li>三分球規則直至1979年才被NBA採用</li>
+                  <li>1992年美國「夢之隊」改寫奧運歷史</li>
+                </ul>
+              </div>
+            </div>
+            <div class="rules-img-wrap">
+              <img src="https://images.unsplash.com/photo-1546519638-68e109498ffc?w=700&q=80&auto=format&fit=crop"
+                alt="籃球場實景"
+                loading="lazy"
+                onerror="this.outerHTML='<div class=\'rules-img-fallback\'><span>🏀</span><span>籃球場（圖片載入失敗）</span></div>'">
+            </div>
+          </div>
+        </div>
+
+        <!-- 排球 -->
+        <div class="acc-item">
+          <button class="acc-header" onclick="toggleAcc(this)">
+            <span><span class="sport-badge">🏐</span>排球 Volleyball</span>
+            <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <div class="rules-grid">
+              <div class="rules-block">
+                <h4>🏟 場地標準</h4>
+                <ul>
+                  <li>場地尺寸：18m × 9m</li>
+                  <li>網高（男）：2.43m</li>
+                  <li>網高（女）：2.24m</li>
+                  <li>攻擊線距中線：3m</li>
+                  <li>後備區：場地外3m</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>📋 核心規則</h4>
+                <ul>
+                  <li>先得25分獲勝，決勝局15分</li>
+                  <li>五局三勝制</li>
+                  <li>每隊每次最多觸球3次</li>
+                  <li>同一球員不可連續觸球兩次</li>
+                  <li>球落地線上算在界內（壓線得分）</li>
+                  <li>發球觸網後過網有效（除發球直接入場）</li>
+                  <li>自由球員（Libero）不可上前區進攻</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>🤚 常見裁判手勢</h4>
+                <ul>
+                  <li>出界：雙臂向外展開指示</li>
+                  <li>觸網：一手指向球網</li>
+                  <li>四次觸球：四根手指朝上</li>
+                  <li>連擊：雙臂前後重疊旋轉</li>
+                  <li>換人：雙手前後交替旋轉</li>
+                </ul>
+              </div>
+            </div>
+            <div class="rules-img-wrap">
+              <img src="https://images.unsplash.com/photo-1592656094267-764a45160876?w=700&q=80&auto=format&fit=crop"
+                alt="排球場實景"
+                loading="lazy"
+                onerror="this.outerHTML='<div class=\'rules-img-fallback\'><span>🏐</span><span>排球場（圖片載入失敗）</span></div>'">
+            </div>
+          </div>
+        </div>
+
+        <!-- 足球 -->
+        <div class="acc-item">
+          <button class="acc-header" onclick="toggleAcc(this)">
+            <span><span class="sport-badge">⚽</span>足球 Football</span>
+            <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <div class="rules-grid">
+              <div class="rules-block">
+                <h4>🏟 場地標準</h4>
+                <ul>
+                  <li>場地：105m × 68m（標準）</li>
+                  <li>球門尺寸：7.32m × 2.44m</li>
+                  <li>罰球點距球門：11m</li>
+                  <li>罰球區：40.32m × 16.5m</li>
+                  <li>球門區：18.32m × 5.5m</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>📋 核心規則</h4>
+                <ul>
+                  <li>上下半場各45分鐘</li>
+                  <li>越位規則：進攻球員位置比倒數第二防守球員更靠近球門</li>
+                  <li>黃牌：警告；紅牌：直接出場</li>
+                  <li>犯規在禁區內判罰球（PK）</li>
+                  <li>角球：球出邊線時由對方開角球</li>
+                  <li>開球門球：球出底線時守方開</li>
+                  <li>任意球：直接/間接之分</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>🤚 常見裁判手勢</h4>
+                <ul>
+                  <li>越位：一臂側平舉示意</li>
+                  <li>直接任意球：一手指向進攻方向</li>
+                  <li>間接任意球：一臂垂直舉起</li>
+                  <li>罰球：一手指向罰球點</li>
+                  <li>黃/紅牌：一手高舉牌子</li>
+                </ul>
+              </div>
+            </div>
+            <div class="rules-img-wrap">
+              <img src="https://images.unsplash.com/photo-1522778526097-ce0a22ceb253?w=700&q=80&auto=format&fit=crop"
+                alt="足球場實景"
+                loading="lazy"
+                onerror="this.outerHTML='<div class=\'rules-img-fallback\'><span>⚽</span><span>足球場（圖片載入失敗）</span></div>'">
+            </div>
+          </div>
+        </div>
+
+        <!-- 羽毛球 -->
+        <div class="acc-item">
+          <button class="acc-header" onclick="toggleAcc(this)">
+            <span><span class="sport-badge">🏸</span>羽毛球 Badminton</span>
+            <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <div class="rules-grid">
+              <div class="rules-block">
+                <h4>🏟 場地標準</h4>
+                <ul>
+                  <li>雙打場地：13.4m × 6.1m</li>
+                  <li>單打場地：13.4m × 5.18m</li>
+                  <li>網高（中）：1.524m</li>
+                  <li>網高（網柱處）：1.55m</li>
+                  <li>後發球線距底線：0.76m</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>📋 核心規則</h4>
+                <ul>
+                  <li>三局兩勝，每局先得21分</li>
+                  <li>20平後須領先2分，最多30分</li>
+                  <li>發球必須低於腰部（腰帶以下）</li>
+                  <li>羽毛球落地界外或掛網為失分</li>
+                  <li>每局結束後換場地，第三局11分換邊</li>
+                  <li>發球時雙腳不可踩線</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>🤚 常見裁判手勢</h4>
+                <ul>
+                  <li>出界：一臂向外平伸</li>
+                  <li>入界：一臂向下指地</li>
+                  <li>讓球重打：雙臂展開向下</li>
+                  <li>服務違例：一手指向發球方</li>
+                </ul>
+              </div>
+            </div>
+            <div class="rules-img-wrap">
+              <img src="https://images.unsplash.com/photo-1626224583764-f87db24ac4ea?w=700&q=80&auto=format&fit=crop"
+                alt="羽毛球場實景"
+                loading="lazy"
+                onerror="this.outerHTML='<div class=\'rules-img-fallback\'><span>🏸</span><span>羽毛球場（圖片載入失敗）</span></div>'">
+            </div>
+          </div>
+        </div>
+
+        <!-- 田徑 -->
+        <div class="acc-item">
+          <button class="acc-header" onclick="toggleAcc(this)">
+            <span><span class="sport-badge">🏃</span>田徑 Athletics</span>
+            <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <div class="rules-grid">
+              <div class="rules-block">
+                <h4>🏟 場地標準</h4>
+                <ul>
+                  <li>標準跑道：400m 橢圓形</li>
+                  <li>跑道寬度：每條1.22m</li>
+                  <li>標準跑道：8條或9條</li>
+                  <li>跳遠助跑道：40m 以上</li>
+                  <li>鉛球投擲圈直徑：2.135m</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>📋 核心規則（短跑）</h4>
+                <ul>
+                  <li>搶跑（False Start）：第一次警告，第二次取消資格</li>
+                  <li>短跑須全程保持在自己跑道內</li>
+                  <li>跑道切線規則：400m以上可在彎道外切</li>
+                  <li>跳遠：踏板超過起跳線即為犯規</li>
+                  <li>鉛球：球必須落在35度扇形區內</li>
+                  <li>接力棒必須在接力區（20m）內交接</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>🤚 常見裁判手勢</h4>
+                <ul>
+                  <li>搶跑：鳴槍兩次，揮動紅旗</li>
+                  <li>成績有效：一臂舉起白旗</li>
+                  <li>犯規無效：舉起紅旗</li>
+                  <li>比賽準備：舉起發令手槍</li>
+                </ul>
+              </div>
+            </div>
+            <div class="rules-img-wrap">
+              <img src="https://images.unsplash.com/photo-1502904550040-7534597429ae?w=700&q=80&auto=format&fit=crop"
+                alt="田徑跑道實景"
+                loading="lazy"
+                onerror="this.outerHTML='<div class=\'rules-img-fallback\'><span>🏃</span><span>田徑跑道（圖片載入失敗）</span></div>'">
+            </div>
+          </div>
+        </div>
+
+        <!-- 乒乓球 -->
+        <div class="acc-item">
+          <button class="acc-header" onclick="toggleAcc(this)">
+            <span><span class="sport-badge">🏓</span>乒乓球 Table Tennis</span>
+            <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <div class="rules-grid">
+              <div class="rules-block">
+                <h4>🏟 場地標準</h4>
+                <ul>
+                  <li>球台：2.74m × 1.525m</li>
+                  <li>球台高度：76cm</li>
+                  <li>網高：15.25cm</li>
+                  <li>球直徑：40mm，重量 2.7g</li>
+                  <li>球材質：白色或橙色賽璐珞球</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>📋 核心規則</h4>
+                <ul>
+                  <li>七局四勝（奧運三局兩勝）</li>
+                  <li>每局先得11分，10平後須領先2分</li>
+                  <li>每人連續發球2次後換發</li>
+                  <li>發球時球需先在手心上彈起再擊打</li>
+                  <li>球擦邊（邊球）算得分</li>
+                  <li>球擦網後落台有效（Let重打）</li>
+                  <li>雙打須依對角線交替擊球</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>💡 歷史小知識</h4>
+                <ul>
+                  <li>起源於19世紀英國，最初用書本當球拍</li>
+                  <li>1988年起成為奧運正式項目</li>
+                  <li>中國在奧運歷史上贏得超過32枚金牌</li>
+                  <li>乒乓外交：1971年中美關係解凍的象徵</li>
+                  <li>球台顏色規定必須為深綠色或深藍色</li>
+                </ul>
+              </div>
+            </div>
+            <div class="rules-img-wrap">
+              <img src="https://images.unsplash.com/photo-1534158914592-062992fbe900?w=700&q=80&auto=format&fit=crop"
+                alt="乒乓球實景" loading="lazy"
+                onerror="this.outerHTML='<div class=\'rules-img-fallback\'><span>🏓</span><span>乒乓球（圖片載入失敗）</span></div>'">
+            </div>
+          </div>
+        </div>
+
+        <!-- 網球 -->
+        <div class="acc-item">
+          <button class="acc-header" onclick="toggleAcc(this)">
+            <span><span class="sport-badge">🎾</span>網球 Tennis</span>
+            <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <div class="rules-grid">
+              <div class="rules-block">
+                <h4>🏟 場地標準</h4>
+                <ul>
+                  <li>全場：23.77m × 10.97m（雙打）</li>
+                  <li>單打：23.77m × 8.23m</li>
+                  <li>網高（中）：0.914m</li>
+                  <li>網高（網柱）：1.07m</li>
+                  <li>發球區：6.4m × 4.115m</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>📋 核心規則</h4>
+                <ul>
+                  <li>計分：0、15、30、40、Deuce、Adv、Game</li>
+                  <li>先贏6局獲勝，需領先2局（Deuce局）</li>
+                  <li>Grand Slam通常五盤三勝（男）/三盤兩勝（女）</li>
+                  <li>發球2次機會，雙誤失分</li>
+                  <li>球落出界或觸網為失分</li>
+                  <li>6:6需打平局搶七（Tie-Break）</li>
+                  <li>Fault：發球踩線或落錯區</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>💡 歷史小知識</h4>
+                <ul>
+                  <li>現代網球於1873年由英國人草坪球場演化而來</li>
+                  <li>四大滿貫：澳網、法網、溫布頓、美網</li>
+                  <li>溫布頓是歷史最悠久的草地大賽（1877年）</li>
+                  <li>費達拿持有20個大滿貫紀錄（男單）</li>
+                  <li>計分系統中「Love=0」源自法語「l'oeuf（雞蛋）」</li>
+                </ul>
+              </div>
+            </div>
+            <div class="rules-img-wrap">
+              <img src="https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=700&q=80&auto=format&fit=crop"
+                alt="網球場實景" loading="lazy"
+                onerror="this.outerHTML='<div class=\'rules-img-fallback\'><span>🎾</span><span>網球場（圖片載入失敗）</span></div>'">
+            </div>
+          </div>
+        </div>
+
+        <!-- 游泳 -->
+        <div class="acc-item">
+          <button class="acc-header" onclick="toggleAcc(this)">
+            <span><span class="sport-badge">🏊</span>游泳 Swimming</span>
+            <span class="acc-arrow">▼</span>
+          </button>
+          <div class="acc-body">
+            <div class="rules-grid">
+              <div class="rules-block">
+                <h4>🏟 場地標準</h4>
+                <ul>
+                  <li>標準泳池：50m × 25m（奧運）</li>
+                  <li>短池：25m（短池世錦賽）</li>
+                  <li>泳道數：8–10 條</li>
+                  <li>每道寬：2.5m</li>
+                  <li>水溫：25–28°C（競技規定）</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>📋 四種泳姿規則</h4>
+                <ul>
+                  <li>自由泳：姿勢不限，通常使用捷泳</li>
+                  <li>蛙泳：雙臂同步前伸，雙腿蛙踢</li>
+                  <li>背泳：全程仰面，轉身可側身翻滾</li>
+                  <li>蝶泳：雙臂同步出水，海豚踢</li>
+                  <li>個人混合泳順序：蝶→背→蛙→自</li>
+                  <li>觸壁規則：蛙/蝶必須雙手同時觸壁</li>
+                  <li>搶跑第一次警告，第二次取消資格</li>
+                </ul>
+              </div>
+              <div class="rules-block">
+                <h4>💡 歷史小知識</h4>
+                <ul>
+                  <li>游泳是1896年首屆現代奧運的核心項目</li>
+                  <li>菲爾普斯共奪23枚奧運金牌，史上最多</li>
+                  <li>蛙泳是最古老的有組織競技泳姿（17世紀）</li>
+                  <li>鯊魚皮泳衣2009年後被FINA禁用</li>
+                  <li>水球、花式游泳亦屬游泳大家族</li>
+                </ul>
+              </div>
+            </div>
+            <div class="rules-img-wrap">
+              <img src="https://images.unsplash.com/photo-1530549387789-4c1017266635?w=700&q=80&auto=format&fit=crop"
+                alt="游泳池實景" loading="lazy"
+                onerror="this.outerHTML='<div class=\'rules-img-fallback\'><span>🏊</span><span>游泳池（圖片載入失敗）</span></div>'">
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- BMI -->
+  <div id="tab-bmi" class="hidden">
+    <div class="card-block">
+      <div class="sec-title">⚖️ BMI 身體質量指數計算器</div>
+      <div class="bmi-toggle">
+        <button class="bmi-toggle-btn active" id="unitMetric" onclick="bmiSetUnit('metric')">公制（cm / kg）</button>
+        <button class="bmi-toggle-btn" id="unitImperial" onclick="bmiSetUnit('imperial')">英制（ft·in / lb）</button>
+      </div>
+      <div id="bmiMetric">
+        <div class="bmi-grid">
+          <div class="bmi-field">
+            <label>身高</label>
+            <div class="bmi-input-wrap">
+              <input class="bmi-inp" id="bmiH" type="number" min="50" max="250" placeholder="170">
+              <span class="bmi-unit">cm</span>
+            </div>
+          </div>
+          <div class="bmi-field">
+            <label>體重</label>
+            <div class="bmi-input-wrap">
+              <input class="bmi-inp" id="bmiW" type="number" min="10" max="300" placeholder="65">
+              <span class="bmi-unit">kg</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="bmiImperial" class="hidden">
+        <div class="bmi-grid" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="bmi-field">
+            <label>英尺</label>
+            <div class="bmi-input-wrap">
+              <input class="bmi-inp" id="bmiFt" type="number" min="1" max="9" placeholder="5">
+              <span class="bmi-unit">ft</span>
+            </div>
+          </div>
+          <div class="bmi-field">
+            <label>英寸</label>
+            <div class="bmi-input-wrap">
+              <input class="bmi-inp" id="bmiIn" type="number" min="0" max="11" placeholder="9">
+              <span class="bmi-unit">in</span>
+            </div>
+          </div>
+          <div class="bmi-field">
+            <label>體重</label>
+            <div class="bmi-input-wrap">
+              <input class="bmi-inp" id="bmiLb" type="number" min="20" max="700" placeholder="143">
+              <span class="bmi-unit">lb</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bmi-grid" style="margin-top:4px;margin-bottom:0;">
+        <div class="bmi-field">
+          <label>年齡（選填）</label>
+          <div class="bmi-input-wrap">
+            <input class="bmi-inp" id="bmiAge" type="number" min="2" max="120" placeholder="15">
+            <span class="bmi-unit">歲</span>
+          </div>
+        </div>
+        <div class="bmi-field">
+          <label>性別（選填）</label>
+          <div style="display:flex;gap:6px;height:44px;">
+            <button class="bmi-toggle-btn" id="sexM" onclick="bmiSetSex('M')" style="border-radius:10px;">♂ 男</button>
+            <button class="bmi-toggle-btn" id="sexF" onclick="bmiSetSex('F')" style="border-radius:10px;">♀ 女</button>
+          </div>
+        </div>
+      </div>
+      <div class="row-gap" style="margin-top:14px;">
+        <button class="btn btn-gold" onclick="bmiCalc()">📊 計算 BMI</button>
+        <button class="btn btn-grey" onclick="bmiReset()">🔄 重置</button>
+      </div>
+    </div>
+
+    <div class="bmi-result-wrap" id="bmiResult">
+      <div class="card-block" style="text-align:center;">
+        <div class="bmi-dial-area">
+          <svg class="bmi-svg" viewBox="0 0 200 110" id="bmiSvg">
+            <path class="bmi-arc-bg" d="M20,100 A80,80 0 0,1 180,100"/>
+            <path class="bmi-arc-fg" id="bmiArcFg" d="M20,100 A80,80 0 0,1 180,100" stroke-dasharray="251.2" stroke-dashoffset="251.2"/>
+            <text x="100" y="88" text-anchor="middle" id="bmiValText" fill="#fff" font-size="22" font-family="'Segoe UI',Arial,sans-serif" font-weight="900">—</text>
+            <text x="20" y="108" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-family="'Segoe UI',Arial,sans-serif">16</text>
+            <text x="180" y="108" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-family="'Segoe UI',Arial,sans-serif">40</text>
+            <text x="100" y="22" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="9" font-family="'Segoe UI',Arial,sans-serif">BMI</text>
+          </svg>
+        </div>
+        <div class="bmi-category" id="bmiCatLabel">—</div>
+        <div class="bmi-ideal" id="bmiIdealText"></div>
+        <div class="bmi-bands" id="bmiBands">
+          <div class="bmi-band" style="background:rgba(58,134,255,0.15);">
+            <span class="bmi-band-val" style="color:#3a86ff;">&lt; 18.5</span>
+            <span class="bmi-band-lbl">體重過輕</span>
+          </div>
+          <div class="bmi-band" style="background:rgba(46,204,113,0.15);">
+            <span class="bmi-band-val" style="color:#2ecc71;">18.5–24.9</span>
+            <span class="bmi-band-lbl">正常體重</span>
+          </div>
+          <div class="bmi-band" style="background:rgba(255,165,0,0.15);">
+            <span class="bmi-band-val" style="color:#f39c12;">25–29.9</span>
+            <span class="bmi-band-lbl">體重過重</span>
+          </div>
+          <div class="bmi-band" style="background:rgba(231,76,60,0.18);">
+            <span class="bmi-band-val" style="color:#e74c3c;">≥ 30</span>
+            <span class="bmi-band-lbl">肥胖</span>
+          </div>
+        </div>
+        <div id="bmiDetails" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;text-align:left;margin-top:4px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card-block" style="margin-top:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+      <div class="sec-title" style="margin-bottom:0;">📋 計算記錄</div>
+      <button class="btn btn-grey" style="padding:4px 12px;font-size:0.78rem;" onclick="bmiClearHistory()">清除全部</button>
+    </div>
+    <div id="bmiHistoryList"><span style="color:var(--muted);font-size:0.85rem;">尚無記錄</span></div>
+  </div>
+
+</div>
+
+<script>
+// ===== 體適能標準數據（參考香港體適能測試 + 教育局中學標準）=====
+// 格式：[優秀, 良好, 合格] （800m/50m 越小越好；其他越大越好）
+const FT_STD = {
+  // 800m 跑步（秒）—— 越低越好
+  run800: {
+    m:{ s1:[210,240,280], s2:[205,235,275], s3:[200,230,270], s4:[195,225,265], s5:[190,220,260], s6:[190,220,260] },
+    f:{ s1:[240,275,320], s2:[235,270,315], s3:[230,265,310], s4:[228,263,308], s5:[225,260,305], s6:[225,260,305] },
+  },
+  // 50m 短跑（秒）—— 越低越好
+  run50: {
+    m:{ s1:[7.5,8.2,9.5], s2:[7.3,8.0,9.3], s3:[7.1,7.8,9.0], s4:[7.0,7.6,8.8], s5:[6.9,7.5,8.7], s6:[6.9,7.5,8.7] },
+    f:{ s1:[8.5,9.3,10.5], s2:[8.3,9.1,10.3], s3:[8.2,9.0,10.2], s4:[8.1,8.9,10.0], s5:[8.0,8.8,10.0], s6:[8.0,8.8,10.0] },
+  },
+  // 立定跳遠（cm）—— 越高越好
+  jump: {
+    m:{ s1:[175,155,135], s2:[185,165,145], s3:[195,175,155], s4:[205,185,165], s5:[215,195,170], s6:[220,200,175] },
+    f:{ s1:[145,130,115], s2:[150,135,120], s3:[155,140,125], s4:[158,143,128], s5:[160,145,130], s6:[160,145,130] },
+  },
+  // 仰臥起坐 1分鐘（次）—— 越多越好
+  situp: {
+    m:{ s1:[48,38,28], s2:[52,42,32], s3:[56,46,36], s4:[58,48,38], s5:[60,50,40], s6:[60,50,40] },
+    f:{ s1:[40,32,24], s2:[43,35,27], s3:[45,37,29], s4:[46,38,30], s5:[47,39,31], s6:[47,39,31] },
+  },
+  // 坐姿體前彎（cm）—— 越高越好
+  flex: {
+    m:{ s1:[10,5,0], s2:[11,6,1], s3:[12,7,2], s4:[13,8,3], s5:[14,9,4], s6:[15,10,5] },
+    f:{ s1:[18,13,8], s2:[19,14,9], s3:[20,15,10], s4:[21,16,11], s5:[22,17,12], s6:[22,17,12] },
+  },
+  // 跳繩 1分鐘（次）—— 越多越好
+  jump_rope: {
+    m:{ s1:[110,90,65], s2:[118,98,72], s3:[125,105,78], s4:[130,110,82], s5:[135,115,85], s6:[135,115,85] },
+    f:{ s1:[115,95,70], s2:[122,102,75], s3:[128,108,80], s4:[132,112,83], s5:[135,115,85], s6:[135,115,85] },
+  },
+};
+
+const FT_KEYS = ['run800','run50','jump','situp','flex','jump_rope'];
+const FT_LOWER_BETTER = [true, true, false, false, false, false]; // true=越低越好
+
+const FT_ITEMS_DEF = [
+  {n:"800公尺跑步", u:"秒",  key:'run800'},
+  {n:"50公尺短跑",  u:"秒",  key:'run50'},
+  {n:"立定跳遠",    u:"cm",  key:'jump'},
+  {n:"仰臥起坐（1分鐘）", u:"次", key:'situp'},
+  {n:"坐姿體前彎",  u:"cm",  key:'flex'},
+  {n:"跳繩（1分鐘）", u:"次", key:'jump_rope'},
+];
+const DIMS=['有氧耐力','速度爆發','彈跳力','核心力量','柔韌度','協調敏捷'];
+const DIM_COLORS=['#ff6b6b','#ffd700','#4ecdc4','#a29bfe','#fd79a8','#55efc4'];
+
+function getGradeGender(){ return {grade: document.getElementById('ftGrade').value, gender: document.getElementById('ftGender').value}; }
+
+function getStd(key){ const {grade,gender}=getGradeGender(); return FT_STD[key][gender][grade]; }
+
+// 根據標準計算百分制分數
+function scoreByStd(val, key){
+  const v = parseFloat(val);
+  if(isNaN(v)||val===''||val===null) return 0;
+  const lower = FT_LOWER_BETTER[FT_KEYS.indexOf(key)];
+  const [ex, good, pass] = getStd(key);
+  if(lower){
+    // 越小越好
+    if(v<=ex)   return 100;
+    if(v<=good) return Math.round(100 - (v-ex)/(good-ex)*20);   // 100→80
+    if(v<=pass) return Math.round(80  - (v-good)/(pass-good)*40); // 80→40
+    const worst = pass * 1.5;
+    return Math.max(0, Math.round(40 - (v-pass)/(worst-pass)*40));
+  } else {
+    // 越大越好
+    if(v>=ex)   return 100;
+    if(v>=good) return Math.round(80 + (v-good)/(ex-good)*20);   // 80→100
+    if(v>=pass) return Math.round(40 + (v-pass)/(good-pass)*40); // 40→80
+    return Math.max(0, Math.round(v/pass*40));
+  }
+}
+
+function updateFtHints(){
+  const grade = document.getElementById('ftGrade').options[document.getElementById('ftGrade').selectedIndex].text;
+  const gender = document.getElementById('ftGender').value==='m'?'男生':'女生';
+  document.getElementById('ftStdNote').textContent='📋 已載入 '+grade+gender+' 體適能標準（參考香港中學體適能測試指引）';
+  // 更新 hint 欄
+  FT_ITEMS_DEF.forEach(function(it,i){
+    const lower = FT_LOWER_BETTER[i];
+    const [ex,good,pass] = getStd(it.key);
+    const exEl = document.getElementById('ft_ex_'+i);
+    const passEl = document.getElementById('ft_pass_'+i);
+    if(exEl) exEl.textContent = lower ? '≤'+ex : '≥'+ex;
+    if(passEl) passEl.textContent = lower ? '≤'+pass : '≥'+pass;
+  });
+}
+
+
+
+/* TAB */
+function switchTab(t,btn){
+  ['scoreboard','fitness','rules','bmi'].forEach(id=>document.getElementById('tab-'+id).classList.toggle('hidden',id!==t));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  if(t==='fitness'){loadFtRec().then(rec=>{ftRec=rec;initFt();renderFtHist();});}
+  if(t==='bmi'){loadBmiHistory().then(h=>{bmiHistory=h;bmiRenderHistory();});}
+}
+
+/* SCOREBOARD */
+let scores={A:0,B:0};
+function sc(t,d,rst=false){
+  if(rst)scores[t]=0;else scores[t]=Math.max(0,scores[t]+d);
+  const el=document.getElementById('score'+t);
+  el.textContent=scores[t];el.classList.remove('bump');void el.offsetWidth;el.classList.add('bump');
+  setTimeout(()=>el.classList.remove('bump'),140);
+  document.getElementById('teamA').classList.toggle('lead',scores.A>scores.B);
+  document.getElementById('teamB').classList.toggle('lead',scores.B>scores.A);
+}
+function setSport(btn,name,rule,secs){
+  document.querySelectorAll('.sport-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('ruleText').textContent=name+'　規則：'+rule;
+  if(secs)tSet(secs);
+}
+function fullReset(){
+  scores={A:0,B:0};
+  ['A','B'].forEach(t=>{document.getElementById('score'+t).textContent='0';document.getElementById('team'+t).classList.remove('lead');});
+  document.getElementById('nameA').value='隊伍 A';document.getElementById('nameB').value='隊伍 B';
+  tStop();
+}
+
+/* TIMER */
+let timerSec=300,tRun=false,tIv=null;
+function tFmt(s){return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');}
+function tUpd(){const el=document.getElementById('timerDisp');el.textContent=tFmt(timerSec);el.classList.toggle('warn',timerSec<=10&&timerSec>0);}
+function tSet(s){tStop();timerSec=s;tUpd();}
+function tCustom(){tSet((parseInt(document.getElementById('tMin').value)||0)*60+(parseInt(document.getElementById('tSecInput').value)||0));}
+function tStart(){if(tRun||timerSec<=0)return;tRun=true;tIv=setInterval(()=>{if(timerSec<=0){tPause();return;}timerSec--;tUpd();},1000);}
+function tPause(){tRun=false;clearInterval(tIv);}
+function tStop(){tPause();timerSec=300;tUpd();}
+
+/* FITNESS */
+let ftRec=[];
+// ===== Supabase 設定 =====
+const SB_URL = 'https://lqpuffsjirsnusjxtwin.supabase.co';
+const SB_KEY = 'sb_publishable_QW-2DPyUIrzMwIkug8Tliw_cf1tx0qH';
+async function sbFetch(path, options={}){
+  const headers={
+    'apikey':SB_KEY,
+    'Authorization':'Bearer '+SB_KEY,
+    'Content-Type':'application/json',
+  };
+  if(options.prefer) headers['Prefer']=options.prefer;
+  Object.assign(headers,options.headers||{});
+  const res=await fetch(SB_URL+'/rest/v1/'+path,{
+    method:options.method||'GET',
+    headers,
+    body:options.body!==undefined?JSON.stringify(options.body):undefined,
+  });
+  if(!res.ok&&res.status!==204){const t=await res.text();throw new Error(t||String(res.status));}
+  if(res.status===204)return null;
+  const text=await res.text();
+  if(!text||!text.trim())return null;
+  try{return JSON.parse(text);}catch(e){throw new Error('Invalid JSON: '+text.slice(0,120));}
+}
+
+// ===== 用戶系統 =====
+function ssGetUser(){ return localStorage.getItem('ssCurrentUser')||''; }
+function ssGetId(){ return localStorage.getItem('ssCurrentId')||''; }
+function ssLogout(){ localStorage.removeItem('ssCurrentUser'); localStorage.removeItem('ssCurrentId'); location.href='app.html'; }
+
+(function initUserBar(){
+  const u=ssGetUser();
+  document.getElementById('userBar').style.display='flex';
+  document.getElementById('userBarName').textContent=u||'訪客（記錄不會保留）';
+  if(u){
+    document.getElementById('navUsername').textContent='👤 '+u;
+    document.getElementById('navUsername').style.display='';
+    document.getElementById('navLogout').style.display='';
+  }
+})();
+
+// ===== 體適能紀錄（Supabase 雲端）=====
+let _ftCache = null;
+
+async function loadFtRec(){
+  const userId = ssGetId();
+  if(!userId) return [];
+  if(_ftCache!==null) return _ftCache;
+  try{
+    const rows = await sbFetch('ft_history?user_id=eq.'+userId+'&order=created_at.desc&limit=30&select=data,created_at');
+    _ftCache = (rows||[]).map(r=>({...r.data, date:r.data.date||new Date(r.created_at).toLocaleDateString('zh-TW')}));
+    return _ftCache;
+  }catch(e){ console.warn('loadFtRec:', e); return []; }
+}
+
+async function saveFtToStorage(){
+  const userId = ssGetId();
+  if(!userId) return;
+  const latest = ftRec[0];
+  if(!latest) return;
+  try{
+    await sbFetch('ft_history', {
+      method:'POST', prefer:'return=minimal',
+      body:{user_id:userId, data:latest}
+    });
+    _ftCache = null;
+  }catch(e){ console.warn('saveFtToStorage:', e); }
+}
+function initFt(){
+  const tb=document.getElementById('ftBody'); tb.innerHTML='';
+  FT_ITEMS_DEF.forEach(function(it,i){
+    const lower = FT_LOWER_BETTER[i];
+    const [ex,good,pass] = getStd(it.key);
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td>'+it.n+'</td>'
+      +'<td><input class="ft-in" id="ft_'+i+'" type="number" placeholder="-" min="0" step="0.1"></td>'
+      +'<td style="color:var(--muted)">'+it.u+'</td>'
+      +'<td style="color:var(--teal);font-size:0.78rem;" id="ft_ex_'+i+'">'+(lower?'≤'+ex:'≥'+ex)+'</td>'
+      +'<td style="color:var(--muted);font-size:0.78rem;" id="ft_pass_'+i+'">'+(lower?'≤'+pass:'≥'+pass)+'</td>';
+    tb.appendChild(tr);
+  });
+}
+function calcScore(silent){
+  if(silent===undefined)silent=false;
+  var sc2=FT_ITEMS_DEF.map(function(it,i){
+    var v=document.getElementById('ft_'+i)?document.getElementById('ft_'+i).value:'';
+    return scoreByStd(v, it.key);
+  });
+  var hasAny=FT_ITEMS_DEF.some(function(_,i){return (document.getElementById('ft_'+i)?document.getElementById('ft_'+i).value:'').trim()!=='';});
+  if(!hasAny){if(!silent)alert('請至少輸入一項數據');return;}
+  var total=Math.round(sc2.reduce(function(a,b){return a+b;},0)/FT_ITEMS_DEF.length);
+  document.getElementById('radarCard').style.display='';
+  document.getElementById('totalScore').textContent=total;
+  renderRadar(sc2);renderScoreBars(sc2);renderGrade(total);renderAdvice(sc2);
+}
+function renderGrade(total){
+  var grade,color;
+  if(total>=90){grade='S 頂尖水平';color='#ffd700';}
+  else if(total>=80){grade='A+ 優秀';color='#4ecdc4';}
+  else if(total>=70){grade='A 良好';color='#55efc4';}
+  else if(total>=60){grade='B 達標';color='#a8e063';}
+  else if(total>=50){grade='C 合格';color='#fdcb6e';}
+  else{grade='D 需加強';color='#ff6b6b';}
+  const gradeLabel=document.getElementById('ftGrade').options[document.getElementById('ftGrade').selectedIndex].text;
+  const genderLabel=document.getElementById('ftGender').value==='m'?'男生':'女生';
+  document.getElementById('gradeRow').innerHTML='<span style="font-size:0.88rem;color:var(--muted);">'+gradeLabel+genderLabel+' 綜合評級：</span><span class="grade-badge" style="background:'+color+'22;color:'+color+';border:1px solid '+color+'44;">'+grade+'</span><span style="font-size:0.78rem;color:var(--muted);margin-left:8px;">（滿分100分，對照中學體適能標準）</span>';
+}
+function renderScoreBars(sc2){
+  var el=document.getElementById('radarScores');
+  el.innerHTML=FT_ITEMS_DEF.map(function(it,i){
+    var v=sc2[i];var bar=v>=80?'#4ecdc4':v>=50?'#ffd700':'#ff6b6b';
+    return '<div class="rs-row"><div class="rs-label">'+it.n.replace('（1分鐘）','')+'</div><div class="rs-bar-bg"><div class="rs-bar" style="width:'+v+'%;background:'+bar+';"></div></div><div class="rs-val" style="color:'+bar+';">'+v+'</div></div>';
+  }).join('');
+}
+function saveFt(){
+  var nm=document.getElementById('ftName').value.trim()||'匿名';
+  var sc2=FT_ITEMS_DEF.map(function(it,i){var v=document.getElementById('ft_'+i)?document.getElementById('ft_'+i).value:'';return{name:it.n,val:v,unit:it.u,score:v?scoreByStd(v,it.key):null};});
+  var total=Math.round(sc2.reduce(function(a,b){return a+(b.score||0);},0)/FT_ITEMS_DEF.length);
+  const gradeLabel=document.getElementById('ftGrade').options[document.getElementById('ftGrade').selectedIndex].text;
+  const genderLabel=document.getElementById('ftGender').value==='m'?'男':'女';
+  const entry={name:nm,date:new Date().toLocaleDateString('zh-TW'),sc2:sc2,total:total,gradeLabel:gradeLabel,genderLabel:genderLabel};
+  ftRec.unshift(entry);
+  saveFtToStorage().catch(()=>{});
+  renderFtHist();
+  document.getElementById('ftName').value='';
+  FT_ITEMS_DEF.forEach(function(_,i){var el=document.getElementById('ft_'+i);if(el)el.value='';});
+  document.getElementById('radarCard').style.display='none';
+}
+function clearFt(){
+  document.getElementById('ftName').value='';
+  FT_ITEMS_DEF.forEach(function(_,i){var el=document.getElementById('ft_'+i);if(el)el.value='';});
+  document.getElementById('radarCard').style.display='none';
+}
+function renderFtHist(){
+  var w=document.getElementById('ftHistory');
+  if(!ftRec.length){w.innerHTML='<div style="color:var(--muted);font-size:0.88rem;">尚無紀錄</div>';return;}
+  w.innerHTML=ftRec.map(function(r,idx){
+    var gc=r.total>=90?'#ffd700':r.total>=80?'#4ecdc4':r.total>=70?'#55efc4':r.total>=60?'#a8e063':r.total>=50?'#fdcb6e':'#ff6b6b';
+    var gn=r.total>=90?'S':r.total>=80?'A+':r.total>=70?'A':r.total>=60?'B':r.total>=50?'C':'D';
+    var items=r.sc2.filter(function(s){return s.val;}).map(function(s){return s.name.replace('（1分鐘）','')+'：<b style="color:#fff">'+s.val+s.unit+'</b><span style="color:var(--muted)"> ('+s.score+'分)</span>';}).join('　');
+    var tag=(r.gradeLabel?r.gradeLabel:'')+(r.genderLabel?r.genderLabel:'');
+    return '<div style="background:rgba(255,255,255,0.04);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:0.85rem;display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px;"><div style="flex:1;min-width:0;"><span style="font-weight:700;color:var(--gold);">'+r.name+'</span>'+(tag?'<span style="margin-left:6px;font-size:0.75rem;color:var(--teal);">'+tag+'</span>':'')+'<span style="color:var(--muted);margin-left:8px;font-size:0.8rem;">'+r.date+'</span><span style="margin-left:8px;background:'+gc+'22;color:'+gc+';border:1px solid '+gc+'44;border-radius:12px;padding:1px 8px;font-size:0.78rem;font-weight:700;">'+gn+' '+r.total+'分</span><div style="margin-top:6px;color:#ccc;line-height:1.8;font-size:0.82rem;">'+items+'</div></div><div style="display:flex;gap:6px;flex-shrink:0;"><button onclick="ftViewRecord('+idx+')" style="background:rgba(78,205,196,0.15);color:var(--teal);border:1px solid rgba(78,205,196,0.35);border-radius:7px;padding:4px 10px;cursor:pointer;font-size:0.78rem;">📊 查看分析</button><button onclick="ftDeleteRec('+idx+')" style="background:rgba(255,100,100,0.2);color:#ff8888;border:none;border-radius:7px;padding:4px 10px;cursor:pointer;font-size:0.78rem;">刪除</button></div></div>';
+  }).join('');
+}
+
+function ftViewRecord(idx){
+  var r=ftRec[idx];
+  if(!r||!r.sc2)return;
+  // 滾動到雷達圖區域
+  document.getElementById('radarCard').style.display='';
+  var scores=r.sc2.map(function(s){return s.score||0;});
+  document.getElementById('totalScore').textContent=r.total;
+  // 更新雷達圖標題顯示來源記錄
+  document.querySelector('#radarCard .sec-title').textContent='🔷 體適能六邊形評分圖（'+r.name+' · '+r.date+'）';
+  renderRadar(scores);
+  renderScoreBars(scores);
+  renderGrade(r.total);
+  renderAdvice(scores);
+  // 將班別性別還原以正確顯示 grade
+  document.getElementById('radarCard').scrollIntoView({behavior:'smooth',block:'start'});
+  // 加一個「回到輸入」按鈕提示
+  var existBtn=document.getElementById('ftBackBtn');
+  if(!existBtn){
+    var btn=document.createElement('button');
+    btn.id='ftBackBtn';
+    btn.className='btn btn-grey';
+    btn.style.marginTop='10px';
+    btn.textContent='← 返回輸入介面';
+    btn.onclick=function(){
+      document.querySelector('#radarCard .sec-title').textContent='🔷 體適能六邊形評分圖';
+      document.getElementById('radarCard').style.display='none';
+      btn.remove();
+    };
+    document.getElementById('radarCard').appendChild(btn);
+  }
+}
+
+async function ftDeleteRec(idx){
+  ftRec.splice(idx,1);
+  // 重新上傳全部記錄（簡單做法：刪除全部舊記錄再重新插入）
+  const userId=ssGetId();
+  if(userId){
+    try{
+      await sbFetch('ft_history?user_id=eq.'+userId, {method:'DELETE'});
+      for(const r of ftRec){
+        await sbFetch('ft_history',{method:'POST',prefer:'return=minimal',body:{user_id:userId,data:r}});
+      }
+    }catch(e){ console.warn('ftDeleteRec:', e); }
+  }
+  _ftCache=null;
+  renderFtHist();
+}
+function renderAdvice(sc2){
+  var ADVICE=[
+    {dim:'有氧耐力',tips:['每週3次持續慢跑20-30分鐘，逐週延長5分鐘','嘗試間歇跑：快跑1分鐘+慢走1分鐘，重複8組','騎單車或游泳代替短暫散步，提升心肺功能']},
+    {dim:'速度爆發',tips:['每週做3次30公尺加速衝刺練習，每次8-10組','練習高抬腿與快步頻訓練，每組30秒','加強腿部力量：深蹲、弓步走，每週2次']},
+    {dim:'彈跳力',tips:['深蹲跳：蹲下後全力跳起，每組10次共4組','單腿跳階訓練，增強踝關節與股四頭肌力量','跳繩訓練：每次5分鐘雙腳跳，每週4次']},
+    {dim:'核心力量',tips:['每日仰臥起坐3組，每組20次，逐週增加5次','加入平板支撐（Plank）：每次30秒共3組','練習捲腹與側棒式，全面強化腹部與背部肌群']},
+    {dim:'柔韌度',tips:['每日早晚各做5分鐘靜態伸展，重點針對大腿後側','坐姿前彎保持30秒，每次3-4組，逐漸加深幅度','加入瑜伽基礎動作，如貓牛式、下犬式']},
+    {dim:'協調敏捷',tips:['每日跳繩練習：交替腳、雙搖等變化形式','敏捷梯訓練：高頻步伐練習，每週2-3次','練習球類接拋動作（如反應球），提升手眼協調']},
+  ];
+  var weak=sc2.map(function(s,i){return{i:i,s:s};}).filter(function(x){return x.s<60;});
+  weak.sort(function(a,b){return a.s-b.s;});
+  var el=document.getElementById('adviceRow');
+  if(!weak.length){
+    el.innerHTML='<div style="margin-top:16px;background:rgba(46,204,113,0.08);border:1px solid rgba(46,204,113,0.25);border-radius:12px;padding:14px 18px;"><div style="font-size:0.88rem;font-weight:700;color:#2ecc71;margin-bottom:4px;">🎉 各項表現優異！</div><div style="font-size:0.82rem;color:#ccc;line-height:1.7;">所有項目得分均達60分以上，整體體適能狀態良好。建議持續保持訓練強度，向「S級頂尖水平」邁進！</div></div>';
+    return;
+  }
+  var top=weak.slice(0,3);
+  var html='<div style="margin-top:16px;"><div style="font-size:0.88rem;font-weight:700;color:var(--gold);margin-bottom:10px;">💡 個人化訓練建議</div>';
+  top.forEach(function(x){
+    var a=ADVICE[x.i];var barColor=x.s>=50?'#fdcb6e':'#ff6b6b';
+    html+='<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:12px 14px;margin-bottom:10px;"><div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;"><span style="font-weight:700;color:'+barColor+';">⚠ '+a.dim+'</span><span style="font-size:0.78rem;background:'+barColor+'22;color:'+barColor+';border:1px solid '+barColor+'44;border-radius:8px;padding:1px 8px;">'+x.s+'分 需加強</span></div><ul style="padding-left:16px;margin:0;">';
+    a.tips.forEach(function(tip){html+='<li style="font-size:0.82rem;color:#ccc;line-height:1.8;margin-bottom:2px;">'+tip+'</li>';});
+    html+='</ul></div>';
+  });
+  html+='</div>';
+  el.innerHTML=html;
+}
+function renderRadar(sc2){
+  var canvas=document.getElementById('radarCanvas');
+  var ctx=canvas.getContext('2d');
+  var W=canvas.width,H=canvas.height,cx=W/2,cy=H/2,R=100,N=6;
+  ctx.clearRect(0,0,W,H);
+  for(var r=1;r<=5;r++){
+    ctx.beginPath();
+    for(var i=0;i<N;i++){var a=Math.PI/2-i*(2*Math.PI/N);var x=cx+R*(r/5)*Math.cos(a),y=cy-R*(r/5)*Math.sin(a);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);}
+    ctx.closePath();ctx.strokeStyle=r===5?'rgba(255,255,255,0.2)':'rgba(255,255,255,0.06)';ctx.lineWidth=r===5?1.5:1;ctx.stroke();
+  }
+  for(var i=0;i<N;i++){var a2=Math.PI/2-i*(2*Math.PI/N);ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+R*Math.cos(a2),cy-R*Math.sin(a2));ctx.strokeStyle='rgba(255,255,255,0.1)';ctx.lineWidth=1;ctx.stroke();}
+  ctx.beginPath();
+  for(var i=0;i<N;i++){var a3=Math.PI/2-i*(2*Math.PI/N);var ratio=sc2[i]/100;var px=cx+R*ratio*Math.cos(a3),py=cy-R*ratio*Math.sin(a3);i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);}
+  ctx.closePath();
+  var grad=ctx.createRadialGradient(cx,cy,0,cx,cy,R);
+  grad.addColorStop(0,'rgba(78,205,196,0.6)');grad.addColorStop(1,'rgba(78,205,196,0.1)');
+  ctx.fillStyle=grad;ctx.fill();ctx.strokeStyle='#4ecdc4';ctx.lineWidth=2.5;ctx.stroke();
+  for(var i=0;i<N;i++){
+    var a4=Math.PI/2-i*(2*Math.PI/N);var ratio2=sc2[i]/100;
+    var dx=cx+R*ratio2*Math.cos(a4),dy=cy-R*ratio2*Math.sin(a4);
+    ctx.beginPath();ctx.arc(dx,dy,5,0,Math.PI*2);ctx.fillStyle=DIM_COLORS[i];ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=1.5;ctx.stroke();
+    var lx=cx+(R+26)*Math.cos(a4),ly=cy-(R+26)*Math.sin(a4);
+    ctx.font='bold 10px Segoe UI,Arial';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle=DIM_COLORS[i];ctx.fillText(DIMS[i],lx,ly);
+    if(sc2[i]>0){ctx.font='bold 9px Segoe UI,Arial';ctx.fillStyle='#fff';var ox=ratio2>0.15?Math.cos(a4)*13:0,oy=ratio2>0.15?-Math.sin(a4)*13:0;ctx.fillText(sc2[i],dx+ox,dy+oy);}
+  }
+}
+
+// init
+initFt();
+loadFtRec().then(rec=>{ftRec=rec;renderFtHist();});
+tUpd();
+(function(){
+  var h=location.hash.replace('#','');
+  var btns=document.querySelectorAll('.tab-btn');
+  if(h==='fitness'&&btns[1])btns[1].click();
+  else if(h==='rules'&&btns[2])btns[2].click();
+  else if(h==='bmi'&&btns[3])btns[3].click();
+})();
+
+// ===== BMI 計算器 =====
+let bmiUnit='metric', bmiSex='';
+let bmiHistory=[];
+
+function bmiLocalKey(){ return 'bmihist_'+(ssGetId()||'guest'); }
+
+async function loadBmiHistory(){
+  const userId=ssGetId();
+  // 先讀本地備份
+  const local=JSON.parse(localStorage.getItem(bmiLocalKey())||'[]');
+  if(userId){
+    try{
+      const rows=await sbFetch('bmi_history?user_id=eq.'+userId+'&order=created_at.desc&limit=10&select=data');
+      if(rows&&rows.length){
+        const cloud=(rows||[]).map(r=>({...r.data}));
+        // 雲端有資料則以雲端為準並同步本地
+        localStorage.setItem(bmiLocalKey(),JSON.stringify(cloud));
+        return cloud;
+      }
+    }catch(e){}
+  }
+  return local;
+}
+loadBmiHistory().then(h=>{bmiHistory=h;bmiRenderHistory();});
+
+
+
+function bmiSetUnit(u){
+  bmiUnit=u;
+  document.getElementById('bmiMetric').classList.toggle('hidden',u!=='metric');
+  document.getElementById('bmiImperial').classList.toggle('hidden',u!=='imperial');
+  document.getElementById('unitMetric').classList.toggle('active',u==='metric');
+  document.getElementById('unitImperial').classList.toggle('active',u==='imperial');
+}
+function bmiSetSex(s){
+  bmiSex=(bmiSex===s?'':s);
+  document.getElementById('sexM').classList.toggle('active',bmiSex==='M');
+  document.getElementById('sexF').classList.toggle('active',bmiSex==='F');
+}
+
+const BMI_CATS=[
+  {max:16,   label:'極度過輕', color:'#5b9bd5', bg:'rgba(91,155,213,0.18)'},
+  {max:18.5, label:'體重過輕', color:'#3a86ff', bg:'rgba(58,134,255,0.18)'},
+  {max:25,   label:'正常體重', color:'#2ecc71', bg:'rgba(46,204,113,0.18)'},
+  {max:27.5, label:'略為過重', color:'#f1c40f', bg:'rgba(241,196,15,0.18)'},
+  {max:30,   label:'體重過重', color:'#f39c12', bg:'rgba(243,156,18,0.18)'},
+  {max:35,   label:'輕度肥胖', color:'#e67e22', bg:'rgba(230,126,34,0.18)'},
+  {max:40,   label:'中度肥胖', color:'#e74c3c', bg:'rgba(231,76,60,0.18)'},
+  {max:Infinity,label:'重度肥胖',color:'#c0392b',bg:'rgba(192,57,43,0.18)'},
+];
+const BAND_ACTIVE=[
+  {test:v=>v<18.5, idx:0},
+  {test:v=>v<25,   idx:1},
+  {test:v=>v<30,   idx:2},
+  {test:v=>true,   idx:3},
+];
+function bmiGetCat(v){return BMI_CATS.find(c=>v<c.max)||BMI_CATS[BMI_CATS.length-1];}
+
+function bmiCalc(){
+  let heightM, weightKg;
+  if(bmiUnit==='metric'){
+    const h=parseFloat(document.getElementById('bmiH').value);
+    const w=parseFloat(document.getElementById('bmiW').value);
+    if(!h||!w||h<50||h>250||w<10||w>300){alert('請輸入有效的身高與體重');return;}
+    heightM=h/100; weightKg=w;
+  } else {
+    const ft=parseFloat(document.getElementById('bmiFt').value)||0;
+    const inch=parseFloat(document.getElementById('bmiIn').value)||0;
+    const lb=parseFloat(document.getElementById('bmiLb').value);
+    if((!ft&&!inch)||!lb){alert('請輸入有效數值');return;}
+    heightM=(ft*12+inch)*0.0254; weightKg=lb*0.453592;
+  }
+  const age=parseInt(document.getElementById('bmiAge').value)||null;
+  const bmi=weightKg/(heightM*heightM);
+  const bmiR=Math.round(bmi*10)/10;
+  const cat=bmiGetCat(bmiR);
+
+  // 顯示結果區
+  const resultWrap=document.getElementById('bmiResult');
+  resultWrap.style.display='block';
+
+  // 儀表指針動畫 (16~40)
+  const ARC=251.2;
+  const pct=Math.min(Math.max((bmiR-16)/(40-16),0),1);
+  const offset=ARC*(1-pct);
+  const fg=document.getElementById('bmiArcFg');
+  fg.style.stroke=cat.color;
+  fg.style.strokeDashoffset=offset;
+  const valText=document.getElementById('bmiValText');
+  valText.textContent=bmiR.toFixed(1);
+  valText.setAttribute('fill',cat.color);
+
+  // 分類標籤
+  const catEl=document.getElementById('bmiCatLabel');
+  catEl.textContent=cat.label;
+  catEl.style.background=cat.bg;
+  catEl.style.color=cat.color;
+  catEl.style.borderColor=cat.color;
+
+  // 健康體重範圍
+  const idealLow=(18.5*heightM*heightM).toFixed(1);
+  const idealHigh=(24.9*heightM*heightM).toFixed(1);
+  document.getElementById('bmiIdealText').textContent=`健康體重範圍：${idealLow} – ${idealHigh} kg（BMI 18.5–24.9）`;
+
+  // 四色帶高亮
+  const bands=document.querySelectorAll('#tab-bmi .bmi-band');
+  const activeIdx=BAND_ACTIVE.find(b=>b.test(bmiR)).idx;
+  bands.forEach((b,i)=>b.classList.toggle('active-band',i===activeIdx));
+
+  // BMR 計算（Mifflin-St Jeor，男女有別）
+  const bmrVal=bmiSex==='F'
+    ? (10*weightKg + 6.25*heightM*100 - 5*(age||25) - 161).toFixed(0)
+    : (10*weightKg + 6.25*heightM*100 - 5*(age||25) + 5).toFixed(0);
+
+  // 體脂率估算（Deurenberg 公式，男女有別）
+  // 男：體脂% = 1.20×BMI + 0.23×年齡 - 10.8×1 - 5.4
+  // 女：體脂% = 1.20×BMI + 0.23×年齡 - 10.8×0 - 5.4
+  const bfAge=age||25;
+  const bfPct=bmiSex==='F'
+    ? (1.20*bmiR + 0.23*bfAge - 5.4).toFixed(1)
+    : bmiSex==='M'
+      ? (1.20*bmiR + 0.23*bfAge - 10.8 - 5.4).toFixed(1)
+      : null;
+  // 體脂標準（台灣衛福部，男：17-25%正常，女：20-30%正常）
+  let bfStatus='', bfColor='';
+  if(bfPct!==null){
+    const bf=parseFloat(bfPct);
+    if(bmiSex==='M'){
+      bfStatus=bf<10?'過低':bf<=17?'標準偏低':bf<=25?'正常':bf<=30?'略高':'肥胖';
+      bfColor=bf<10?'#5b9bd5':bf<=17?'#3a86ff':bf<=25?'#2ecc71':bf<=30?'#f1c40f':'#e74c3c';
+    } else {
+      bfStatus=bf<15?'過低':bf<=20?'標準偏低':bf<=30?'正常':bf<=35?'略高':'肥胖';
+      bfColor=bf<15?'#5b9bd5':bf<=20?'#3a86ff':bf<=30?'#2ecc71':bf<=35?'#f1c40f':'#e74c3c';
+    }
+  }
+
+  // 詳細數據
+  const details=[
+    {k:'身高', v: bmiUnit==='metric'? (heightM*100).toFixed(1)+' cm' : `${Math.floor(heightM/0.0254/12)}ft ${Math.round((heightM/0.0254)%12)}in`},
+    {k:'體重', v: bmiUnit==='metric'? weightKg.toFixed(1)+' kg' : (weightKg/0.453592).toFixed(1)+' lb'},
+    {k:'BMI 值', v:`<span style="color:${cat.color};font-weight:900;">${bmiR.toFixed(2)}</span>`},
+    {k:'分類', v:`<span style="color:${cat.color};">${cat.label}</span>`},
+    ...(bfPct!==null?[{k:`體脂率（${bmiSex==='M'?'男性':bmiSex==='F'?'女性':''}估算）`, v:`<span style="color:${bfColor};font-weight:700;">${bfPct}%</span> <span style="font-size:0.78rem;color:${bfColor};">${bfStatus}</span>`}]:[]),
+    ...(age?[{k:'基礎代謝率', v:`${bmrVal} kcal/天`}]:[]),
+    {k:'理想體重', v:`${idealLow}–${idealHigh} kg`},
+  ];
+  document.getElementById('bmiDetails').innerHTML=details.map(d=>
+    `<div style="background:rgba(255,255,255,0.04);border-radius:9px;padding:9px 12px;">
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:2px;">${d.k}</div>
+      <div style="font-size:0.9rem;font-weight:700;">${d.v}</div>
+    </div>`).join('');
+
+  // 記錄歷史（含 age、sexCode 以便查看分析時還原）
+  const now=new Date();
+  const record={
+    time: now.toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+    bmi: bmiR.toFixed(1), label: cat.label, color: cat.color,
+    h: (heightM*100).toFixed(0), w: weightKg.toFixed(1),
+    sex: bmiSex==='M'?'♂ 男':bmiSex==='F'?'♀ 女':'',
+    sexCode: bmiSex, age: age||null,
+  };
+  bmiHistory.unshift(record);
+  if(bmiHistory.length>10) bmiHistory.pop();
+  // 本地備份（無論是否登入）
+  localStorage.setItem(bmiLocalKey(), JSON.stringify(bmiHistory));
+  // 雲端儲存（登入後）
+  const userId=ssGetId();
+  if(userId){
+    sbFetch('bmi_history',{method:'POST',prefer:'return=minimal',body:{user_id:userId,data:record}}).catch(()=>{});
+  }
+  bmiRenderHistory();
+}
+
+function bmiRenderHistory(){
+  const el=document.getElementById('bmiHistoryList');
+  if(!bmiHistory.length){el.innerHTML='<span style="color:var(--muted);font-size:0.85rem;">尚無記錄</span>';return;}
+  el.innerHTML=bmiHistory.map((r,idx)=>`
+    <div class="bmi-history-row" style="flex-wrap:wrap;gap:6px;">
+      <div class="bmi-dot" style="background:${r.color};"></div>
+      <span style="padding:0 6px;color:var(--muted);font-size:0.82rem;">${r.time}</span>
+      ${r.sex?`<span style="color:${r.color};font-size:0.78rem;">${r.sex}</span>`:''}
+      <span style="color:var(--muted);font-size:0.82rem;">${r.h}cm / ${r.w}kg</span>
+      <span style="font-weight:800;color:${r.color};flex:1;">BMI ${r.bmi} <span style="font-size:0.75rem;font-weight:400;">${r.label}</span></span>
+      <button onclick="bmiViewRecord(${idx})" style="background:rgba(78,205,196,0.15);color:var(--teal);border:1px solid rgba(78,205,196,0.35);border-radius:7px;padding:3px 10px;cursor:pointer;font-size:0.78rem;">📊 查看分析</button>
+      <button onclick="bmiDeleteRecord(${idx})" style="background:rgba(255,100,100,0.15);color:#ff8888;border:1px solid rgba(255,100,100,0.3);border-radius:7px;padding:3px 10px;cursor:pointer;font-size:0.78rem;">刪除</button>
+    </div>`).join('');
+}
+
+async function bmiDeleteRecord(idx){
+  bmiHistory.splice(idx,1);
+  localStorage.setItem(bmiLocalKey(), JSON.stringify(bmiHistory));
+  bmiRenderHistory(); // 先立即更新 UI，不等雲端
+  const userId=ssGetId();
+  if(userId){
+    // 並行上傳，速度快很多
+    sbFetch('bmi_history?user_id=eq.'+userId,{method:'DELETE'})
+      .then(()=>Promise.all(bmiHistory.map(rec=>
+        sbFetch('bmi_history',{method:'POST',prefer:'return=minimal',body:{user_id:userId,data:rec}})
+      )))
+      .catch(e=>console.warn('bmiDeleteRecord cloud:', e));
+  }
+}
+
+function bmiViewRecord(idx){
+  const r=bmiHistory[idx];
+  if(!r) return;
+  const heightM=parseFloat(r.h)/100;
+  const weightKg=parseFloat(r.w);
+  const bmiR=parseFloat(r.bmi);
+  const cat=bmiGetCat(bmiR);
+  const age=r.age||null;
+  const sex=r.sexCode||'';
+
+  // 顯示結果區並滾動
+  const resultWrap=document.getElementById('bmiResult');
+  resultWrap.style.display='block';
+
+  // 儀表指針
+  const ARC=251.2;
+  const pct=Math.min(Math.max((bmiR-16)/(40-16),0),1);
+  const fg=document.getElementById('bmiArcFg');
+  fg.style.stroke=cat.color;
+  fg.style.strokeDashoffset=ARC*(1-pct);
+  const valText=document.getElementById('bmiValText');
+  valText.textContent=bmiR.toFixed(1);
+  valText.setAttribute('fill',cat.color);
+
+  // 分類標籤
+  const catEl=document.getElementById('bmiCatLabel');
+  catEl.textContent=cat.label;
+  catEl.style.background=cat.bg;
+  catEl.style.color=cat.color;
+  catEl.style.borderColor=cat.color;
+
+  // 健康體重範圍
+  const idealLow=(18.5*heightM*heightM).toFixed(1);
+  const idealHigh=(24.9*heightM*heightM).toFixed(1);
+  document.getElementById('bmiIdealText').textContent=`健康體重範圍：${idealLow} – ${idealHigh} kg（BMI 18.5–24.9）`;
+
+  // 色帶高亮
+  const bands=document.querySelectorAll('#tab-bmi .bmi-band');
+  const activeIdx=BAND_ACTIVE.find(b=>b.test(bmiR)).idx;
+  bands.forEach((b,i)=>b.classList.toggle('active-band',i===activeIdx));
+
+  // 體脂率
+  const bfAge=age||25;
+  const bfPct=sex==='F'
+    ? (1.20*bmiR + 0.23*bfAge - 5.4).toFixed(1)
+    : sex==='M'
+      ? (1.20*bmiR + 0.23*bfAge - 10.8 - 5.4).toFixed(1)
+      : null;
+  let bfStatus='', bfColor='';
+  if(bfPct!==null){
+    const bf=parseFloat(bfPct);
+    if(sex==='M'){bfStatus=bf<10?'過低':bf<=17?'標準偏低':bf<=25?'正常':bf<=30?'略高':'肥胖';bfColor=bf<10?'#5b9bd5':bf<=17?'#3a86ff':bf<=25?'#2ecc71':bf<=30?'#f1c40f':'#e74c3c';}
+    else{bfStatus=bf<15?'過低':bf<=20?'標準偏低':bf<=30?'正常':bf<=35?'略高':'肥胖';bfColor=bf<15?'#5b9bd5':bf<=20?'#3a86ff':bf<=30?'#2ecc71':bf<=35?'#f1c40f':'#e74c3c';}
+  }
+
+  // BMR
+  const bmrVal=sex==='F'
+    ? (10*weightKg + 6.25*heightM*100 - 5*(bfAge) - 161).toFixed(0)
+    : (10*weightKg + 6.25*heightM*100 - 5*(bfAge) + 5).toFixed(0);
+
+  // 詳細數據
+  const details=[
+    {k:'身高', v:`${r.h} cm`},
+    {k:'體重', v:`${r.w} kg`},
+    {k:'BMI 值', v:`<span style="color:${cat.color};font-weight:900;">${bmiR.toFixed(2)}</span>`},
+    {k:'分類', v:`<span style="color:${cat.color};">${cat.label}</span>`},
+    ...(bfPct!==null?[{k:`體脂率（${sex==='M'?'男性':'女性'}估算）`, v:`<span style="color:${bfColor};font-weight:700;">${bfPct}%</span> <span style="font-size:0.78rem;color:${bfColor};">${bfStatus}</span>`}]:[]),
+    ...(age?[{k:'基礎代謝率', v:`${bmrVal} kcal/天`}]:[]),
+    {k:'理想體重', v:`${idealLow}–${idealHigh} kg`},
+    {k:'紀錄時間', v:`<span style="color:var(--muted);font-weight:400;font-size:0.85rem;">${r.time}</span>`},
+  ];
+  document.getElementById('bmiDetails').innerHTML=details.map(d=>
+    `<div style="background:rgba(255,255,255,0.04);border-radius:9px;padding:9px 12px;">
+      <div style="font-size:0.72rem;color:var(--muted);margin-bottom:2px;">${d.k}</div>
+      <div style="font-size:0.9rem;font-weight:700;">${d.v}</div>
+    </div>`).join('');
+
+  resultWrap.scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+async function bmiClearHistory(){
+  bmiHistory=[];
+  localStorage.removeItem(bmiLocalKey());
+  const userId=ssGetId();
+  if(userId){
+    try{ await sbFetch('bmi_history?user_id=eq.'+userId,{method:'DELETE'}); }catch(e){}
+  }
+  bmiRenderHistory();
+}
+
+function bmiReset(){
+  ['bmiH','bmiW','bmiFt','bmiIn','bmiLb','bmiAge'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  bmiSex='';
+  document.getElementById('sexM').classList.remove('active');
+  document.getElementById('sexF').classList.remove('active');
+  document.getElementById('bmiResult').style.display='none';
+}
+
+// 初始化 BMI 歷史
+bmiRenderHistory();
+
+// ===== Accordion =====
+function toggleAcc(header){
+  const body=header.nextElementSibling;
+  const isOpen=header.classList.contains('open');
+  header.classList.toggle('open',!isOpen);
+  body.classList.toggle('show',!isOpen);
+}
+
+// ===== 背景主題切換器 =====
+const BG_BODY_CLASSES={star:[],geo:['bg-geo'],noise:['bg-noise'],mountain:['bg-mountain']};
+let currentBg=localStorage.getItem('ssBg')||'star';
+let bgRaf=null;
+function applyBgTheme(name){
+  document.body.classList.remove('bg-geo','bg-noise','bg-mountain');
+  (BG_BODY_CLASSES[name]||[]).forEach(c=>document.body.classList.add(c));
+  document.querySelectorAll('.bg-picker-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.bg===name));
+  currentBg=name; localStorage.setItem('ssBg',name);
+  if(bgRaf) cancelAnimationFrame(bgRaf);
+  startBgCanvas(name);
+}
+document.getElementById('bgSwitcher').addEventListener('click',e=>{
+  const btn=e.target.closest('.bg-picker-btn');
+  if(btn&&btn.dataset.bg!=='custom') applyBgTheme(btn.dataset.bg);
+});
+
+// ===== 自定義圖片背景 =====
+function getBgCustomKey(){ const uid=localStorage.getItem('ssCurrentId')||'guest'; return 'ssBgCustomImg_sports_'+uid; }
+function bgIsBase64(s){ return s&&s.startsWith('data:'); }
+function _applyBgVisual(dataUrl){
+  document.body.style.backgroundImage='url('+dataUrl+')';
+  document.body.classList.add('bg-custom-img');
+  document.querySelectorAll('.bg-picker-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('bgCustomBtn').classList.add('active');
+  document.getElementById('bgCustomPreviewImg').src=dataUrl;
+  document.getElementById('bgCustomPreview').style.display='block';
+}
+async function applyCustomBg(dataUrl){
+  _applyBgVisual(dataUrl);
+  localStorage.setItem(getBgCustomKey(),dataUrl);
+  if(!bgIsBase64(dataUrl)){
+    const uid=ssGetId();
+    if(uid){
+      try{ await sbFetch('users?id=eq.'+uid,{method:'PATCH',prefer:'return=minimal',body:{bg_url:dataUrl}}); }
+      catch(e){ console.warn('bgSync:',e); }
+    }
+  }
+}
+(async function initCustomBg(){
+  const uid=ssGetId();
+  if(uid){
+    try{
+      const rows=await sbFetch('users?id=eq.'+uid+'&select=bg_url');
+      if(rows&&rows[0]&&rows[0].bg_url){ localStorage.setItem(getBgCustomKey(),rows[0].bg_url); _applyBgVisual(rows[0].bg_url); return; }
+    }catch(e){ console.warn('bgSync init:',e); }
+  }
+  const saved=localStorage.getItem(getBgCustomKey());
+  if(saved) _applyBgVisual(saved);
+})();
+function bgCustomOpen(){ document.getElementById('bgCustomOverlay').style.display='flex'; }
+function bgCustomClose(){ document.getElementById('bgCustomOverlay').style.display='none'; }
+function bgHandleFile(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>applyCustomBg(e.target.result);
+  reader.readAsDataURL(file);
+  bgCustomClose();
+}
+function bgApplyUrl(){
+  const url=document.getElementById('bgUrlInput').value.trim();
+  if(!url)return;
+  applyCustomBg(url);
+  bgCustomClose();
+}
+async function bgCustomClear(){
+  localStorage.removeItem(getBgCustomKey());
+  document.body.style.backgroundImage='';
+  document.body.classList.remove('bg-custom-img');
+  document.getElementById('bgCustomBtn').classList.remove('active');
+  document.getElementById('bgCustomPreview').style.display='none';
+  applyBgTheme(currentBg);
+  bgCustomClose();
+  const uid=ssGetId();
+  if(uid){ try{ await sbFetch('users?id=eq.'+uid,{method:'PATCH',prefer:'return=minimal',body:{bg_url:null}}); }catch(e){} }
+}
+
+(function(){
+  const cv=document.getElementById('bgCanvas');
+  const ctx=cv.getContext('2d');
+  let W,H;
+  function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+  window.addEventListener('resize',()=>{resize();if(currentBg)startBgCanvas(currentBg);});
+  resize();
+  function bgStar(){
+    let stars=[],comets=[],lastComet=0;
+    const n=Math.floor(W*H/4800);
+    for(let i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.2,a:Math.random(),da:(Math.random()-0.5)*0.009,color:['#ffffff','#4ecdc4','#3a86ff','#ffd700'][Math.floor(Math.random()*4)]});
+    function spawnComet(){const y=Math.random()*H*0.65,len=90+Math.random()*130,spd=4+Math.random()*3.5;comets.push({x:-60,y,vx:spd,vy:spd*0.38,len});}
+    return function draw(){
+      ctx.clearRect(0,0,W,H);
+      stars.forEach(s=>{s.a+=s.da;if(s.a<=0||s.a>=1)s.da=-s.da;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=s.color;ctx.globalAlpha=s.a*0.78;ctx.fill();});
+      const now=performance.now();if(now-lastComet>1800+Math.random()*3500){spawnComet();lastComet=now;}
+      ctx.globalAlpha=1;
+      comets.forEach(c=>{const g=ctx.createLinearGradient(c.x,c.y,c.x-c.len,c.y-c.len*0.38);g.addColorStop(0,'rgba(255,255,255,0.92)');g.addColorStop(1,'rgba(255,255,255,0)');ctx.strokeStyle=g;ctx.lineWidth=2.4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x-c.len,c.y-c.len*0.38);ctx.stroke();c.x+=c.vx;c.y+=c.vy;});
+      comets=comets.filter(c=>c.x<W+200&&c.y<H+200);
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+  function bgGeo(){
+    const CELL=52,DOT=1.3;
+    let nodes=[];
+    const cols=Math.ceil(W/CELL)+2,rows=Math.ceil(H/CELL)+2;
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) nodes.push({bx:(c-0.5)*CELL,by:(r-0.5)*CELL,ox:0,oy:0,a:Math.random()*Math.PI*2,da:(Math.random()-0.5)*0.008,amp:4+Math.random()*6});
+    return function draw(){
+      ctx.clearRect(0,0,W,H);
+      nodes.forEach(n=>{n.a+=n.da;n.ox=Math.cos(n.a)*n.amp;n.oy=Math.sin(n.a)*n.amp;});
+      for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){const i=r*cols+c,n=nodes[i],nx=n.bx+n.ox,ny=n.by+n.oy;
+        if(c+1<cols){const m=nodes[i+1];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(78,205,196,0.07)';ctx.lineWidth=0.9;ctx.stroke();}
+        if(r+1<rows){const m=nodes[i+cols];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(58,134,255,0.07)';ctx.lineWidth=0.9;ctx.stroke();}
+        if(c+1<cols&&r+1<rows){const m=nodes[i+cols+1];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(255,215,0,0.035)';ctx.lineWidth=0.7;ctx.stroke();}
+        ctx.beginPath();ctx.arc(nx,ny,DOT,0,Math.PI*2);ctx.fillStyle='rgba(78,205,196,0.25)';ctx.globalAlpha=1;ctx.fill();
+      }}
+      const cx=W/2,cy=H/2;
+      for(let i=0;i<8;i++){const angle=i*Math.PI/4+(performance.now()*0.0001);const g=ctx.createLinearGradient(cx,cy,cx+Math.cos(angle)*W*0.7,cy+Math.sin(angle)*H*0.7);g.addColorStop(0,'rgba(78,205,196,0.06)');g.addColorStop(1,'rgba(78,205,196,0)');ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(angle)*W,cy+Math.sin(angle)*H);ctx.strokeStyle=g;ctx.lineWidth=60;ctx.stroke();}
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+  function bgNoise(){
+    const offC=document.createElement('canvas');offC.width=offC.height=256;
+    const offCtx=offC.getContext('2d'),imgData=offCtx.createImageData(256,256);
+    for(let i=0;i<imgData.data.length;i+=4){const v=Math.random()*255|0;imgData.data[i]=v;imgData.data[i+1]=v;imgData.data[i+2]=v;imgData.data[i+3]=18;}
+    offCtx.putImageData(imgData,0,0);
+    const noisePat=ctx.createPattern(offC,'repeat');
+    let blobs=[];
+    for(let i=0;i<5;i++) blobs.push({x:Math.random()*W,y:Math.random()*H,r:180+Math.random()*200,a:Math.random()*Math.PI*2,spd:0.004+Math.random()*0.006,col:['rgba(78,205,196,','rgba(255,215,0,','rgba(255,107,107,'][i%3],opa:0.04+Math.random()*0.04});
+    return function draw(){
+      ctx.clearRect(0,0,W,H);ctx.globalAlpha=0.9;ctx.fillStyle=noisePat;ctx.fillRect(0,0,W,H);
+      blobs.forEach(b=>{b.a+=b.spd;const bx=b.x+Math.cos(b.a)*60,by=b.y+Math.sin(b.a)*40;const g=ctx.createRadialGradient(bx,by,0,bx,by,b.r);g.addColorStop(0,b.col+b.opa+')');g.addColorStop(1,b.col+'0)');ctx.globalAlpha=1;ctx.fillStyle=g;ctx.beginPath();ctx.arc(bx,by,b.r,0,Math.PI*2);ctx.fill();});
+      for(let y=0;y<H;y+=3){ctx.globalAlpha=0.012;ctx.fillStyle=y%6===0?'rgba(255,255,255,1)':'rgba(0,0,0,1)';ctx.fillRect(0,y,W,1);}
+      ctx.globalAlpha=1;bgRaf=requestAnimationFrame(draw);
+    };
+  }
+  function bgMountain(){
+    function makeMountain(n,minH,maxH,seed){const pts=[{x:0,y:H}];for(let i=0;i<=n;i++){const x=i*W/n,y=H-(minH+(Math.sin(i*seed+seed)*0.5+0.5)*(maxH-minH));pts.push({x,y});}pts.push({x:W,y:H});return pts;}
+    const layers=[{pts:makeMountain(12,H*0.52,H*0.72,1.7),col:'rgba(10,30,60,0.85)',speed:0},{pts:makeMountain(10,H*0.42,H*0.62,2.3),col:'rgba(15,40,80,0.80)',speed:0.08},{pts:makeMountain(8,H*0.32,H*0.52,3.1),col:'rgba(20,55,110,0.70)',speed:0.18},{pts:makeMountain(6,H*0.22,H*0.42,4.2),col:'rgba(30,70,140,0.55)',speed:0.30},{pts:makeMountain(5,H*0.14,H*0.30,5.8),col:'rgba(50,100,180,0.35)',speed:0.44}];
+    let prevTS=0;let stars2=[];const ns=Math.floor(W*H/9000);
+    for(let i=0;i<ns;i++) stars2.push({x:Math.random()*W,y:Math.random()*H*0.55,r:Math.random()+0.3,a:Math.random(),da:(Math.random()-0.5)*0.006});
+    return function draw(ts){
+      prevTS=ts;ctx.clearRect(0,0,W,H);
+      stars2.forEach(s=>{s.a+=s.da;if(s.a<=0||s.a>=1)s.da=-s.da;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle='#ffffff';ctx.globalAlpha=s.a*0.6;ctx.fill();});
+      ctx.globalAlpha=1;
+      const gh=ctx.createLinearGradient(0,H*0.55,0,H);gh.addColorStop(0,'rgba(5,15,40,0)');gh.addColorStop(1,'rgba(5,15,40,0.95)');ctx.fillStyle=gh;ctx.fillRect(0,H*0.55,W,H*0.45);
+      [...layers].reverse().forEach(layer=>{ctx.beginPath();ctx.moveTo(layer.pts[0].x,layer.pts[0].y);layer.pts.forEach(p=>ctx.lineTo(p.x,p.y));ctx.closePath();ctx.fillStyle=layer.col;ctx.fill();});
+      const mg=ctx.createRadialGradient(W*0.78,H*0.12,0,W*0.78,H*0.12,W*0.28);mg.addColorStop(0,'rgba(180,210,255,0.10)');mg.addColorStop(1,'rgba(180,210,255,0)');ctx.fillStyle=mg;ctx.fillRect(0,0,W,H);
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+  window.startBgCanvas=function(name){
+    if(bgRaf) cancelAnimationFrame(bgRaf);
+    resize();
+    let drawFn;
+    if(name==='star') drawFn=bgStar();
+    else if(name==='geo') drawFn=bgGeo();
+    else if(name==='noise') drawFn=bgNoise();
+    else if(name==='mountain') drawFn=bgMountain();
+    if(drawFn) bgRaf=requestAnimationFrame(drawFn);
+  };
+  startBgCanvas(currentBg);
+})();
+applyBgTheme(currentBg);
+// ===== 深淺色模式 =====
+function applyTheme(mode){
+  document.body.classList.toggle('light-mode', mode==='light');
+  document.getElementById('themeBtn').textContent = mode==='light' ? '🌙' : '☀️';
+}
+function toggleTheme(){
+  const next = document.body.classList.contains('light-mode') ? 'dark' : 'light';
+  localStorage.setItem('ssTheme', next);
+  applyTheme(next);
+}
+(function(){ applyTheme(localStorage.getItem('ssTheme')||'dark'); })();
+</script>
+</body>
+</html>

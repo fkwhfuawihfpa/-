@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>英文專區 | 文武雙全</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+:root{--gold:#ffd700;--gold2:#ffaa00;--blue:#3a86ff;--teal:#4ecdc4;--red:#ff6b6b;--green:#2ecc71;--bg:#0d0d1a;--bg2:#12122a;--bg3:#1a1a35;--card:#1e1e40;--border:rgba(255,255,255,0.1);--muted:#888;--radius:16px;--text:#fff;--text2:#ccc;--nav-bg:rgba(13,13,26,0.97);}
+body{font-family:'Segoe UI',Arial,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background 0.3s,color 0.3s;}
+button{cursor:pointer;border:none;outline:none;font-family:inherit;}
+input,textarea{font-family:inherit;outline:none;}
+.hidden{display:none!important;}
+/* ── 背景 Canvas 層 ─────────────────────── */
+#bgCanvas{position:fixed;inset:0;pointer-events:none;z-index:0;transition:opacity 0.6s;}
+nav,.page-wrap{position:relative;z-index:1;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;transition:opacity 0.6s;
+  background:
+    radial-gradient(ellipse 55% 45% at 20% 20%, rgba(58,134,255,0.12) 0%, transparent 67%),
+    radial-gradient(ellipse 48% 38% at 80% 70%, rgba(255,215,0,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 42% 35% at 55% 90%, rgba(78,205,196,0.07) 0%, transparent 55%);}
+body::after{content:'';position:fixed;inset:-10% -10% -5% -10%;z-index:0;pointer-events:none;
+  background:
+    conic-gradient(from 100deg at 25% 25%, rgba(58,134,255,0.13), transparent 45%),
+    conic-gradient(from -20deg at 78% 72%, rgba(78,205,196,0.13), transparent 40%),
+    radial-gradient(60% 40% at 50% 85%, rgba(255,215,0,0.05), transparent 60%);
+  filter:blur(42px) saturate(120%);
+  animation:auroraShift 18s ease-in-out infinite alternate;
+  transition:opacity 0.6s;}
+@keyframes auroraShift{0%{transform:translate3d(0,0,0) rotate(0deg);}50%{transform:translate3d(1.5%,-1.5%,0) rotate(2deg);}100%{transform:translate3d(-1%,1%,0) rotate(-2deg);}}
+.bg-noise body::before{background:radial-gradient(ellipse 70% 60% at 30% 30%, rgba(255,215,0,0.07) 0%, transparent 65%),radial-gradient(ellipse 55% 50% at 70% 75%, rgba(58,134,255,0.07) 0%, transparent 62%);}
+.bg-noise body::after{opacity:0.5;}
+.bg-noise #bgCanvas{opacity:0.9;}
+.bg-mountain body::before{background:radial-gradient(ellipse 100% 60% at 50% 100%, rgba(0,30,60,0.95) 0%, transparent 70%),radial-gradient(ellipse 80% 50% at 50% 50%, rgba(10,20,40,0.5) 0%, transparent 100%);}
+.bg-mountain body::after{background:radial-gradient(ellipse 80% 40% at 50% 95%, rgba(58,134,255,0.18) 0%, transparent 60%),conic-gradient(from 160deg at 50% 80%, rgba(78,205,196,0.12), transparent 30%);filter:blur(30px);animation:mountainGlow 8s ease-in-out infinite alternate;}
+@keyframes mountainGlow{0%{opacity:0.7;}100%{opacity:1;}}
+.bg-geo body::before{background:radial-gradient(ellipse 60% 50% at 15% 20%, rgba(58,134,255,0.10) 0%, transparent 70%),radial-gradient(ellipse 50% 40% at 85% 75%, rgba(78,205,196,0.09) 0%, transparent 65%),radial-gradient(ellipse 40% 35% at 50% 50%, rgba(255,215,0,0.04) 0%, transparent 60%);}
+.bg-geo body::after{opacity:0.6;filter:blur(38px);}
+body.light-mode #bgCanvas{opacity:0.55;filter:invert(1) hue-rotate(180deg) saturate(0.6) brightness(1.1);}
+body.light-mode::before{
+  opacity:1;
+  background:
+    radial-gradient(ellipse 65% 55% at 10% 18%, rgba(58,134,255,0.20) 0%, transparent 68%),
+    radial-gradient(ellipse 55% 45% at 88% 75%, rgba(255,215,0,0.15) 0%, transparent 65%),
+    radial-gradient(ellipse 45% 40% at 50% 45%, rgba(78,205,196,0.10) 0%, transparent 60%);
+}
+body.light-mode::after{opacity:0.55;filter:blur(40px) saturate(160%) brightness(1.3);}
+/* 日間各主題背景強化 */
+body.light-mode.bg-noise #bgCanvas{opacity:0.35;filter:none;}
+body.light-mode.bg-mountain #bgCanvas{opacity:0.45;filter:none;}
+body.light-mode.bg-mountain::before{
+  background:
+    radial-gradient(ellipse 100% 50% at 50% 100%, rgba(100,150,220,0.25) 0%, transparent 70%),
+    radial-gradient(ellipse 80% 50% at 50% 50%, rgba(58,134,255,0.12) 0%, transparent 100%);
+}
+/* ── 背景切換器按鈕 ─────────────────────── */
+.bg-switcher{display:flex;align-items:center;gap:4px;margin-left:6px;}
+.bg-picker-btn{width:28px;height:28px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:transform 0.2s,border-color 0.2s,box-shadow 0.2s;position:relative;overflow:hidden;flex-shrink:0;}
+.bg-picker-btn:hover{transform:scale(1.18);box-shadow:0 0 8px rgba(255,255,255,0.3);}
+.bg-picker-btn.active{border-color:#fff;box-shadow:0 0 0 2px rgba(255,255,255,0.5);}
+.bg-picker-btn[data-bg="star"]{background:radial-gradient(circle at 40% 35%, #3a86ff 0%, #0d0d1a 70%);}
+.bg-picker-btn[data-bg="geo"]{background:linear-gradient(135deg, #1e1e40 0%, #3a86ff 50%, #4ecdc4 100%);}
+.bg-picker-btn[data-bg="noise"]{background:radial-gradient(circle, #c8a24a 0%, #3d2c08 60%, #1a1000 100%);}
+.bg-picker-btn[data-bg="mountain"]{background:linear-gradient(to bottom, #0d0d1a 0%, #1a3050 55%, #3a86ff 100%);}
+.bg-picker-btn::after{content:attr(data-label);position:absolute;bottom:-32px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.82);color:#fff;font-size:0.7rem;padding:3px 8px;border-radius:6px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity 0.2s;}
+.bg-picker-btn:hover::after{opacity:1;}
+/* 自定義圖片背景 */
+.bg-custom-overlay{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);}
+.bg-custom-panel{background:var(--card,#1e1e40);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:20px;padding:28px 28px 24px;width:min(480px,92vw);box-shadow:0 20px 60px rgba(0,0,0,0.5);}
+.bg-custom-panel h3{font-size:1rem;font-weight:800;color:var(--gold,#ffd700);margin-bottom:16px;}
+.bg-upload-zone{border:2px dashed var(--border,rgba(255,255,255,0.18));border-radius:12px;padding:24px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:12px;}
+.bg-upload-zone:hover{border-color:rgba(58,134,255,0.6);background:rgba(58,134,255,0.05);}
+.bg-upload-zone input{display:none;}
+.bg-url-inp{width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:10px;color:var(--text,#fff);font-size:0.88rem;padding:9px 13px;margin-bottom:10px;}
+.bg-url-inp:focus{border-color:var(--blue,#3a86ff);outline:none;}
+body.light-mode .bg-custom-panel{background:#fff;}
+body.light-mode .bg-url-inp{color:#1a1a2e;background:rgba(0,0,0,0.05);}
+/* 自定義圖片背景應用 */
+body.bg-custom-img{background-size:cover;background-position:center;background-attachment:scroll;}
+body.bg-custom-img::before{opacity:0.3!important;}
+body.bg-custom-img::after{opacity:0.25!important;}
+body.bg-custom-img #bgCanvas{opacity:0.15!important;}
+
+::-webkit-scrollbar{width:6px;}::-webkit-scrollbar-track{background:#111;}::-webkit-scrollbar-thumb{background:#444;border-radius:3px;}
+a{text-decoration:none;}
+/* LIGHT MODE */
+body.light-mode{--bg:#edf1fb;--bg2:#e2e8f4;--bg3:#e8eef6;--card:#ffffff;--border:rgba(0,0,0,0.1);--muted:#555;--text:#1a1a2e;--text2:#444;--nav-bg:rgba(237,241,251,0.96);--gold:#d4a017;
+  background:radial-gradient(ellipse 70% 55% at 8% 15%, rgba(58,134,255,0.15) 0%, transparent 65%),radial-gradient(ellipse 60% 50% at 92% 80%, rgba(255,215,0,0.12) 0%, transparent 65%),radial-gradient(ellipse 50% 45% at 50% 45%, rgba(78,205,196,0.08) 0%, transparent 60%),#edf1fb;}
+body.light-mode .nav-a{color:#555;}
+body.light-mode .nav-a:hover{color:#000;background:rgba(0,0,0,0.06);}
+body.light-mode .nav-a.active{color:#000;}
+body.light-mode .tag-btn{background:rgba(0,0,0,0.06);color:#555;}
+body.light-mode .tag-btn.on{background:#2563eb;color:#fff;border-color:#2563eb;box-shadow:0 2px 10px rgba(37,99,235,0.35);}
+body.light-mode .nav-btn{color:#444;background:rgba(0,0,0,0.06);}
+body.light-mode .sp-btn{background:rgba(0,0,0,0.06);color:#555;}
+body.light-mode .sp-btn.active{background:#2563eb;color:#fff;border-color:#2563eb;box-shadow:0 2px 10px rgba(37,99,235,0.35);}
+body.light-mode .tab-btn{background:rgba(0,0,0,0.06);color:#555;}
+body.light-mode .tab-btn.active{background:#2563eb;color:#fff;border-color:#2563eb;box-shadow:0 3px 12px rgba(37,99,235,0.40);}
+body.light-mode .choice-btn.on{background:#2563eb;color:#fff;border-color:#2563eb;box-shadow:0 2px 8px rgba(37,99,235,0.30);}
+body.light-mode .sp-card{box-shadow:0 2px 12px rgba(0,0,0,0.08);}
+body.light-mode .choice-btn{background:rgba(0,0,0,0.06);color:#444;}
+body.light-mode .txt-input{color:#1a1a2e;background:rgba(0,0,0,0.05);}
+body.light-mode .chip{background:rgba(0,0,0,0.07);}
+body.light-mode .answer-slots{border-color:rgba(0,0,0,0.15);}
+body.light-mode .daily-body{color:#1a1a2e;}
+body.light-mode .daily-ex{color:#444;}
+body.light-mode .daily-tr{color:#666;}
+body.light-mode .c-ex{color:#444;}
+body.light-mode .c-tr{color:#666;}
+body.light-mode .c-syn{color:#888;}
+/* light-mode 分數/得分/進度條 */
+body.light-mode .score-pill{background:rgba(212,160,23,0.12);border-color:rgba(212,160,23,0.35);color:#7a4f00;}
+body.light-mode .streak-pill{background:rgba(255,140,0,0.12);border-color:rgba(255,140,0,0.35);color:#b35b00;}
+body.light-mode .feedback.ok{background:rgba(46,204,113,0.12);color:#1a6b3a;border-color:rgba(46,204,113,0.3);}
+body.light-mode .feedback.fail{background:rgba(255,107,107,0.10);color:#b81c1c;border-color:rgba(255,107,107,0.25);}
+body.light-mode .sp-hist-row{color:#333;}
+body.light-mode .sp-hist-row span{color:#555 !important;}
+body.light-mode .sp-err-q{color:#333;}
+body.light-mode .sp-err-correct{color:#1a6b3a;}
+body.light-mode .answer-slots{background:rgba(0,0,0,0.04);}
+body.light-mode .slot-chip{background:rgba(212,160,23,0.15);color:#7a4f00;border-color:rgba(212,160,23,0.4);}
+body.light-mode .custom-word-chip{background:rgba(37,99,235,0.1);color:#1e40af;border-color:rgba(37,99,235,0.25);}
+body.light-mode #spHistoryList span{color:#555;}
+body.light-mode .tip-text{color:#333;}
+body.light-mode .daily-word{color:var(--gold);}
+body.light-mode .daily-mean{color:#0e7490;}
+
+
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--nav-bg);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:56px;gap:4px;transition:background 0.3s;}
+.logo{font-size:1rem;font-weight:900;color:var(--gold);letter-spacing:2px;margin-right:14px;white-space:nowrap;}
+.nav-a{padding:7px 13px;border-radius:20px;font-size:0.83rem;font-weight:600;color:var(--muted);transition:all 0.2s;white-space:nowrap;}
+.nav-a:hover,.nav-a.active{color:#fff;background:rgba(255,255,255,0.08);}
+.nav-a.active{background:var(--gold);color:#000;}
+.theme-btn{background:none;border:1px solid var(--border);border-radius:20px;padding:5px 12px;cursor:pointer;font-size:1rem;color:var(--gold);transition:all 0.2s;margin-left:4px;}
+.theme-btn:hover{background:rgba(255,215,0,0.12);}
+
+.page-wrap{padding:72px 20px 40px;max-width:860px;margin:0 auto;}
+.page-banner{margin-bottom:24px;border-radius:16px;overflow:hidden;position:relative;}
+.banner-img{width:100%;height:150px;object-fit:cover;display:block;filter:brightness(0.45);}
+.banner-text{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:center;padding:0 24px;}
+.page-banner h1{font-size:1.6rem;font-weight:900;color:var(--gold);margin-bottom:4px;}
+.page-banner p{color:rgba(255,255,255,0.65);font-size:0.88rem;}
+
+/* TAB NAV */
+.tab-nav{display:flex;gap:8px;margin-bottom:24px;flex-wrap:wrap;}
+.tab-btn{padding:9px 20px;border-radius:20px;font-size:0.88rem;font-weight:700;background:rgba(255,255,255,0.07);color:#ccc;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
+.tab-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+/* FLASHCARD */
+.fc-tag-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px;}
+.tag-btn{padding:5px 13px;border-radius:20px;font-size:0.78rem;font-weight:600;background:rgba(255,255,255,0.07);color:#ccc;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
+.tag-btn.on{background:var(--gold);color:#000;border-color:var(--gold);}
+.prog-wrap{background:rgba(255,255,255,0.08);border-radius:20px;height:7px;margin-bottom:16px;overflow:hidden;}
+.prog-bar{height:100%;border-radius:20px;background:linear-gradient(90deg,var(--gold),var(--gold2));transition:width 0.4s;}
+.fc-wrap{perspective:1200px;width:100%;max-width:540px;margin:0 auto 20px;}
+.flashcard{width:100%;height:320px;transform-style:preserve-3d;transition:transform 0.7s cubic-bezier(.4,2,.6,1);cursor:pointer;position:relative;}
+.flashcard.flipped{transform:rotateY(180deg);}
+.card-face{position:absolute;inset:0;backface-visibility:hidden;border:2px solid var(--border);border-radius:24px;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0;box-shadow:0 8px 32px rgba(0,0,0,0.5);}
+.card-bg{position:absolute;inset:0;background-size:cover;background-position:center;filter:brightness(0.28);border-radius:22px;}
+.card-content{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;height:100%;padding:24px;}
+.card-back{transform:rotateY(180deg);background:linear-gradient(135deg,#1a2a1a,#0d1a0d);}
+.c-word{font-size:2.8rem;font-weight:900;color:var(--gold);margin-bottom:6px;text-align:center;}
+.c-ph{font-size:1rem;color:#aaa;margin-bottom:5px;}
+.c-part{font-size:0.8rem;background:rgba(255,215,0,0.15);color:var(--gold);padding:3px 11px;border-radius:20px;}
+.c-hint{font-size:0.8rem;color:#666;margin-top:14px;}
+.c-mean{font-size:1.8rem;font-weight:800;color:var(--teal);margin-bottom:10px;text-align:center;}
+.c-ex{font-size:0.9rem;color:#ccc;text-align:center;line-height:1.7;margin-bottom:5px;font-style:italic;}
+.c-tr{font-size:0.82rem;color:#888;text-align:center;}
+.c-syn{font-size:0.77rem;color:#555;margin-top:6px;text-align:center;}
+.fc-nav{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:16px;}
+.nav-btn{background:var(--card);border:1px solid var(--border);color:#ccc;border-radius:12px;padding:9px 22px;font-size:0.95rem;font-weight:700;transition:all 0.2s;}
+.nav-btn:hover{background:rgba(255,255,255,0.1);color:#fff;}
+.counter{font-size:0.88rem;color:var(--muted);}
+.fc-actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;}
+
+/* SENTENCE */
+.sp-modes{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.sp-btn{padding:7px 16px;border-radius:20px;font-size:0.85rem;font-weight:600;background:rgba(255,255,255,0.07);color:#ccc;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
+.sp-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.sp-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px;}
+.sp-prompt{font-size:0.75rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.sp-sentence{font-size:1.2rem;color:#fff;line-height:1.85;margin-bottom:14px;}
+.sp-sentence .blank{display:inline-block;min-width:80px;border-bottom:2px solid var(--gold);color:var(--gold);text-align:center;padding:0 6px;}
+.choices{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:12px;}
+.choice-btn{padding:6px 16px;border-radius:20px;font-size:0.88rem;font-weight:600;background:rgba(255,255,255,0.07);color:#ccc;border:1px solid var(--border);cursor:pointer;transition:all 0.2s;}
+.choice-btn.on{background:var(--blue);color:#fff;border-color:var(--blue);}
+.word-chips{display:flex;flex-wrap:wrap;gap:7px;margin:10px 0;}
+.chip{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);border-radius:8px;padding:6px 14px;cursor:pointer;font-size:0.9rem;transition:all 0.15s;user-select:none;}
+.chip:hover{background:rgba(58,134,255,0.25);}
+.chip.used{opacity:0.22;pointer-events:none;}
+.answer-slots{min-height:46px;background:rgba(0,0,0,0.2);border:2px dashed var(--border);border-radius:10px;padding:8px;display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+.slot-chip{background:rgba(255,215,0,0.12);border:1px solid var(--gold);border-radius:7px;padding:5px 12px;font-size:0.9rem;color:var(--gold);cursor:pointer;}
+.slot-chip:hover{background:rgba(255,100,100,0.15);}
+.txt-input{width:100%;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;color:#fff;font-size:0.95rem;padding:10px 13px;resize:vertical;}
+.txt-input:focus{border-color:var(--blue);}
+.sp-actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;}
+.feedback{padding:10px 14px;border-radius:10px;font-weight:700;margin-top:10px;display:none;line-height:1.6;}
+.feedback.ok{background:rgba(46,204,113,0.15);color:var(--green);border:1px solid rgba(46,204,113,0.3);}
+.feedback.fail{background:rgba(255,107,107,0.15);color:var(--red);border:1px solid rgba(255,107,107,0.3);}
+.streak-pill{background:rgba(255,140,0,0.15);border:1px solid rgba(255,140,0,0.4);color:#ffaa00;border-radius:20px;padding:4px 11px;font-size:0.83rem;font-weight:700;animation:streakPop 0.3s ease;}
+@keyframes streakPop{0%{transform:scale(0.85)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+.score-pill{background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.3);color:var(--gold);border-radius:20px;padding:4px 13px;font-size:0.83rem;font-weight:700;}
+
+/* DAILY */
+.daily-card{background:var(--card);border:1px solid var(--border);border-radius:24px;overflow:hidden;}
+.daily-hero{width:100%;height:200px;object-fit:cover;display:block;filter:brightness(0.75);}
+.daily-body{padding:32px 28px 28px;text-align:center;}
+.daily-label{font-size:0.72rem;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;}
+.daily-word{font-size:3.2rem;font-weight:900;color:var(--gold);margin-bottom:7px;}
+.daily-ph{font-size:1rem;color:#aaa;margin-bottom:6px;}
+.daily-part{display:inline-block;font-size:0.8rem;background:rgba(255,215,0,0.15);color:var(--gold);padding:3px 11px;border-radius:20px;margin-bottom:18px;}
+.daily-mean{font-size:1.8rem;font-weight:800;color:var(--teal);margin-bottom:14px;}
+.daily-ex{color:#ccc;line-height:1.8;max-width:460px;margin:0 auto 6px;font-style:italic;}
+.daily-tr{color:#888;margin-bottom:20px;font-size:0.9rem;}
+.tip-box{background:rgba(255,215,0,0.06);border-radius:12px;padding:14px 20px;max-width:380px;margin:0 auto 20px;}
+.tip-label{font-size:0.72rem;color:var(--muted);margin-bottom:5px;}
+.tip-text{font-size:0.9rem;color:#ccc;line-height:1.6;}
+
+/* BUTTONS */
+.btn{cursor:pointer;border:none;font-family:inherit;border-radius:11px;padding:9px 22px;font-weight:700;font-size:0.9rem;transition:all 0.15s;}
+.btn:active{transform:scale(0.95);}
+.btn-gold{background:var(--gold);color:#000;}
+.btn-blue{background:var(--blue);color:#fff;}
+.btn-green{background:var(--green);color:#fff;}
+.btn-grey{background:rgba(255,255,255,0.08);color:#ccc;}
+
+/* 自定義詞庫 */
+.custom-word-row{display:flex;gap:6px;margin-bottom:6px;align-items:center;flex-wrap:wrap;}
+.cw-inp{flex:1;min-width:80px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:0.85rem;padding:6px 10px;}
+.cw-inp:focus{border-color:var(--blue);}
+body.light-mode .cw-inp{color:#1a1a2e;background:rgba(0,0,0,0.05);}
+.cw-tag-badge{display:inline-block;padding:2px 9px;border-radius:12px;font-size:0.75rem;font-weight:600;background:rgba(58,134,255,0.15);color:var(--blue);border:1px solid rgba(58,134,255,0.3);}
+.custom-word-chip{background:rgba(58,134,255,0.1);border:1px solid rgba(58,134,255,0.25);border-radius:20px;padding:3px 10px;font-size:0.8rem;color:#aad4ff;display:inline-flex;align-items:center;gap:4px;}
+.custom-word-chip button{background:none;border:none;color:#ff8888;cursor:pointer;font-size:0.9rem;padding:0;line-height:1;}
+
+.tts-btn{background:rgba(58,134,255,0.15);border:1px solid rgba(58,134,255,0.35);color:var(--blue);border-radius:20px;padding:6px 14px;font-size:0.85rem;font-weight:700;cursor:pointer;transition:all 0.2s;display:inline-flex;align-items:center;gap:5px;}
+.tts-btn:hover{background:rgba(58,134,255,0.28);}
+.tts-btn.speaking{background:rgba(58,134,255,0.3);animation:tts-pulse 0.8s infinite;}
+@keyframes tts-pulse{0%,100%{opacity:1}50%{opacity:0.55}}
+/* Nav 用戶 */
+.nav-username{font-size:0.82rem;font-weight:700;color:var(--gold);padding:5px 12px;background:rgba(255,215,0,0.1);border:1px solid rgba(255,215,0,0.25);border-radius:20px;white-space:nowrap;}
+.nav-logout{font-size:0.78rem;font-weight:600;color:var(--muted);padding:5px 10px;border-radius:20px;cursor:pointer;border:1px solid var(--border);background:none;transition:all .2s;margin-left:4px;}
+.nav-logout:hover{color:#fff;background:rgba(255,100,100,0.15);border-color:rgba(255,100,100,0.4);}
+/* ── 橫滑導航列 ─────────────────────── */
+.nav-links{display:flex;align-items:center;gap:4px;flex:1;overflow:hidden;}
+@media(max-width:600px){
+  nav{overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-wrap:nowrap;padding:0 10px;gap:4px;}
+  nav::-webkit-scrollbar{display:none;}
+  .nav-links{overflow:visible;flex:none;}
+  .logo{font-size:0.88rem;white-space:nowrap;flex-shrink:0;}
+  .nav-a{flex-shrink:0;}
+  .bg-switcher{gap:2px;margin-left:4px;flex-shrink:0;}
+  .bg-picker-btn{width:22px;height:22px;}
+  .theme-btn{flex-shrink:0;}
+  .nav-username,.nav-logout{flex-shrink:0;}
+  .page-wrap{padding:68px 12px 32px;}
+  .tab-nav{gap:6px;}
+  .tab-btn{padding:8px 14px;font-size:0.82rem;}
+  .fc-wrap{max-width:100%;}
+  .flashcard{height:260px;}
+  .sp-modes{gap:6px;}
+  .sp-btn{padding:6px 12px;font-size:0.8rem;}
+  .sp-actions{gap:6px;}
+  .sp-actions .btn{padding:8px 14px;font-size:0.82rem;}
+  .choices{gap:5px;}
+  .choice-btn{padding:5px 12px;font-size:0.82rem;}
+  .fc-actions{gap:6px;}
+  .fc-actions .btn{padding:7px 14px;font-size:0.82rem;}
+}
+/* 用戶標示欄 */
+.user-bar{display:flex;align-items:center;gap:10px;background:rgba(58,134,255,0.07);border:1px solid rgba(58,134,255,0.18);border-radius:10px;padding:8px 14px;margin-bottom:18px;font-size:0.82rem;color:var(--blue);}
+.user-bar a{color:var(--muted);font-size:0.78rem;margin-left:auto;cursor:pointer;text-decoration:underline;}
+body.light-mode .user-bar{background:rgba(37,99,235,0.06);border-color:rgba(37,99,235,0.18);}
+/* 句子練習歷史 */
+.sp-hist-row{display:flex;justify-content:space-between;align-items:center;padding:7px 12px;border-radius:8px;background:rgba(255,255,255,0.04);margin-bottom:5px;font-size:0.82rem;}
+body.light-mode .sp-hist-row{background:rgba(0,0,0,0.04);}
+/* 錯誤回顧 */
+.sp-err-item{background:rgba(255,107,107,0.07);border:1px solid rgba(255,107,107,0.2);border-radius:10px;padding:10px 14px;margin-bottom:8px;font-size:0.85rem;}
+.sp-err-q{color:#ccc;margin-bottom:4px;}
+.sp-err-ans{color:var(--red);margin-bottom:2px;}
+.sp-err-correct{color:var(--green);}
+body.light-mode .sp-err-q{color:#444;}
+body.light-mode .sp-err-item{background:rgba(255,107,107,0.05);}
+
+</style>
+</head>
+<canvas id="bgCanvas"></canvas>
+<body>
+<nav>
+  <a class="logo" href="app.html">文武雙全</a>
+  <div class="nav-links">
+    <a class="nav-a" href="app.html">🏠 主頁</a>
+    <a class="nav-a active" href="english.html">📚 英文</a>
+    <a class="nav-a" href="sports.html">🏆 體育</a>
+    <a class="nav-a" href="tools.html">🎲 教具</a>
+    <a class="nav-a" href="news.html">📰 體壇動態</a>
+  </div>
+  <div class="bg-switcher" id="bgSwitcher">
+    <button class="bg-picker-btn active" data-bg="star"     data-label="✨ 星空流星" title="星空流星"></button>
+    <button class="bg-picker-btn"        data-bg="geo"      data-label="⬡ 幾何網格" title="幾何網格"></button>
+    <button class="bg-picker-btn"        data-bg="noise"    data-label="📄 噪點紙感" title="噪點紙感"></button>
+    <button class="bg-picker-btn"        data-bg="mountain" data-label="🏔 視差山脈" title="視差山脈"></button>
+    <button class="bg-picker-btn" id="bgCustomBtn" data-bg="custom" data-label="🖼 自定義圖片" title="自定義圖片" style="background:linear-gradient(135deg,#ff6b6b,#ffd700,#4ecdc4);font-size:13px;display:flex;align-items:center;justify-content:center;" onclick="bgCustomOpen()">🖼</button>
+  </div>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()" title="切換深淺色模式">🌙</button>
+  <span class="nav-username" id="navUsername" style="display:none;"></span>
+  <button class="nav-logout" id="navLogout" onclick="ssLogout()" style="display:none;">登出</button>
+</nav>
+
+<!-- 自定義圖片背景面板 -->
+<div class="bg-custom-overlay" id="bgCustomOverlay" style="display:none;" onclick="if(event.target===this)bgCustomClose()">
+  <div class="bg-custom-panel">
+    <h3>🖼 自定義頁面背景</h3>
+    <label class="bg-upload-zone" for="bgFileInput">
+      <input type="file" id="bgFileInput" accept="image/*" onchange="bgHandleFile(this)">
+      <div style="font-size:2rem;margin-bottom:8px;">📁</div>
+      <div style="font-size:0.88rem;color:var(--muted,#888);">點擊選擇圖片（JPG / PNG / WebP）</div>
+      <div style="font-size:0.75rem;color:var(--muted,#888);margin-top:4px;">建議解析度 1920×1080 或以上</div>
+    </label>
+    <div style="text-align:center;font-size:0.8rem;color:var(--muted,#888);margin:8px 0;">— 或貼上圖片網址 —</div>
+    <input class="bg-url-inp" id="bgUrlInput" type="url" placeholder="https://... 圖片 URL">
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;">
+      <button onclick="bgApplyUrl()" style="flex:1;background:var(--blue,#3a86ff);color:#fff;border:none;border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:0.88rem;">✅ 套用</button>
+      <button onclick="bgCustomClear()" style="background:rgba(255,100,100,0.15);color:#ff8888;border:1px solid rgba(255,100,100,0.3);border-radius:10px;padding:9px 16px;font-weight:700;cursor:pointer;font-size:0.88rem;">🗑 清除自定義</button>
+      <button onclick="bgCustomClose()" style="background:rgba(255,255,255,0.07);color:var(--muted,#888);border:1px solid var(--border,rgba(255,255,255,0.12));border-radius:10px;padding:9px 14px;cursor:pointer;font-size:0.88rem;">關閉</button>
+    </div>
+    <div id="bgCustomPreview" style="margin-top:12px;border-radius:10px;overflow:hidden;display:none;max-height:130px;">
+      <img id="bgCustomPreviewImg" style="width:100%;height:130px;object-fit:cover;" src="" alt="">
+    </div>
+  </div>
+</div>
+
+
+
+<div class="page-wrap">
+  <!-- 用戶標示欄 -->
+  <div class="user-bar" id="userBar" style="display:none;">
+    <span>👤 目前登入：<b id="userBarName"></b></span>
+    <a href="app.html" onclick="event.preventDefault();ssLogout()">切換用戶</a>
+  </div>
+  <div class="page-banner">
+    <img class="banner-img" src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=860&q=80&auto=format&fit=crop" alt="英文專區">
+    <div class="banner-text">
+      <h1>📚 英文專區 The English Lab</h1>
+      <p>智慧閃卡 · 句子練習 · 每日一字</p>
+    </div>
+  </div>
+
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('flashcard',this)">🃏 智慧閃卡</button>
+    <button class="tab-btn" onclick="switchTab('sentence',this)">✍️ 句子練習</button>
+    <button class="tab-btn" onclick="switchTab('daily',this)">☀️ 每日一字</button>
+    <button class="tab-btn" onclick="switchTab('custom',this)">✏️ 自定義詞庫</button>
+  </div>
+
+  <!-- ===== FLASHCARD ===== -->
+  <div id="tab-flashcard">
+    <div class="fc-tag-row" id="fcTagRow"></div>
+    <div class="prog-wrap"><div class="prog-bar" id="fcProg" style="width:0%"></div></div>
+    <div class="fc-wrap">
+      <div class="flashcard" id="flashcard" onclick="fcFlip()">
+        <div class="card-face">
+          <div class="card-bg" id="fcBg"></div>
+          <div class="card-content">
+            <div class="c-word" id="fcWord">—</div>
+            <div class="c-ph" id="fcPh"></div>
+            <div class="c-part" id="fcPart"></div>
+            <div class="c-hint">點擊翻轉查看中文</div>
+          </div>
+        </div>
+        <div class="card-face card-back">
+          <div class="card-content">
+            <div class="c-mean" id="fcMean"></div>
+            <div class="c-ex" id="fcEx"></div>
+            <div class="c-tr" id="fcTr"></div>
+            <div class="c-syn" id="fcSyn"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="fc-nav">
+      <button class="nav-btn" onclick="fcPrev()">‹ 上一張</button>
+      <span class="counter" id="fcCounter">1 / 1</span>
+      <button class="nav-btn" onclick="fcNext()">下一張 ›</button>
+    </div>
+    <div class="fc-actions">
+      <button class="btn btn-gold" onclick="fcFlip()">🔄 翻轉</button>
+      <button class="tts-btn" id="ttsFC" onclick="speakFC()">🔊 朗讀單字</button>
+      <button class="tts-btn" id="ttsFCEx" onclick="speakFCEx()" style="display:none">🔊 朗讀例句</button>
+      <button class="btn btn-grey" onclick="fcShuffle()">🔀 隨機</button>
+      <button class="btn btn-grey" onclick="fcReset()">↩ 重置</button>
+    </div>
+  </div>
+
+  <!-- ===== SENTENCE ===== -->
+  <div id="tab-sentence" class="hidden">
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap;">
+      <div class="sp-modes">
+        <button class="sp-btn active" id="modeFill" onclick="setMode('fill',this)">填空</button>
+        <button class="sp-btn" id="modeOrder" onclick="setMode('order',this)">排列句子</button>
+        <button class="sp-btn" id="modeTranslate" onclick="setMode('translate',this)">中翻英</button>
+      </div>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+        <span class="streak-pill" id="streakPill" style="display:none">🔥 <span id="streakCount">0</span> 連答</span>
+        <span class="score-pill" id="scorePill">得分：<b id="scoreNum">0</b></span>
+      </div>
+    </div>
+    <!-- 進度條 -->
+    <div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">
+        <span style="font-size:0.75rem;color:var(--muted);" id="qProgress">第 1 題，共 <span id="qTotal">0</span> 題</span>
+        <span style="font-size:0.75rem;color:var(--gold);" id="accuracyLabel">正確率：—</span>
+      </div>
+      <div style="background:rgba(255,255,255,0.07);border-radius:20px;height:6px;overflow:hidden;">
+        <div id="spProgBar" style="height:100%;border-radius:20px;background:linear-gradient(90deg,var(--blue),var(--teal));transition:width 0.4s;width:0%;"></div>
+      </div>
+    </div>
+    <div class="sp-card">
+      <div class="sp-prompt" id="spPrompt">選擇正確單字填入空格</div>
+      <div class="sp-sentence" id="spSentence">—</div>
+      <div id="areaFill"><div class="choices" id="choicesWrap"></div></div>
+      <div id="areaOrder" class="hidden">
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:8px;letter-spacing:1px;">點擊單字加入答案列，點答案列單字可移除</div>
+        <div class="answer-slots" id="answerSlots"></div>
+        <div class="word-chips" id="wordChips"></div>
+      </div>
+      <div id="areaTranslate" class="hidden">
+        <textarea class="txt-input" id="transInput" rows="3" placeholder="請輸入英文翻譯..."></textarea>
+      </div>
+      <div class="sp-actions">
+        <button class="btn btn-blue" onclick="checkAns()">✔ 確認</button>
+        <button class="btn btn-green" onclick="nextQ()">下一題 →</button>
+        <button class="btn btn-grey" onclick="revealAns()">顯示答案</button>
+        <button class="btn" style="background:rgba(255,107,107,0.15);color:#ff8888;border:1px solid rgba(255,107,107,0.3);" onclick="spFinishRound()">📊 結束本輪</button>
+      </div>
+      <div class="feedback" id="feedback"></div>
+    </div>
+
+    <!-- 錯誤回顧 -->
+    <div id="spReviewBox" style="margin-top:14px;background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:none;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:0.88rem;font-weight:700;color:var(--red);">❌ 本輪錯題回顧</div>
+        <button onclick="document.getElementById('spReviewBox').style.display='none'" style="background:rgba(255,255,255,0.07);color:#ccc;border:none;border-radius:7px;padding:4px 10px;cursor:pointer;font-size:0.78rem;">關閉</button>
+      </div>
+      <div id="spReviewList"></div>
+    </div>
+  </div>
+
+  <!-- ===== DAILY ===== -->
+  <div id="tab-daily" class="hidden">
+    <div class="daily-card">
+      <img class="daily-hero" id="dHero" src="" alt="">
+      <div class="daily-body">
+        <div class="daily-label">Today's Word</div>
+        <div class="daily-word" id="dWord"></div>
+        <div class="daily-ph" id="dPh"></div>
+        <div class="daily-part" id="dPart"></div>
+        <div class="daily-mean" id="dMean"></div>
+        <div class="daily-ex" id="dEx"></div>
+        <div class="daily-tr" id="dTr"></div>
+        <div class="tip-box">
+          <div class="tip-label">💡 記憶技巧</div>
+          <div class="tip-text" id="dTip"></div>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:center;flex-wrap:wrap;">
+          <button class="tts-btn" id="ttsDaily" onclick="speakDaily()">🔊 朗讀單字</button>
+          <button class="btn btn-gold" onclick="nextDaily()">🎲 換一個詞</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CUSTOM VOCAB ===== -->
+  <div id="tab-custom" class="hidden">
+    <!-- 老師輸入區 -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px;">
+      <div style="font-size:0.95rem;font-weight:700;color:var(--gold);margin-bottom:4px;">✏️ 自定義詞庫 — 老師專用</div>
+      <div style="font-size:0.78rem;color:var(--muted);margin-bottom:14px;">只需輸入英文單字，系統自動查詢意思、音標及例句，加入後即可練習</div>
+
+      <!-- 單字快速加入 -->
+      <div class="custom-word-row" style="align-items:stretch;">
+        <input class="cw-inp" id="cwWord" placeholder="輸入英文單字，按 Enter 或點擊查詢" style="flex:1;font-size:0.95rem;" onkeydown="if(event.key==='Enter')cwLookup()">
+        <button class="btn btn-blue" id="cwLookupBtn" onclick="cwLookup()" style="white-space:nowrap;">🔍 自動查詢</button>
+        <button class="btn btn-gold" id="cwAddBtn" onclick="cwConfirmAdd()" style="display:none;white-space:nowrap;">➕ 加入詞庫</button>
+      </div>
+
+      <!-- 查詢結果預覽 -->
+      <div id="cwPreview" style="display:none;margin-top:12px;background:rgba(58,134,255,0.06);border:1px solid rgba(58,134,255,0.2);border-radius:12px;padding:14px 16px;">
+        <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+          <span id="cwPvWord" style="font-size:1.3rem;font-weight:800;color:var(--blue);"></span>
+          <span id="cwPvPh" style="font-size:0.88rem;color:var(--muted);"></span>
+          <span id="cwPvPart" style="font-size:0.78rem;background:rgba(78,205,196,0.15);color:var(--teal);border-radius:10px;padding:1px 8px;"></span>
+        </div>
+        <div id="cwPvMean" style="font-size:1rem;font-weight:700;color:var(--text);margin-bottom:6px;"></div>
+        <div id="cwPvEx" style="font-size:0.85rem;color:#aaa;font-style:italic;margin-bottom:4px;"></div>
+        <div id="cwPvTr" style="font-size:0.82rem;color:var(--muted);"></div>
+        <div style="margin-top:10px;border-top:1px solid var(--border);padding-top:10px;">
+          <div style="font-size:0.75rem;color:var(--muted);margin-bottom:6px;">如需修改可手動調整：</div>
+          <div class="custom-word-row">
+            <input class="cw-inp" id="cwEditMean" placeholder="中文意思" style="flex:1;">
+            <input class="cw-inp" id="cwEditEx" placeholder="例句（用 ___ 代替單字）" style="flex:2;">
+          </div>
+          <div class="custom-word-row">
+            <input class="cw-inp" id="cwTag" placeholder="分類標籤（如：課文第三章，選填）" style="flex:1;">
+          </div>
+        </div>
+      </div>
+
+      <!-- 批量輸入 -->
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">
+        <div style="font-size:0.82rem;font-weight:700;color:var(--muted);margin-bottom:6px;">📋 批量輸入（每行一個英文單字，系統自動查詢）</div>
+        <textarea class="txt-input" id="cwBulk" rows="4" placeholder="achieve&#10;effort&#10;significant&#10;evaluate&#10;conclude"></textarea>
+        <div style="margin-top:8px;display:flex;gap:8px;align-items:center;">
+          <button class="btn btn-gold" id="cwBulkBtn" onclick="cwBulkAdd()">📥 批量查詢並匯入</button>
+          <span id="cwBulkStatus" style="font-size:0.8rem;color:var(--muted);"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 自定義詞庫列表 -->
+    <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <div style="font-size:0.92rem;font-weight:700;color:var(--gold);">📚 自定義詞彙（<span id="cwCount">0</span> 個）</div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-blue" onclick="cwStartPractice()" style="padding:5px 14px;font-size:0.82rem;">🚀 開始練習</button>
+          <button onclick="cwClearAll()" style="background:rgba(255,100,100,0.15);color:#ff8888;border:none;border-radius:7px;padding:5px 10px;cursor:pointer;font-size:0.78rem;">清空</button>
+        </div>
+      </div>
+      <div id="cwWordList" style="display:flex;flex-wrap:wrap;gap:6px;min-height:36px;">
+        <span style="color:var(--muted);font-size:0.82rem;">尚無自定義單字，請在上方輸入</span>
+      </div>
+    </div>
+
+    <!-- 單字編輯彈窗 -->
+    <div id="cwEditDlg" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.6);backdrop-filter:blur(4px);align-items:center;justify-content:center;">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:18px;padding:22px 24px;width:min(440px,92vw);box-shadow:0 16px 50px rgba(0,0,0,0.5);">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div style="font-size:0.95rem;font-weight:800;color:var(--gold);">✏️ 編輯單字</div>
+          <button onclick="cwEditClose()" style="background:none;color:var(--muted);font-size:1.3rem;line-height:1;padding:0 4px;">×</button>
+        </div>
+        <div id="cwEditDlgWord" style="font-size:1.1rem;font-weight:700;color:var(--blue);margin-bottom:14px;"></div>
+        <div style="display:flex;flex-direction:column;gap:9px;">
+          <div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-bottom:3px;">中文意思</div>
+            <input id="cwEditDlgMean" class="cw-inp" style="width:100%;" placeholder="中文意思">
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-bottom:3px;">例句（用 ___ 代替單字）</div>
+            <input id="cwEditDlgEx" class="cw-inp" style="width:100%;" placeholder="例句（用 ___ 代替單字）">
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-bottom:3px;">例句中文翻譯</div>
+            <input id="cwEditDlgTr" class="cw-inp" style="width:100%;" placeholder="例句中文翻譯（選填）">
+          </div>
+          <div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-bottom:3px;">分類標籤</div>
+            <input id="cwEditDlgTag" class="cw-inp" style="width:100%;" placeholder="分類標籤（選填）">
+          </div>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+          <button onclick="cwEditClose()" style="background:rgba(255,255,255,0.07);color:var(--muted);border:1px solid var(--border);border-radius:8px;padding:7px 16px;font-size:0.85rem;">取消</button>
+          <button onclick="cwEditSave()" class="btn btn-gold" style="padding:7px 20px;font-size:0.85rem;">💾 儲存</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 練習區（自定義題目） -->
+    <div id="cwPracticeBox" class="hidden">
+      <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <div style="font-size:0.92rem;font-weight:700;color:var(--blue);">🎯 自定義詞庫練習</div>
+          <div style="display:flex;gap:8px;align-items:center;">
+            <span id="cwPractScore" style="font-size:0.82rem;color:var(--gold);">得分：0</span>
+            <button onclick="cwEndPractice()" style="background:rgba(255,255,255,0.07);color:#ccc;border:1px solid var(--border);border-radius:7px;padding:4px 10px;cursor:pointer;font-size:0.78rem;">結束練習</button>
+          </div>
+        </div>
+        <div style="font-size:0.75rem;color:var(--muted);margin-bottom:10px;" id="cwQProg">第 1 題</div>
+        <div class="sp-card">
+          <div class="sp-prompt">選擇正確單字填入空格</div>
+          <div class="sp-sentence" id="cwSentence">—</div>
+          <div class="choices" id="cwChoices"></div>
+          <div class="sp-actions">
+            <button class="btn btn-blue" onclick="cwCheck()">✔ 確認</button>
+            <button class="btn btn-green" onclick="cwNext()">下一題 →</button>
+          </div>
+          <div class="feedback" id="cwFeedback"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ===== 統一練習記錄 ===== -->
+<div style="max-width:700px;margin:18px auto 0;padding:0 16px;">
+  <div style="background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+      <div style="font-size:0.9rem;font-weight:700;color:var(--gold);">📊 練習記錄</div>
+      <button onclick="allClearHistory()" style="background:rgba(255,100,100,0.12);color:#ff8888;border:1px solid rgba(255,100,100,0.3);border-radius:7px;padding:3px 12px;cursor:pointer;font-size:0.78rem;">清除全部</button>
+    </div>
+    <div id="allHistoryList"><span style="color:var(--muted);font-size:0.82rem;">尚無記錄</span></div>
+  </div>
+</div>
+
+<script>
+// ===== Supabase 設定 =====
+const SB_URL = 'https://lqpuffsjirsnusjxtwin.supabase.co';
+const SB_KEY = 'sb_publishable_QW-2DPyUIrzMwIkug8Tliw_cf1tx0qH';
+async function sbFetch(path, options={}){
+  const headers={
+    'apikey':SB_KEY,
+    'Authorization':'Bearer '+SB_KEY,
+    'Content-Type':'application/json',
+  };
+  if(options.prefer) headers['Prefer']=options.prefer;
+  Object.assign(headers,options.headers||{});
+  const res=await fetch(SB_URL+'/rest/v1/'+path,{
+    method:options.method||'GET',
+    headers,
+    body:options.body!==undefined?JSON.stringify(options.body):undefined,
+  });
+  if(!res.ok&&res.status!==204){const t=await res.text();throw new Error(t||String(res.status));}
+  if(res.status===204)return null;
+  const text=await res.text();
+  if(!text||!text.trim())return null;
+  try{return JSON.parse(text);}catch(e){throw new Error('Invalid JSON: '+text.slice(0,120));}
+}
+
+// ===== 用戶系統 =====
+function ssGetUser(){ return localStorage.getItem('ssCurrentUser')||''; }
+function ssGetId(){ return localStorage.getItem('ssCurrentId')||''; }
+function ssLogout(){ localStorage.removeItem('ssCurrentUser'); localStorage.removeItem('ssCurrentId'); location.href='app.html'; }
+(function initUserBar(){
+  const u=ssGetUser();
+  document.getElementById('userBar').style.display='flex';
+  document.getElementById('userBarName').textContent=u||'訪客（記錄不會保留）';
+  if(u){
+    document.getElementById('navUsername').textContent='👤 '+u;
+    document.getElementById('navUsername').style.display='';
+    document.getElementById('navLogout').style.display='';
+  }
+})();
+
+
+
+// ===== 句子練習得分記錄（Supabase 雲端 + localStorage 緩存）=====
+let _spHistCache = null;
+
+async function spLoadHistory(){
+  if(_spHistCache!==null) return _spHistCache;
+  const userId = ssGetId();
+  // 先讀本地備份
+  const localKey='spHistLocal_'+(userId||'guest');
+  const localHist=JSON.parse(localStorage.getItem(localKey)||'[]');
+  // 若已登入，嘗試讀雲端
+  if(userId){
+    try{
+      const rows = await sbFetch('sp_history?user_id=eq.'+userId+'&order=created_at.desc&limit=20&select=score,total,mode,created_at,bonus_score,wrongs');
+      if(rows&&rows.length){
+        _spHistCache = rows.map(r=>({
+          date: new Date(r.created_at).toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+          mode: r.mode,
+          correct: r.score,
+          total: r.total,
+          bonusScore: r.bonus_score||r.score,
+          pct: r.total>0?Math.round(r.score/r.total*100):0,
+          wrongs: r.wrongs||[]
+        }));
+        return _spHistCache;
+      }
+    }catch(e){ console.warn('spLoadHistory cloud:', e); }
+  }
+  // 雲端失敗或未登入，用本地備份
+  _spHistCache = localHist;
+  return _spHistCache;
+}
+
+async function spRenderHistory(){ renderAllHistory(); }
+
+async function spSaveResult(){
+  if(spTotal===0) return;
+  const modeLabel=spMode==='fill'?'填空':spMode==='order'?'排列句子':'中翻英';
+  const now=new Date();
+  const dateStr=now.toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  const record={date:dateStr,mode:modeLabel,correct:spCorrect,total:spTotal,bonusScore:spScore,pct:spTotal>0?Math.round(spCorrect/spTotal*100):0,wrongs:spWrongList.slice()};
+  // 本地備份（無論是否登入）
+  const localKey='spHistLocal_'+(ssGetId()||'guest');
+  let localHist=JSON.parse(localStorage.getItem(localKey)||'[]');
+  localHist.unshift(record);
+  if(localHist.length>30) localHist=localHist.slice(0,30);
+  localStorage.setItem(localKey,JSON.stringify(localHist));
+  _spHistCache=null; // 清除緩存，讓下次重新讀取
+  // 雲端同步（需登入）
+  const userId = ssGetId();
+  if(userId){
+    try{
+      await sbFetch('sp_history', {
+        method:'POST',
+        prefer:'return=minimal',
+        body:{user_id:userId, score:spCorrect, total:spTotal, mode:modeLabel, bonus_score:spScore, wrongs:spWrongList.slice()}
+      });
+      _spHistCache=null;
+      showToast&&showToast('☁️ 記錄已同步到雲端');
+    }catch(e){
+      console.warn('spSaveResult cloud:', e);
+      showToast&&showToast('⚠️ 雲端同步失敗：'+e.message);
+    }
+  }
+  spRenderHistory();
+}
+
+async function spClearHistory(){
+  if(!confirm('確定要清除所有練習記錄嗎？')) return;
+  const userId = ssGetId();
+  const localKey='spHistLocal_'+(userId||'guest');
+  localStorage.removeItem(localKey);
+  _spHistCache=null;
+  if(userId){
+    try{
+      await sbFetch('sp_history?user_id=eq.'+userId, { method:'DELETE' });
+    }catch(e){ console.warn('spClearHistory:', e); }
+  }
+  spRenderHistory();
+}
+
+async function spDeleteRecord(idx){
+  const userId = ssGetId();
+  const localKey='spHistLocal_'+(userId||'guest');
+  let localHist=JSON.parse(localStorage.getItem(localKey)||'[]');
+  localHist.splice(idx,1);
+  localStorage.setItem(localKey,JSON.stringify(localHist));
+  _spHistCache=null;
+  spRenderHistory();
+}
+
+async function spShowHistWrong(idx){
+  const hist = await spLoadHistory();
+  const r = hist[idx];
+  if(!r||!r.wrongs||!r.wrongs.length) return;
+  // 建立或更新 modal
+  let modal=document.getElementById('spHistWrongModal');
+  if(!modal){
+    modal=document.createElement('div');
+    modal.id='spHistWrongModal';
+    modal.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.72);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);';
+    modal.innerHTML=`<div id="spHistWrongPanel" style="background:var(--card,#1e1e40);border:1px solid rgba(255,255,255,0.1);border-radius:18px;padding:26px 24px 20px;width:min(540px,92vw);max-height:80vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div id="spHistWrongTitle" style="font-weight:800;font-size:1rem;color:var(--gold,#ffd700);"></div>
+        <button onclick="document.getElementById('spHistWrongModal').remove()" style="background:none;border:none;color:#888;font-size:1.3rem;cursor:pointer;line-height:1;">✕</button>
+      </div>
+      <div id="spHistWrongList"></div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{ if(e.target===modal) modal.remove(); });
+  }
+  document.getElementById('spHistWrongTitle').textContent=`${r.date}｜${r.mode}　錯題回顧（${r.wrongs.length} 題）`;
+  document.getElementById('spHistWrongList').innerHTML=r.wrongs.map(e=>`
+    <div class="sp-err-item">
+      <div class="sp-err-q">${e.type==='translate'?'🈯 '+e.q:e.type==='order'?'🔤 '+e.q:'📝 '+e.q}</div>
+      <div class="sp-err-correct">✅ 正確答案：<b>${e.correct}</b>${e.zh?'　<span style="color:#888;font-size:0.8rem;">'+e.zh+'</span>':''}</div>
+    </div>`).join('');
+}
+
+const WORDS=[
+  {w:"Challenge",ph:"/ˈtʃæl.ɪndʒ/",part:"n./v.",m:"挑戰",ex:"Every challenge makes you stronger.",tr:"每個挑戰都讓你更強大。",syn:"difficulty, obstacle",tag:"品格"},
+  {w:"Resilience",ph:"/rɪˈzɪl.jəns/",part:"n.",m:"韌性；恢復力",ex:"Resilience helps us bounce back from failure.",tr:"韌性幫助我們從失敗中恢復。",syn:"toughness, endurance",tag:"品格"},
+  {w:"Effort",ph:"/ˈef.ət/",part:"n.",m:"努力；盡力",ex:"Success requires constant effort.",tr:"成功需要持續的努力。",syn:"work, endeavor",tag:"品格"},
+  {w:"Confident",ph:"/ˈkɒn.fɪ.dənt/",part:"adj.",m:"自信的",ex:"She felt confident before the exam.",tr:"她考試前感到很自信。",syn:"assured, positive",tag:"品格"},
+  {w:"Improve",ph:"/ɪmˈpruːv/",part:"v.",m:"改善；進步",ex:"Practice every day to improve your English.",tr:"每天練習以提升你的英文。",syn:"enhance, develop",tag:"品格"},
+  {w:"Determination",ph:"/dɪˌtɜː.mɪˈneɪ.ʃən/",part:"n.",m:"決心；意志",ex:"His determination led him to success.",tr:"他的決心帶領他走向成功。",syn:"resolve, willpower",tag:"品格"},
+  {w:"Persevere",ph:"/ˌpɜː.sɪˈvɪər/",part:"v.",m:"堅持；不放棄",ex:"You must persevere even when it is hard.",tr:"即使很難，你也必須堅持。",syn:"persist, endure",tag:"品格"},
+  {w:"Respect",ph:"/rɪˈspekt/",part:"n./v.",m:"尊重",ex:"We should respect our teachers and classmates.",tr:"我們應該尊重老師和同學。",syn:"regard, honor",tag:"品格"},
+  {w:"Cooperate",ph:"/kəʊˈɒp.ər.eɪt/",part:"v.",m:"合作；協調",ex:"We need to cooperate as a team.",tr:"我們需要作為一個團隊合作。",syn:"collaborate, work together",tag:"品格"},
+  {w:"Achieve",ph:"/əˈtʃiːv/",part:"v.",m:"達到；實現",ex:"You can achieve your goals with hard work.",tr:"你可以通過努力實現你的目標。",syn:"accomplish, attain",tag:"品格"},
+  {w:"Sacrifice",ph:"/ˈsæk.rɪ.faɪs/",part:"n./v.",m:"犧牲；奉獻",ex:"He sacrificed his free time to help others.",tr:"他犧牲了自己的空閒時間去幫助別人。",syn:"give up, forgo",tag:"品格"},
+  {w:"Integrity",ph:"/ɪnˈteɡ.rɪ.ti/",part:"n.",m:"正直；誠信",ex:"Integrity means doing the right thing always.",tr:"正直意味著任何時候都做正確的事。",syn:"honesty, virtue",tag:"品格"},
+  {w:"Humble",ph:"/ˈhʌm.bəl/",part:"adj.",m:"謙遜的；謙虛的",ex:"A humble person always listens to others.",tr:"謙遜的人總是傾聽他人。",syn:"modest, unassuming",tag:"品格"},
+  {w:"Athletic",ph:"/æθˈlet.ɪk/",part:"adj.",m:"運動的；體格健美的",ex:"She is an athletic and energetic person.",tr:"她是一個運動型且精力充沛的人。",syn:"sporty, fit",tag:"體育"},
+  {w:"Endurance",ph:"/ɪnˈdjʊə.rəns/",part:"n.",m:"耐力；忍耐力",ex:"Running marathons builds great endurance.",tr:"跑馬拉松能培養極佳的耐力。",syn:"stamina, staying power",tag:"體育"},
+  {w:"Strategy",ph:"/ˈstræt.ɪ.dʒi/",part:"n.",m:"策略；戰略",ex:"A good strategy can win the game.",tr:"好的策略可以贏得比賽。",syn:"plan, tactic",tag:"體育"},
+  {w:"Compete",ph:"/kəmˈpiːt/",part:"v.",m:"競賽；競爭",ex:"Athletes compete for the gold medal.",tr:"運動員為金牌而競爭。",syn:"contest, rival",tag:"體育"},
+  {w:"Champion",ph:"/ˈtʃæm.pi.ən/",part:"n.",m:"冠軍；勝者",ex:"He became the school running champion.",tr:"他成為了學校的長跑冠軍。",syn:"winner, victor",tag:"體育"},
+  {w:"Discipline",ph:"/ˈdɪs.ɪ.plɪn/",part:"n.",m:"紀律；自律",ex:"Discipline is the key to success in sports.",tr:"自律是體育成功的關鍵。",syn:"self-control, training",tag:"體育"},
+  {w:"Teamwork",ph:"/ˈtiːm.wɜːk/",part:"n.",m:"團隊合作",ex:"Teamwork is essential for a winning team.",tr:"團隊合作對一支獲勝的隊伍至關重要。",syn:"cooperation, collaboration",tag:"體育"},
+  {w:"Agile",ph:"/ˈædʒ.aɪl/",part:"adj.",m:"敏捷的；靈活的",ex:"Basketball players need to be agile.",tr:"籃球員需要敏捷靈活。",syn:"nimble, flexible",tag:"體育"},
+  {w:"Stamina",ph:"/ˈstæm.ɪ.nə/",part:"n.",m:"體力；精力",ex:"You need good stamina to run long distances.",tr:"長跑需要良好的體力。",syn:"endurance, vitality",tag:"體育"},
+  {w:"Tournament",ph:"/ˈtɔː.nə.mənt/",part:"n.",m:"錦標賽；比賽",ex:"Our school won the basketball tournament.",tr:"我們學校贏得了籃球錦標賽。",syn:"competition, contest",tag:"體育"},
+  {w:"Opponent",ph:"/əˈpəʊ.nənt/",part:"n.",m:"對手；敵手",ex:"He shook hands with his opponent after the game.",tr:"比賽後他與對手握手。",syn:"rival, competitor",tag:"體育"},
+  {w:"Warm-up",ph:"/ˈwɔːm.ʌp/",part:"n.",m:"熱身運動",ex:"Always do a warm-up before exercising.",tr:"運動前一定要先熱身。",syn:"stretching, preparation",tag:"體育"},
+  {w:"Environment",ph:"/ɪnˈvaɪ.rən.mənt/",part:"n.",m:"環境",ex:"We must protect the environment.",tr:"我們必須保護環境。",syn:"surroundings, nature",tag:"生活"},
+  {w:"Community",ph:"/kəˈmjuː.nɪ.ti/",part:"n.",m:"社區；群體",ex:"The community helped the flood victims.",tr:"社區幫助了洪水受害者。",syn:"society, neighborhood",tag:"生活"},
+  {w:"Technology",ph:"/tekˈnɒl.ə.dʒi/",part:"n.",m:"科技；技術",ex:"Technology changes our daily life.",tr:"科技改變了我們的日常生活。",syn:"innovation, science",tag:"生活"},
+  {w:"Volunteer",ph:"/ˌvɒl.ənˈtɪər/",part:"n./v.",m:"志願者；自願",ex:"She volunteers at the local hospital.",tr:"她在當地醫院做義工。",syn:"helper, aid worker",tag:"生活"},
+  {w:"Opportunity",ph:"/ˌɒp.əˈtjuː.nɪ.ti/",part:"n.",m:"機會",ex:"This is a great opportunity to learn.",tr:"這是一個很好的學習機會。",syn:"chance, opening",tag:"生活"},
+  {w:"Responsibility",ph:"/rɪˌspɒn.sɪˈbɪl.ɪ.ti/",part:"n.",m:"責任；職責",ex:"It is our responsibility to keep the school clean.",tr:"保持學校清潔是我們的責任。",syn:"duty, obligation",tag:"生活"},
+  {w:"Communicate",ph:"/kəˈmjuː.nɪ.keɪt/",part:"v.",m:"溝通；交流",ex:"It is important to communicate clearly.",tr:"清晰溝通非常重要。",syn:"convey, express",tag:"生活"},
+  {w:"Creative",ph:"/kriˈeɪ.tɪv/",part:"adj.",m:"有創意的",ex:"She is a very creative student.",tr:"她是一位非常有創意的學生。",syn:"imaginative, inventive",tag:"生活"},
+  {w:"Solution",ph:"/səˈluː.ʃən/",part:"n.",m:"解決方案",ex:"We found a solution to the problem.",tr:"我們找到了解決問題的方案。",syn:"answer, resolution",tag:"生活"},
+  {w:"Grateful",ph:"/ˈɡreɪt.fəl/",part:"adj.",m:"感激的",ex:"I am grateful for your help.",tr:"我很感激你的幫助。",syn:"thankful, appreciative",tag:"情感"},
+  {w:"Anxious",ph:"/ˈæŋk.ʃəs/",part:"adj.",m:"焦慮的；擔心的",ex:"She felt anxious before the performance.",tr:"她在表演前感到焦慮。",syn:"nervous, worried",tag:"情感"},
+  {w:"Encourage",ph:"/ɪnˈkʌr.ɪdʒ/",part:"v.",m:"鼓勵",ex:"Teachers encourage students to do their best.",tr:"老師鼓勵學生盡力而為。",syn:"motivate, support",tag:"情感"},
+  {w:"Optimistic",ph:"/ˌɒp.tɪˈmɪs.tɪk/",part:"adj.",m:"樂觀的",ex:"Stay optimistic even when things are tough.",tr:"即使困難時也要保持樂觀。",syn:"positive, hopeful",tag:"情感"},
+  {w:"Disappoint",ph:"/ˌdɪs.əˈpɔɪnt/",part:"v.",m:"使失望",ex:"Do not disappoint your team.",tr:"不要讓你的團隊失望。",syn:"let down, discourage",tag:"情感"},
+  {w:"Sympathize",ph:"/ˈsɪm.pə.θaɪz/",part:"v.",m:"同情；理解",ex:"I sympathize with your situation.",tr:"我理解你的處境。",syn:"empathize, understand",tag:"情感"},
+  {w:"Analyze",ph:"/ˈæn.ə.laɪz/",part:"v.",m:"分析",ex:"We need to analyze the data carefully.",tr:"我們需要仔細分析數據。",syn:"examine, study",tag:"學術"},
+  {w:"Evaluate",ph:"/ɪˈvæl.ju.eɪt/",part:"v.",m:"評估；評價",ex:"The teacher will evaluate your essay.",tr:"老師將評估你的文章。",syn:"assess, judge",tag:"學術"},
+  {w:"Significant",ph:"/sɪɡˈnɪf.ɪ.kənt/",part:"adj.",m:"重要的；顯著的",ex:"This is a significant discovery.",tr:"這是一個重要的發現。",syn:"important, notable",tag:"學術"},
+  {w:"Summarize",ph:"/ˈsʌm.ər.aɪz/",part:"v.",m:"總結；概括",ex:"Please summarize the main points.",tr:"請總結主要觀點。",syn:"outline, recap",tag:"學術"},
+  {w:"Evidence",ph:"/ˈev.ɪ.dəns/",part:"n.",m:"證據；證明",ex:"You need evidence to support your idea.",tr:"你需要證據來支持你的觀點。",syn:"proof, data",tag:"學術"},
+  {w:"Argument",ph:"/ˈɑː.ɡjʊ.mənt/",part:"n.",m:"論點；爭論",ex:"She made a strong argument for recycling.",tr:"她為回收提出了強有力的論點。",syn:"point, reasoning",tag:"學術"},
+  {w:"Conclude",ph:"/kənˈkluːd/",part:"v.",m:"得出結論；結束",ex:"The report concludes that exercise improves mood.",tr:"報告得出結論，運動能改善情緒。",syn:"deduce, finish",tag:"學術"},
+  {w:"Phenomenon",ph:"/fɪˈnɒm.ɪ.nən/",part:"n.",m:"現象",ex:"Climate change is a global phenomenon.",tr:"氣候變化是一個全球現象。",syn:"occurrence, event",tag:"學術"},
+  {w:"Hypothesis",ph:"/haɪˈpɒθ.ɪ.sɪs/",part:"n.",m:"假設；假說",ex:"The scientist tested her hypothesis.",tr:"那位科學家測試了她的假說。",syn:"theory, assumption",tag:"學術"},
+  {w:"Perspective",ph:"/pəˈspek.tɪv/",part:"n.",m:"觀點；視角",ex:"Try to see things from a different perspective.",tr:"試著從不同角度看事情。",syn:"viewpoint, angle",tag:"學術"},
+  {w:"Accomplish",ph:"/əˈkʌm.plɪʃ/",part:"v.",m:"完成；達成",ex:"She accomplished all her goals this year.",tr:"她今年完成了所有目標。",syn:"achieve, complete",tag:"學術"},
+];
+
+const SENTENCES=[
+  {type:'fill',s:"She showed great ___ when she failed the exam but tried again.",blank:"resilience",choices:["resilience","anxiety","argument","solution"],zh:"她考試失敗後展現了極大的韌性，並再次嘗試。"},
+  {type:'fill',s:"We must ___ with each other to finish the project on time.",blank:"cooperate",choices:["cooperate","compete","sacrifice","evaluate"],zh:"我們必須相互合作才能按時完成項目。"},
+  {type:'fill',s:"The coach gave us a great ___ for winning the basketball game.",blank:"strategy",choices:["strategy","volunteer","solution","phenomenon"],zh:"教練給了我們一個贏得籃球比賽的好策略。"},
+  {type:'fill',s:"It is our ___ to keep our school clean and tidy.",blank:"responsibility",choices:["responsibility","technology","tournament","discipline"],zh:"保持學校整潔是我們的責任。"},
+  {type:'fill',s:"She is ___ that she will pass the English exam.",blank:"confident",choices:["confident","anxious","grateful","athletic"],zh:"她對通過英語考試很有信心。"},
+  {type:'fill',s:"Without ___, even the most talented players cannot succeed.",blank:"teamwork",choices:["teamwork","stamina","champion","warm-up"],zh:"沒有團隊合作，即使是最有天賦的球員也無法成功。"},
+  {type:'fill',s:"The teacher always ___ us to work hard and be kind.",blank:"encourages",choices:["encourages","disappoints","sacrifices","analyzes"],zh:"老師總是鼓勵我們努力學習並善待他人。"},
+  {type:'fill',s:"You need great ___ to run a marathon without stopping.",blank:"endurance",choices:["endurance","creativity","integrity","argument"],zh:"你需要極大的耐力才能不停歇地跑完馬拉松。"},
+  {type:'fill',s:"Doing a ___ before exercise can help prevent injuries.",blank:"warm-up",choices:["warm-up","tournament","conclusion","opponent"],zh:"運動前熱身有助於防止受傷。"},
+  {type:'fill',s:"Please ___ the main ideas of the article in two sentences.",blank:"summarize",choices:["summarize","achieve","compete","communicate"],zh:"請用兩句話總結文章的主要觀點。"},
+  {type:'fill',s:"A ___ person always admits their mistakes and learns from them.",blank:"humble",choices:["humble","agile","optimistic","significant"],zh:"謙遜的人總是承認錯誤並從中學習。"},
+  {type:'fill',s:"The new ___ will help us find clean energy solutions.",blank:"technology",choices:["technology","community","perspective","hypothesis"],zh:"新科技將幫助我們找到清潔能源解決方案。"},
+  {type:'order',s:"Teamwork is the key to winning the championship.",zh:"團隊合作是贏得冠軍的關鍵。",words:["Teamwork","is","the","key","to","winning","the","championship."]},
+  {type:'order',s:"Practice every day to improve your skills.",zh:"每天練習以提升你的技能。",words:["Practice","every","day","to","improve","your","skills."]},
+  {type:'order',s:"We should respect and encourage each other.",zh:"我們應該相互尊重和鼓勵。",words:["We","should","respect","and","encourage","each","other."]},
+  {type:'order',s:"Discipline and effort are needed to achieve success.",zh:"紀律和努力是成功所必需的。",words:["Discipline","and","effort","are","needed","to","achieve","success."]},
+  {type:'order',s:"A good warm-up prevents injuries during sports.",zh:"良好的熱身可以防止運動中受傷。",words:["A","good","warm-up","prevents","injuries","during","sports."]},
+  {type:'order',s:"Stay optimistic and you will find a solution.",zh:"保持樂觀，你就會找到解決方案。",words:["Stay","optimistic","and","you","will","find","a","solution."]},
+  {type:'translate',zh:"我很感激老師給我的機會。",en:"I am grateful for the opportunity my teacher gave me.",keys:["grateful","opportunity"]},
+  {type:'translate',zh:"體育需要耐力、速度和團隊合作。",en:"Sports require endurance, speed and teamwork.",keys:["endurance","teamwork"]},
+  {type:'translate',zh:"保持樂觀，即使面對挑戰。",en:"Stay optimistic even when facing challenges.",keys:["optimistic","challenge"]},
+  {type:'translate',zh:"她犧牲了休息時間來幫助同學。",en:"She sacrificed her rest time to help her classmates.",keys:["sacrificed","classmates"]},
+  {type:'translate',zh:"我們需要更多的證據來支持這個論點。",en:"We need more evidence to support this argument.",keys:["evidence","argument"]},
+  {type:'translate',zh:"自律和決心是成功最重要的因素。",en:"Discipline and determination are the most important factors for success.",keys:["discipline","determination"]},
+];
+
+const TIPS=["把這個單字寫三遍，大聲唸出來","把這個單字用在一個關於你自己的句子裡","聯想一個和這個詞相關的圖像來記憶","注意它的前綴或後綴，找出同家族單字","把例句抄下來，嘗試改寫一個新句子","把它和同義詞一起背，擴大詞彙網絡","每天晨起默念這個單字三次加深印象"];
+
+/* ---- Flashcard ---- */
+let fcList=[...WORDS],fcIdx=0,fcTag='all';
+
+/* 各 tag 對應 Unsplash 背景圖 */
+const TAG_IMGS={
+  '品格':'https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=600&q=75&auto=format&fit=crop',
+  '體育':'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=600&q=75&auto=format&fit=crop',
+  '生活':'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=75&auto=format&fit=crop',
+  '情感':'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&q=75&auto=format&fit=crop',
+  '學術':'https://images.unsplash.com/photo-1497633762265-9d179a990aa6?w=600&q=75&auto=format&fit=crop',
+};
+/* 每個單字對應的主題實景圖 */
+const WORD_IMGS={
+  'Challenge':    'https://images.unsplash.com/photo-1519834785169-98be25ec3f84?w=600&q=75&auto=format&fit=crop',
+  'Resilience':   'https://images.unsplash.com/photo-1541534741688-6078c6bfb5c5?w=600&q=75&auto=format&fit=crop',
+  'Effort':       'https://images.unsplash.com/photo-1434494878577-86c23bcb06b9?w=600&q=75&auto=format&fit=crop',
+  'Confident':    'https://images.unsplash.com/photo-1529900748604-07564a03e7a6?w=600&q=75&auto=format&fit=crop',
+  'Improve':      'https://images.unsplash.com/photo-1551836022-deb4988cc6c0?w=600&q=75&auto=format&fit=crop',
+  'Determination':'https://images.unsplash.com/photo-1520390138845-fd2d229dd553?w=600&q=75&auto=format&fit=crop',
+  'Persevere':    'https://images.unsplash.com/photo-1498855926480-d98e83099315?w=600&q=75&auto=format&fit=crop',
+  'Respect':      'https://images.unsplash.com/photo-1582213782179-e0d53f98f2ca?w=600&q=75&auto=format&fit=crop',
+  'Cooperate':    'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&q=75&auto=format&fit=crop',
+  'Achieve':      'https://images.unsplash.com/photo-1533227268428-f9ed0900fb3b?w=600&q=75&auto=format&fit=crop',
+  'Sacrifice':    'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?w=600&q=75&auto=format&fit=crop',
+  'Integrity':    'https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=600&q=75&auto=format&fit=crop',
+
+  'Humble':       'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&q=75&auto=format&fit=crop',
+  'Athletic':     'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?w=600&q=75&auto=format&fit=crop',
+  'Endurance':    'https://images.unsplash.com/photo-1502904550040-7534597429ae?w=600&q=75&auto=format&fit=crop',
+  'Strategy':     'https://images.unsplash.com/photo-1611532736597-de2d4265fba3?w=600&q=75&auto=format&fit=crop',
+  'Compete':      'https://images.unsplash.com/photo-1546519638-68e109498ffc?w=600&q=75&auto=format&fit=crop',
+  'Champion':     'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=600&q=75&auto=format&fit=crop',
+  'Discipline':   'https://images.unsplash.com/photo-1574680096145-d05b474e2155?w=600&q=75&auto=format&fit=crop',
+  'Teamwork':     'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=75&auto=format&fit=crop',
+  'Agile':        'https://images.unsplash.com/photo-1517649763962-0c623066013b?w=600&q=75&auto=format&fit=crop',
+  'Stamina':      'https://images.unsplash.com/photo-1538805060514-97d9cc17730c?w=600&q=75&auto=format&fit=crop',
+  'Tournament':   'https://images.unsplash.com/photo-1526676037777-05a232554f77?w=600&q=75&auto=format&fit=crop',
+  'Opponent':     'https://images.unsplash.com/photo-1551958219-acbc595d816f?w=600&q=75&auto=format&fit=crop',
+  'Warm-up':      'https://images.unsplash.com/photo-1599058917765-a780eda07a3e?w=600&q=75&auto=format&fit=crop',
+  'Environment':  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=600&q=75&auto=format&fit=crop',
+  'Community':    'https://images.unsplash.com/photo-1491438590914-bc09fcaaf77a?w=600&q=75&auto=format&fit=crop',
+  'Technology':   'https://images.unsplash.com/photo-1518770660439-4636190af475?w=600&q=75&auto=format&fit=crop',
+  'Volunteer':    'https://images.unsplash.com/photo-1593113598332-cd288d649433?w=600&q=75&auto=format&fit=crop',
+  'Opportunity':  'https://images.unsplash.com/photo-1493612276216-ee3925520721?w=600&q=75&auto=format&fit=crop',
+
+  'Responsibility':'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=600&q=75&auto=format&fit=crop',
+  'Communicate':  'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=600&q=75&auto=format&fit=crop',
+  'Creative':     'https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=600&q=75&auto=format&fit=crop',
+  'Solution':     'https://images.unsplash.com/photo-1527689368864-3a821dbccc34?w=600&q=75&auto=format&fit=crop',
+  'Grateful':     'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=600&q=75&auto=format&fit=crop',
+  'Anxious':      'https://images.unsplash.com/photo-1474552226712-ac0f0961a954?w=600&q=75&auto=format&fit=crop',
+  'Encourage':    'https://images.unsplash.com/photo-1531206715517-5c0ba140b2b8?w=600&q=75&auto=format&fit=crop',
+  'Optimistic':   'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?w=600&q=75&auto=format&fit=crop',
+  'Disappoint':   'https://images.unsplash.com/photo-1541199249251-f713e6145474?w=600&q=75&auto=format&fit=crop',
+
+  'Sympathize':   'https://images.unsplash.com/photo-1516534775068-ba3e7458af70?w=600&q=75&auto=format&fit=crop',
+  'Analyze':      'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?w=600&q=75&auto=format&fit=crop',
+  'Evaluate':     'https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=600&q=75&auto=format&fit=crop',
+
+  'Significant':  'https://images.unsplash.com/photo-1519750157634-b6d493a0f77c?w=600&q=75&auto=format&fit=crop',
+
+  'Summarize':    'https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=600&q=75&auto=format&fit=crop',
+  'Evidence':     'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600&q=75&auto=format&fit=crop',
+  'Argument':     'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&q=75&auto=format&fit=crop',
+  'Conclude':     'https://images.unsplash.com/photo-1491841573634-28140fc7ced7?w=600&q=75&auto=format&fit=crop',
+
+  'Phenomenon':   'https://images.unsplash.com/photo-1534796636912-3b95b3ab5986?w=600&q=75&auto=format&fit=crop',
+  'Hypothesis':   'https://images.unsplash.com/photo-1507413245164-6160d8298b31?w=600&q=75&auto=format&fit=crop',
+  'Perspective':  'https://images.unsplash.com/photo-1494500764479-0c8f2919a3d8?w=600&q=75&auto=format&fit=crop',
+  'Accomplish':   'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=600&q=75&auto=format&fit=crop',
+
+};
+const DAILY_IMGS={
+  '品格':'https://images.unsplash.com/photo-1552664730-d307ca884978?w=860&q=80&auto=format&fit=crop',
+  '體育':'https://images.unsplash.com/photo-1526676317768-d9b14f15615a?w=860&q=80&auto=format&fit=crop',
+  '生活':'https://images.unsplash.com/photo-1484723091739-30a097e8f929?w=860&q=80&auto=format&fit=crop',
+  '情感':'https://images.unsplash.com/photo-1474552226712-ac0f0961a954?w=860&q=80&auto=format&fit=crop',
+  '學術':'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=860&q=80&auto=format&fit=crop',
+};
+function buildTags(){
+  const tags=['all',...new Set(WORDS.map(w=>w.tag))];
+  document.getElementById('fcTagRow').innerHTML=tags.map(t=>`<button class="tag-btn${fcTag===t?' on':''}" onclick="filterTag('${t}')">${t==='all'?'全部':t}（${t==='all'?WORDS.length:WORDS.filter(w=>w.tag===t).length}）</button>`).join('');
+}
+function filterTag(t){fcTag=t;fcList=t==='all'?[...WORDS]:WORDS.filter(w=>w.tag===t);fcIdx=0;renderFC();buildTags();}
+function renderFC(){
+  const c=fcList[fcIdx];
+  document.getElementById('fcWord').textContent=c.w;
+  document.getElementById('fcPh').textContent=c.ph;
+  document.getElementById('fcPart').textContent=c.part;
+  document.getElementById('fcMean').textContent=c.m;
+  document.getElementById('fcEx').textContent='"'+c.ex+'"';
+  document.getElementById('fcTr').textContent=c.tr;
+  document.getElementById('fcSyn').textContent=c.syn?'同義詞：'+c.syn:'';
+  document.getElementById('fcCounter').textContent=(fcIdx+1)+' / '+fcList.length;
+  document.getElementById('fcProg').style.width=((fcIdx+1)/fcList.length*100)+'%';
+  document.getElementById('flashcard').classList.remove('flipped');
+  // 優先用單字專屬圖，否則用 tag 圖
+  const img=WORD_IMGS[c.w]||TAG_IMGS[c.tag]||TAG_IMGS['品格'];
+  document.getElementById('fcBg').style.backgroundImage='url('+img+')';
+}
+function fcFlip(){
+  const card=document.getElementById('flashcard');
+  const isFlipped=card.classList.toggle('flipped');
+  // 翻到背面顯示例句朗讀，正面只顯示單字朗讀
+  document.getElementById('ttsFCEx').style.display=isFlipped?'':'none';
+}
+function fcNext(){fcIdx=(fcIdx+1)%fcList.length;renderFC();document.getElementById('ttsFCEx').style.display='none';}
+function fcPrev(){fcIdx=(fcIdx-1+fcList.length)%fcList.length;renderFC();document.getElementById('ttsFCEx').style.display='none';}
+function fcShuffle(){fcList.sort(()=>Math.random()-0.5);fcIdx=0;renderFC();document.getElementById('ttsFCEx').style.display='none';}
+function fcReset(){filterTag(fcTag);document.getElementById('ttsFCEx').style.display='none';}
+
+/* ---- Sentence ---- */
+let spMode='fill',spList=[],spIdx=0,spScore=0,spSel=[];
+let spCorrect=0,spTotal=0,spStreak=0,spAnswered=false;
+let spWrongList=[]; // 本輪錯題記錄
+
+function updateScoreUI(){
+  document.getElementById('scoreNum').textContent=spScore;
+  // 正確率
+  if(spTotal>0){
+    const pct=Math.round(spCorrect/spTotal*100);
+    document.getElementById('accuracyLabel').textContent='正確率：'+pct+'%';
+    document.getElementById('accuracyLabel').style.color=pct>=80?'var(--green)':pct>=50?'var(--gold)':'var(--red)';
+  }else{
+    document.getElementById('accuracyLabel').textContent='正確率：—';
+    document.getElementById('accuracyLabel').style.color='var(--gold)';
+  }
+  // 進度條
+  const prog=spList.length?Math.min((spIdx)/spList.length,1):0;
+  document.getElementById('spProgBar').style.width=(prog*100)+'%';
+  // 題號
+  document.getElementById('qProgress').innerHTML='第 <b>'+(spIdx+1)+'</b> 題，共 <span id="qTotal">'+spList.length+'</span> 題';
+  document.getElementById('qTotal').textContent=spList.length;
+  // 連答
+  const sp=document.getElementById('streakPill');
+  if(spStreak>=2){sp.style.display='';document.getElementById('streakCount').textContent=spStreak;}
+  else{sp.style.display='none';}
+}
+
+function setMode(m,btn){
+  spSaveResult(); // 切換模式前保存當前結果
+  spMode=m;
+  document.querySelectorAll('.sp-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  spScore=0;spCorrect=0;spTotal=0;spStreak=0;spAnswered=false;spWrongList=[];
+  document.getElementById('spReviewBox').style.display='none';
+  buildQList();spIdx=0;renderQ();
+  updateScoreUI();
+}
+function buildQList(){spList=SENTENCES.filter(s=>s.type===spMode).sort(()=>Math.random()-0.5);}
+function renderQ(){
+  if(!spList.length){buildQList();}
+  if(!spList.length){document.getElementById('spSentence').textContent='無題目，請先選擇模式';return;}
+  spSel=[];spAnswered=false;
+  const q=spList[spIdx%spList.length];
+  const fb=document.getElementById('feedback');fb.style.display='none';fb.className='feedback';
+  document.getElementById('areaFill').style.display='none';
+  document.getElementById('areaOrder').classList.add('hidden');
+  document.getElementById('areaTranslate').classList.add('hidden');
+  // 啟用確認按鈕，禁用下一題（未作答前不可跳題）
+  document.querySelector('.sp-actions .btn-blue').disabled=false;
+  document.querySelector('.sp-actions .btn-blue').style.opacity='1';
+  const nextBtn=document.querySelector('.sp-actions .btn-green');
+  if(nextBtn){nextBtn.disabled=true;nextBtn.style.opacity='0.4';}
+  if(q.type==='fill'){
+    document.getElementById('spPrompt').textContent='選擇正確單字填入空格';
+    document.getElementById('spSentence').innerHTML=q.s.replace(q.blank,'<span class="blank">______</span>');
+    document.getElementById('areaFill').style.display='block';
+    const w=document.getElementById('choicesWrap');w.innerHTML='';
+    [...q.choices].sort(()=>Math.random()-0.5).forEach(c=>{
+      const b=document.createElement('button');b.className='choice-btn';b.textContent=c;
+      b.onclick=()=>{w.querySelectorAll('.choice-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');};
+      w.appendChild(b);
+    });
+  } else if(q.type==='order'){
+    document.getElementById('spPrompt').textContent='將單字排列成正確句子';
+    document.getElementById('spSentence').textContent='中文：'+q.zh;
+    document.getElementById('areaOrder').classList.remove('hidden');
+    document.getElementById('answerSlots').innerHTML='';
+    const cw=document.getElementById('wordChips');cw.innerHTML='';
+    [...q.words].sort(()=>Math.random()-0.5).forEach(word=>{
+      const chip=document.createElement('div');chip.className='chip';chip.textContent=word;
+      chip.onclick=()=>{
+        if(chip.classList.contains('used'))return;
+        chip.classList.add('used');spSel.push({word,chip});
+        const slot=document.createElement('div');slot.className='slot-chip';slot.textContent=word;
+        slot.onclick=()=>{const i=spSel.findIndex(o=>o.chip===chip);if(i>-1){spSel.splice(i,1);chip.classList.remove('used');slot.remove();}};
+        document.getElementById('answerSlots').appendChild(slot);
+      };
+      cw.appendChild(chip);
+    });
+  } else {
+    document.getElementById('spPrompt').textContent='將以下中文翻譯成英文';
+    document.getElementById('spSentence').textContent=q.zh;
+    document.getElementById('areaTranslate').classList.remove('hidden');
+    document.getElementById('transInput').value='';
+  }
+  updateScoreUI();
+}
+function checkAns(){
+  if(spAnswered)return;
+  if(!spList.length)return;
+  const q=spList[spIdx%spList.length];const fb=document.getElementById('feedback');let ok=false;
+  if(q.type==='fill'){
+    const sel=document.querySelector('#choicesWrap .choice-btn.on');
+    if(!sel){fb.textContent='⚠️ 請先選擇一個答案';fb.className='feedback fail';fb.style.display='block';return;}
+    ok=sel.textContent.trim().toLowerCase()===q.blank.toLowerCase();
+    // 標示選項顏色
+    document.querySelectorAll('#choicesWrap .choice-btn').forEach(b=>{
+      if(b.textContent.trim().toLowerCase()===q.blank.toLowerCase())b.style.background='rgba(46,204,113,0.3)';
+      else if(b.classList.contains('on')&&!ok)b.style.background='rgba(255,107,107,0.3)';
+    });
+    fb.innerHTML=ok?'✅ 正確！　<span style="color:#aaa;font-weight:400;">'+q.zh+'</span>':'❌ 正確答案：<b>'+q.blank+'</b>　<span style="color:#aaa;font-weight:400;">'+q.zh+'</span>';
+  } else if(q.type==='order'){
+    ok=spSel.map(o=>o.word).join(' ')===q.s;
+    fb.innerHTML=ok?'✅ 正確！':'❌ 正確句子：<b>'+q.s+'</b>';
+  } else {
+    const inp=document.getElementById('transInput').value.trim().toLowerCase();
+    if(!inp){fb.textContent='⚠️ 請先輸入翻譯';fb.className='feedback fail';fb.style.display='block';return;}
+    ok=q.keys.every(k=>inp.includes(k.toLowerCase()));
+    fb.innerHTML=ok?'✅ 關鍵詞正確！<span style="color:#aaa;font-weight:400;"> 參考：'+q.en+'</span>':'❌ 關鍵詞缺少：<b>'+q.keys.filter(k=>!inp.includes(k.toLowerCase())).join('、')+'</b>　參考：'+q.en;
+  }
+  fb.className='feedback '+(ok?'ok':'fail');fb.style.display='block';
+  spAnswered=true;spTotal++;
+  // 禁用確認按鈕避免重複提交，啟用下一題
+  const confirmBtn=document.querySelector('.sp-actions .btn-blue');
+  confirmBtn.disabled=true;confirmBtn.style.opacity='0.5';
+  const nBtn=document.querySelector('.sp-actions .btn-green');
+  if(nBtn){nBtn.disabled=false;nBtn.style.opacity='1';}
+  if(ok){
+    spCorrect++;spStreak++;
+    const bonus=spStreak>=5?3:spStreak>=3?2:1;
+    spScore+=bonus*10;
+    if(bonus>1)fb.innerHTML+='　<span style="color:#ffaa00;font-weight:700;">🔥 ×'+bonus+' BONUS +'+bonus*10+'分！</span>';
+    else spScore>0&&(fb.innerHTML+='　<span style="color:var(--gold);">+10分</span>');
+  }else{
+    spStreak=0;
+    // 記錄錯題
+    if(q.type==='fill') spWrongList.push({q:q.s.replace(q.blank,'___'),correct:q.blank,zh:q.zh,type:'fill'});
+    else if(q.type==='order') spWrongList.push({q:'（排列）'+q.zh,correct:q.s,zh:'',type:'order'});
+    else spWrongList.push({q:q.zh,correct:q.en,zh:'',type:'translate'});
+  }
+  updateScoreUI();
+}
+function revealAns(){
+  if(spAnswered)return;
+  const q=spList[spIdx%spList.length];const fb=document.getElementById('feedback');
+  if(q.type==='fill'){fb.innerHTML='💡 答案：<b>'+q.blank+'</b>　<span style="color:#aaa;font-weight:400;">'+q.zh+'</span>';spWrongList.push({q:q.s.replace(q.blank,'___'),correct:q.blank,zh:q.zh,type:'fill'});}
+  else if(q.type==='order'){fb.innerHTML='💡 正確句子：<b>'+q.s+'</b>';spWrongList.push({q:'（排列）'+q.zh,correct:q.s,zh:'',type:'order'});}
+  else{fb.innerHTML='💡 參考答案：'+q.en;spWrongList.push({q:q.zh,correct:q.en,zh:'',type:'translate'});}
+  fb.className='feedback fail';fb.style.display='block';
+  spAnswered=true;spTotal++;spStreak=0;
+  const confirmBtn=document.querySelector('.sp-actions .btn-blue');
+  confirmBtn.disabled=true;confirmBtn.style.opacity='0.5';
+  const nBtn=document.querySelector('.sp-actions .btn-green');
+  if(nBtn){nBtn.disabled=false;nBtn.style.opacity='1';}
+  updateScoreUI();
+}
+function nextQ(){
+  const nextIdx=(spIdx+1)%spList.length;
+  // 走完一輪：保存記錄 + 顯示錯題回顧
+  if(nextIdx===0 && spTotal>0){
+    spSaveResult();
+    if(spWrongList.length>0) showSpReview();
+    else showToast&&showToast('🎉 本輪全對！得分 '+spScore);
+  }
+  spIdx=nextIdx;renderQ();
+}
+function showSpReview(){
+  const box=document.getElementById('spReviewBox');
+  const list=document.getElementById('spReviewList');
+  list.innerHTML=spWrongList.map(e=>`
+    <div class="sp-err-item">
+      <div class="sp-err-q">${e.type==='translate'?'🈯 '+e.q:e.type==='order'?'🔤 '+e.q:'📝 '+e.q}</div>
+      <div class="sp-err-correct">✅ 正確答案：<b>${e.correct}</b>${e.zh?'　<span style="color:#888;font-size:0.8rem;">'+e.zh+'</span>':''}</div>
+    </div>`).join('');
+  box.style.display='block';
+  box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+// 隨時結束本輪，保存記錄 + 顯示分析，然後重設並開始下一輪
+function spFinishRound(){
+  if(spTotal===0){showToast&&showToast('⚠️ 尚未作答任何題目');return;}
+  spSaveResult();
+  const hadWrongs=spWrongList.length>0;
+  // 重設本輪資料
+  spScore=0;spCorrect=0;spTotal=0;spStreak=0;spAnswered=false;spWrongList=[];
+  buildQList();spIdx=0;renderQ();
+  updateScoreUI();
+  if(hadWrongs){
+    showSpReview();
+  } else {
+    showToast&&showToast('🎉 本輪全對！已重新開始下一輪');
+  }
+}
+
+/* ---- Daily ---- */
+let dIdx=0;
+function nextDaily(){dIdx=Math.floor(Math.random()*WORDS.length);renderDaily();}
+function renderDaily(){
+  const w=WORDS[dIdx];
+  document.getElementById('dWord').textContent=w.w;
+  document.getElementById('dPh').textContent=w.ph;
+  document.getElementById('dPart').textContent=w.part;
+  document.getElementById('dMean').textContent=w.m;
+  document.getElementById('dEx').textContent='"'+w.ex+'"';
+  document.getElementById('dTr').textContent=w.tr;
+  document.getElementById('dTip').textContent=TIPS[dIdx%TIPS.length];
+  const img=DAILY_IMGS[w.tag]||DAILY_IMGS['品格'];
+  document.getElementById('dHero').src=img;
+  document.getElementById('dHero').alt=w.tag+' — '+w.w;
+}
+
+/* ---- Tab Switch ---- */
+function switchTab(t,btn){
+  ['flashcard','sentence','daily','custom'].forEach(id=>document.getElementById('tab-'+id).classList.toggle('hidden',id!==t));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+/* ---- Custom Vocab ---- */
+let customWords = JSON.parse(localStorage.getItem('ssCustomWords')||'[]');
+let cwPractList=[], cwPractIdx=0, cwPractScore=0, cwPractAnswered=false;
+let cwHistory=[];
+
+function cwHistKey(){ return 'cwHist_'+(ssGetId()||'guest'); }
+
+// 從雲端載入詞庫（登入才有）
+async function cwLoadWords(){
+  const userId=ssGetId();
+  if(!userId) return;
+  try{
+    const rows=await sbFetch('custom_words?user_id=eq.'+userId+'&limit=1&select=data');
+    if(rows&&rows.length&&Array.isArray(rows[0].data)){
+      customWords=rows[0].data;
+      localStorage.setItem('ssCustomWords',JSON.stringify(customWords));
+      cwRenderList();
+    }
+  }catch(e){ console.warn('cwLoadWords:', e); }
+}
+
+// 儲存詞庫到本地+雲端（先刪後寫，不需要 unique constraint）
+async function cwSyncCloud(){
+  const userId=ssGetId();
+  if(!userId) return;
+  try{
+    await sbFetch('custom_words?user_id=eq.'+userId,{method:'DELETE'});
+    await sbFetch('custom_words',{
+      method:'POST',
+      prefer:'return=minimal',
+      body:{user_id:userId, data:customWords}
+    });
+    showToast&&showToast('☁️ 詞庫已同步到雲端');
+  }catch(e){
+    console.warn('cwSyncCloud:', e);
+    let msg=e.message||'';
+    if(msg.includes('row-level security')) msg='請去 Supabase 關閉 custom_words 的 RLS';
+    else if(msg.includes('does not exist')) msg='請在 Supabase 建立 custom_words 表';
+    showToast&&showToast('⚠️ 詞庫雲端同步失敗：'+msg);
+  }
+}
+
+async function cwLoadHistory(){
+  const local=JSON.parse(localStorage.getItem(cwHistKey())||'[]');
+  const userId=ssGetId();
+  if(userId){
+    try{
+      const rows=await sbFetch('cw_history?user_id=eq.'+userId+'&order=created_at.desc&limit=20&select=data');
+      if(rows&&rows.length){
+        const cloud=rows.map(r=>({...r.data}));
+        localStorage.setItem(cwHistKey(),JSON.stringify(cloud));
+        return cloud;
+      }
+    }catch(e){}
+  }
+  return local;
+}
+
+async function cwSaveHistory(record){
+  cwHistory.unshift(record);
+  if(cwHistory.length>20) cwHistory.pop();
+  localStorage.setItem(cwHistKey(),JSON.stringify(cwHistory));
+  const userId=ssGetId();
+  if(userId){
+    sbFetch('cw_history',{method:'POST',prefer:'return=minimal',body:{user_id:userId,data:record}})
+      .catch(e=>console.warn('cw_history 上傳失敗（請確認 Supabase 已建立 cw_history 表）:',e));
+  }
+  cwRenderHistory();
+}
+
+async function cwDeleteHistory(idx){
+  cwHistory.splice(idx,1);
+  localStorage.setItem(cwHistKey(),JSON.stringify(cwHistory));
+  cwRenderHistory();
+  const userId=ssGetId();
+  if(userId){
+    sbFetch('cw_history?user_id=eq.'+userId,{method:'DELETE'})
+      .then(()=>Promise.all(cwHistory.map(r=>
+        sbFetch('cw_history',{method:'POST',prefer:'return=minimal',body:{user_id:userId,data:r}})
+      ))).catch(()=>{});
+  }
+}
+
+async function cwClearHistory(){
+  if(!confirm('確定要清除所有練習記錄嗎？')) return;
+  cwHistory=[];
+  localStorage.removeItem(cwHistKey());
+  const userId=ssGetId();
+  if(userId){
+    sbFetch('cw_history?user_id=eq.'+userId,{method:'DELETE'}).catch(()=>{});
+  }
+  cwRenderHistory();
+}
+
+function cwRenderHistory(){ renderAllHistory(); }
+
+async function renderAllHistory(){
+  const el=document.getElementById('allHistoryList');
+  if(!el) return;
+  el.innerHTML='<span style="color:var(--muted);font-size:0.82rem;">載入中…</span>';
+  // 取兩種記錄
+  const spHist = await spLoadHistory();
+  const cwHist = cwHistory||[];
+  // 合併並加上 type 標記
+  const spItems = spHist.map((r,i)=>({
+    _type:'sp', _idx:i,
+    _dateRaw: r.date,
+    date: r.date,
+    line1: r.mode,
+    line2: `${r.correct}/${r.total}題　正確率 ${r.pct}%　得分 ${r.bonusScore}`,
+    pct: r.pct,
+    wrongs: r.wrongs||[]
+  }));
+  const cwItems = cwHist.map((r,idx)=>{
+    const pct=r.total>0?Math.round(r.correct/r.total*100):0;
+    return {
+      _type:'cw', _idx:idx,
+      _dateRaw: r.date,
+      date: r.date,
+      line1: `${r.wordCount} 個單字`,
+      line2: `${r.correct}/${r.total}題　正確率 ${pct}%　得分 ${r.score}`,
+      pct,
+      wrongs:[]
+    };
+  });
+  const all=[...spItems,...cwItems];
+  if(!all.length){
+    el.innerHTML='<span style="color:var(--muted);font-size:0.82rem;">尚無記錄（登入後記錄才會保留）</span>';
+    return;
+  }
+  el.innerHTML=all.map(r=>{
+    const c=r.pct>=80?'#2ecc71':r.pct>=50?'#ffd700':'#ff6b6b';
+    const tag=r._type==='sp'
+      ?`<span style="background:rgba(100,180,255,0.18);color:#7ec8f7;border-radius:5px;padding:1px 7px;font-size:0.72rem;font-weight:700;">句子</span>`
+      :`<span style="background:rgba(255,200,50,0.18);color:#ffd060;border-radius:5px;padding:1px 7px;font-size:0.72rem;font-weight:700;">詞彙</span>`;
+    const wrongBtn=(r._type==='sp'&&r.wrongs.length>0)
+      ?`<button onclick="spShowHistWrong(${r._idx})" style="background:rgba(255,107,107,0.18);border:1px solid rgba(255,107,107,0.4);color:#ff8888;border-radius:5px;padding:2px 7px;cursor:pointer;font-size:0.72rem;">錯題 ${r.wrongs.length}</button>`
+      :'';
+    const delFn=r._type==='sp'?`spDeleteRecord(${r._idx})`:`cwDeleteHistory(${r._idx})`;
+    return `<div style="background:rgba(255,255,255,0.04);border-radius:9px;padding:9px 14px;margin-bottom:7px;display:flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:0.83rem;">
+      ${tag}
+      <span style="color:var(--muted);font-size:0.77rem;">${r.date}</span>
+      <span style="color:#ccc;">${r.line1}</span>
+      <span style="color:${c};font-weight:700;margin-left:auto;">${r.line2}</span>
+      ${wrongBtn}
+      <button onclick="${delFn}" style="background:none;border:none;color:#ff8888;cursor:pointer;font-size:0.9rem;padding:0 2px;">×</button>
+    </div>`;
+  }).join('');
+}
+
+async function allClearHistory(){
+  if(!confirm('確定要清除所有練習記錄嗎？')) return;
+  // 清句子記錄
+  const userId=ssGetId();
+  const localKey='spHistLocal_'+(userId||'guest');
+  localStorage.removeItem(localKey);
+  _spHistCache=null;
+  if(userId){ try{ await sbFetch('sp_history?user_id=eq.'+userId,{method:'DELETE'}); }catch(e){} }
+  // 清詞彙記錄
+  cwHistory=[];
+  localStorage.removeItem(cwHistKey());
+  if(userId){ sbFetch('cw_history?user_id=eq.'+userId,{method:'DELETE'}).catch(()=>{}); }
+  renderAllHistory();
+}
+
+cwLoadHistory().then(h=>{cwHistory=h;renderAllHistory();});
+cwLoadWords(); // 登入後從雲端載入詞庫
+
+function cwSave(){
+  localStorage.setItem('ssCustomWords', JSON.stringify(customWords));
+  cwSyncCloud(); // 同步到雲端
+}
+function cwRenderList(){
+  document.getElementById('cwCount').textContent=customWords.length;
+  const el=document.getElementById('cwWordList');
+  if(!customWords.length){
+    el.innerHTML='<span style="color:var(--muted);font-size:0.82rem;">尚無自定義單字，請在上方輸入</span>';
+    return;
+  }
+  el.innerHTML=customWords.map((w,i)=>`
+    <span class="custom-word-chip">
+      <b>${w.word}</b> ${w.mean}
+      ${w.tag?'<span class="cw-tag-badge">'+w.tag+'</span>':''}
+      <button onclick="cwEditOpen(${i})" title="編輯" style="background:rgba(58,134,255,0.25);color:#7ab8ff;border-radius:5px;padding:1px 5px;font-size:0.72rem;margin-right:2px;">✏️</button>
+      <button onclick="cwRemove(${i})" title="刪除">×</button>
+    </span>`).join('');
+}
+function cwRemove(i){ customWords.splice(i,1); cwSave(); cwRenderList(); }
+function cwClearAll(){ if(customWords.length&&!confirm('確定清空所有自定義單字？')) return; customWords=[]; cwSave(); cwRenderList(); }
+
+// 編輯單字（彈窗）
+let _cwEditIdx=-1;
+function cwEditOpen(i){
+  _cwEditIdx=i;
+  const w=customWords[i];
+  document.getElementById('cwEditDlgWord').textContent=w.word+(w.ph?' '+w.ph:'')+(w.part?' ('+w.part+')':'');
+  document.getElementById('cwEditDlgMean').value=w.mean||'';
+  document.getElementById('cwEditDlgEx').value=w.ex||'';
+  document.getElementById('cwEditDlgTr').value=w.tr||'';
+  document.getElementById('cwEditDlgTag').value=w.tag||'';
+  document.getElementById('cwEditDlg').style.display='flex';
+}
+function cwEditClose(){
+  document.getElementById('cwEditDlg').style.display='none';
+  _cwEditIdx=-1;
+}
+function cwEditSave(){
+  if(_cwEditIdx<0)return;
+  const w=customWords[_cwEditIdx];
+  w.mean=document.getElementById('cwEditDlgMean').value.trim()||w.mean;
+  w.ex=document.getElementById('cwEditDlgEx').value.trim();
+  w.tr=document.getElementById('cwEditDlgTr').value.trim();
+  w.tag=document.getElementById('cwEditDlgTag').value.trim();
+  cwSave(); cwRenderList(); cwEditClose();
+  showToast&&showToast('✅ 已更新：'+w.word);
+}
+
+// 翻譯快取（避免重複請求）
+const _cwTransCache={};
+const _GEMINI_KEY='AIzaSyBSOt9ZWF0ylmkFPanrJJ98as6p_uZ1xio';
+
+// 用 Gemini Flash 造例句（帶 ___ 佔位符）
+async function cwGeminiExample(word, mean){
+  const prompt='Give me one short English example sentence for the word "'+word+'" (meaning: '+mean+'). Replace the word "'+word+'" (or its inflected form) with "___" in the sentence. Return ONLY the sentence, no explanation, no punctuation outside the sentence.';
+  const url='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key='+_GEMINI_KEY;
+  const res=await fetch(url,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({contents:[{parts:[{text:prompt}]}]})
+  });
+  if(!res.ok) throw new Error('gemini fail');
+  const data=await res.json();
+  const text=data?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()||'';
+  // 確保含有 ___
+  if(text&&text.includes('___')) return text;
+  // 如果 AI 沒替換，手動替換
+  if(text) return text.replace(new RegExp('\\b'+word+'s?\\b','i'),'___');
+  return '';
+}
+
+// 全部使用 Google Translate 非官方接口（免費、無需 Key）
+// dt=t 句子翻譯、dt=bd 字典條目（詞性+翻譯）、dt=rm 音標
+async function cwFetchWord(word){
+  if(_cwTransCache[word]) return _cwTransCache[word];
+  const result={word, ph:'', part:'', mean:'', ex:'', tr:''};
+
+  // ── Step 1：Google Translate 一次取音標 / 詞性 / 翻譯 ──
+  try{
+    const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&dt=bd&dt=rm&dj=1&q='+encodeURIComponent(word);
+    const res=await fetch(url);
+    if(res.ok){
+      const data=await res.json();
+      const sent=data.sentences?.[0];
+      if(sent?.src_translit) result.ph='/'+sent.src_translit+'/';
+      // 主翻譯：sentences[0].trans 是最常用翻譯
+      if(sent?.trans&&sent.trans!==word) result.mean=sent.trans;
+      // 詞性 + 額外義項
+      if(data.dict&&data.dict.length){
+        const d=data.dict[0];
+        const ptMap={verb:'v.',noun:'n.',adjective:'adj.',adverb:'adv.',pronoun:'pron.',conjunction:'conj.',preposition:'prep.',interjection:'int.'};
+        result.part=ptMap[d.pos]||d.pos||'';
+        const extras=(d.terms||[]).filter(t=>t!==result.mean).slice(0,2);
+        if(extras.length) result.mean+=' ('+extras.join('、')+')';
+      }
+    }
+  }catch(e){}
+
+  // ── Step 2：Free Dictionary API 取英文例句 ──
+  try{
+    const dictRes=await fetch('https://api.dictionaryapi.dev/api/v2/entries/en/'+encodeURIComponent(word));
+    if(dictRes.ok){
+      const data=await dictRes.json();
+      const entry=Array.isArray(data)?data[0]:null;
+      const def=entry?.meanings?.[0]?.definitions?.[0];
+      if(def?.example){
+        result.ex=def.example.replace(new RegExp('\\b'+word+'s?\\b','i'),'___');
+      }
+    }
+  }catch(e){}
+
+  // ── Step 2b：Free Dictionary 沒有例句 → Gemini AI 造句 ──
+  if(!result.ex){
+    try{
+      result.ex=await cwGeminiExample(word, result.mean||word);
+    }catch(e){}
+  }
+
+  // ── Step 3：Google Translate 翻譯例句 ──
+  if(result.ex){
+    try{
+      const origEx=result.ex.replace('___',word);
+      const url2='https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&dj=1&q='+encodeURIComponent(origEx);
+      const res2=await fetch(url2);
+      if(res2.ok){
+        const d2=await res2.json();
+        result.tr=(d2.sentences||[]).map(s=>s.trans||'').join('').trim();
+      }
+    }catch(e){}
+  }
+
+  _cwTransCache[word]=result;
+  return result;
+}
+
+// 查詢並顯示預覽
+async function cwLookup(){
+  const word=document.getElementById('cwWord').value.trim();
+  if(!word){return;}
+  const btn=document.getElementById('cwLookupBtn');
+  btn.textContent='查詢中…';btn.disabled=true;
+  const data=await cwFetchWord(word);
+  btn.textContent='🔍 自動查詢';btn.disabled=false;
+  // 填入預覽
+  document.getElementById('cwPvWord').textContent=data.word;
+  document.getElementById('cwPvPh').textContent=data.ph||'';
+  document.getElementById('cwPvPart').textContent=data.part||'';
+  document.getElementById('cwPvMean').textContent=data.mean||'（未能自動查詢，請手動填寫）';
+  document.getElementById('cwPvEx').textContent=data.ex?'"'+data.ex+'"':'';
+  document.getElementById('cwPvTr').textContent=data.tr||'';
+  document.getElementById('cwEditMean').value=data.mean||'';
+  document.getElementById('cwEditEx').value=data.ex||'';
+  document.getElementById('cwPreview').style.display='block';
+  document.getElementById('cwAddBtn').style.display='';
+}
+
+// 確認加入詞庫
+function cwConfirmAdd(){
+  const word=document.getElementById('cwWord').value.trim();
+  if(!word){return;}
+  if(customWords.find(w=>w.word.toLowerCase()===word.toLowerCase())){
+    showToast&&showToast('此單字已存在');return;
+  }
+  const cached=_cwTransCache[word]||{};
+  const mean=document.getElementById('cwEditMean').value.trim()||cached.mean||'';
+  const ex=document.getElementById('cwEditEx').value.trim()||cached.ex||'';
+  const tag=document.getElementById('cwTag').value.trim();
+  customWords.push({
+    word,
+    mean: mean||word,
+    ph: cached.ph||'',
+    part: cached.part||'',
+    ex,
+    tr: cached.tr||'',
+    tag
+  });
+  cwSave(); cwRenderList();
+  // 重置
+  document.getElementById('cwWord').value='';
+  document.getElementById('cwTag').value='';
+  document.getElementById('cwPreview').style.display='none';
+  document.getElementById('cwAddBtn').style.display='none';
+  showToast&&showToast('✅ 已加入：'+word);
+}
+
+// 批量查詢並匯入（每行一個英文單字）
+async function cwBulkAdd(){
+  const raw=document.getElementById('cwBulk').value.trim();
+  if(!raw){return;}
+  const words=raw.split('\n').map(l=>l.trim().split(/[\s,]/)[0]).filter(l=>l&&/^[a-zA-Z]/.test(l));
+  if(!words.length){showToast&&showToast('沒有有效的英文單字');return;}
+  const btn=document.getElementById('cwBulkBtn');
+  const status=document.getElementById('cwBulkStatus');
+  btn.disabled=true;
+  let added=0,skipped=0;
+  for(let i=0;i<words.length;i++){
+    const w=words[i];
+    status.textContent='查詢中 '+w+' ('+(i+1)+'/'+words.length+')…';
+    if(customWords.find(c=>c.word.toLowerCase()===w.toLowerCase())){skipped++;continue;}
+    try{
+      const data=await cwFetchWord(w);
+      customWords.push({word:data.word,mean:data.mean||data.word,ph:data.ph,part:data.part,ex:data.ex,tr:data.tr,tag:''});
+      added++;
+    }catch(e){skipped++;}
+    cwSave(); cwRenderList();
+    await new Promise(r=>setTimeout(r,350)); // 避免過快請求
+  }
+  btn.disabled=false;
+  status.textContent='完成！加入 '+added+' 個'+(skipped?' ('+skipped+' 跳過)':'');
+  document.getElementById('cwBulk').value='';
+  setTimeout(()=>status.textContent='',4000);
+}
+
+// 自動從自定義詞庫生成填空題
+function cwGenerateQuestions(){
+  const qs=[];
+  customWords.forEach(w=>{
+    if(!w.ex||!w.ex.includes('___')) return; // 無例句跳過
+    qs.push({
+      s: w.ex,
+      blank: w.word,
+      choices: [w.word, ...getRandomWords(3, w.word)],
+      zh: w.tr||'',
+      type:'fill'
+    });
+  });
+  return qs.sort(()=>Math.random()-0.5);
+}
+function getRandomWords(count, exclude){
+  // 優先從自定義詞庫其他單字選干擾項（確保學生見過），不足才從內建詞庫補
+  const cwPool=customWords.map(w=>w.word).filter(w=>w!==exclude);
+  const builtinPool=WORDS.map(w=>w.w).filter(w=>w!==exclude&&!cwPool.includes(w));
+  // 打亂自定義詞庫
+  for(let i=cwPool.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[cwPool[i],cwPool[j]]=[cwPool[j],cwPool[i]];}
+  const combined=[...cwPool,...builtinPool];
+  const result=[];
+  for(let i=0;i<combined.length&&result.length<count;i++){
+    if(!result.includes(combined[i])) result.push(combined[i]);
+  }
+  return result;
+}
+async function cwStartPractice(){
+  if(!customWords.length){alert('請先加入自定義單字');return;}
+  // 找出缺少例句的詞，用 Gemini 補造
+  const missing=customWords.filter(w=>!w.ex||!w.ex.includes('___'));
+  if(missing.length){
+    showToast&&showToast('AI 正在為 '+missing.length+' 個單字造例句，請稍候…',5000);
+    for(const w of missing){
+      try{
+        const ex=await cwGeminiExample(w.word, w.mean||w.word);
+        if(ex){
+          w.ex=ex;
+          // 順便用 Google 翻譯例句
+          if(!w.tr){
+            try{
+              const origEx=ex.replace('___',w.word);
+              const url2='https://translate.googleapis.com/translate_a/single?client=gtx&sl=en&tl=zh-TW&dt=t&dj=1&q='+encodeURIComponent(origEx);
+              const r=await fetch(url2);
+              if(r.ok){const d=await r.json();w.tr=(d.sentences||[]).map(s=>s.trans||'').join('').trim();}
+            }catch(e){}
+          }
+        }
+      }catch(e){}
+    }
+    cwSave();
+  }
+  cwPractList=cwGenerateQuestions();
+  if(!cwPractList.length){alert('所有單字都缺少例句，請點擊 ✏️ 手動補充例句（用 ___ 代替單字）');return;}
+  cwPractIdx=0; cwPractScore=0; cwPractAnswered=false;
+  document.getElementById('cwPracticeBox').classList.remove('hidden');
+  document.getElementById('cwPracticeBox').scrollIntoView({behavior:'smooth',block:'start'});
+  cwRenderQ();
+}
+function cwEndPractice(){
+  document.getElementById('cwPracticeBox').classList.add('hidden');
+}
+function cwRenderQ(){
+  if(cwPractIdx>=cwPractList.length){
+    const total=cwPractList.length;
+    const correct=Math.round(cwPractScore/10);
+    document.getElementById('cwSentence').textContent='🎉 本輪全部完成！共 '+total+' 題，得分 '+cwPractScore+' 分';
+    document.getElementById('cwChoices').innerHTML='';
+    document.getElementById('cwFeedback').style.display='none';
+    document.getElementById('cwQProg').textContent='完成！';
+    // 保存記錄
+    const now=new Date();
+    cwSaveHistory({
+      date: now.toLocaleString('zh-TW',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}),
+      wordCount: customWords.length,
+      total, correct, score: cwPractScore,
+    });
+    return;
+  }
+  const q=cwPractList[cwPractIdx]; cwPractAnswered=false;
+  document.getElementById('cwQProg').textContent='第 '+(cwPractIdx+1)+' 題 / 共 '+cwPractList.length+' 題';
+  document.getElementById('cwSentence').innerHTML=q.s.replace('___','<span class="blank">______</span>');
+  document.getElementById('cwFeedback').style.display='none';
+  document.getElementById('cwFeedback').className='feedback';
+  const cw=document.getElementById('cwChoices');
+  cw.innerHTML='';
+  [...q.choices].sort(()=>Math.random()-0.5).forEach(c=>{
+    const b=document.createElement('button');
+    b.className='choice-btn'; b.textContent=c;
+    b.onclick=()=>{cw.querySelectorAll('.choice-btn').forEach(x=>x.classList.remove('on'));b.classList.add('on');};
+    cw.appendChild(b);
+  });
+  document.getElementById('cwPractScore').textContent='得分：'+cwPractScore;
+}
+function cwCheck(){
+  if(cwPractAnswered)return;
+  const q=cwPractList[cwPractIdx];
+  const sel=document.querySelector('#cwChoices .choice-btn.on');
+  const fb=document.getElementById('cwFeedback');
+  if(!sel){fb.textContent='⚠️ 請先選擇答案';fb.className='feedback fail';fb.style.display='block';return;}
+  const ok=sel.textContent.trim().toLowerCase()===q.blank.toLowerCase();
+  document.querySelectorAll('#cwChoices .choice-btn').forEach(b=>{
+    if(b.textContent.trim().toLowerCase()===q.blank.toLowerCase()) b.style.background='rgba(46,204,113,0.3)';
+    else if(b.classList.contains('on')&&!ok) b.style.background='rgba(255,107,107,0.3)';
+  });
+  fb.innerHTML=ok?'✅ 正確！'+(q.zh?'　<span style="color:#aaa;font-weight:400;">'+q.zh+'</span>':''):'❌ 正確答案：<b>'+q.blank+'</b>'+(q.zh?'　<span style="color:#aaa;">'+q.zh+'</span>':'');
+  fb.className='feedback '+(ok?'ok':'fail');fb.style.display='block';
+  if(ok) cwPractScore+=10;
+  cwPractAnswered=true;
+  document.getElementById('cwPractScore').textContent='得分：'+cwPractScore;
+}
+function cwNext(){ cwPractIdx++; cwRenderQ(); }
+
+/* ---- INIT ---- */
+function showToast(msg,dur=2800){
+  let el=document.getElementById('_toast');
+  if(!el){el=document.createElement('div');el.id='_toast';el.style.cssText='position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:rgba(30,30,64,0.96);color:#fff;padding:10px 22px;border-radius:20px;font-size:0.88rem;font-weight:700;z-index:9999;pointer-events:none;transition:opacity 0.3s;box-shadow:0 4px 18px rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.15);';document.body.appendChild(el);}
+  el.textContent=msg;el.style.opacity='1';
+  clearTimeout(el._t);el._t=setTimeout(()=>{el.style.opacity='0';},dur);
+}
+buildTags();renderFC();
+buildQList();renderQ();
+dIdx=Math.floor(Math.random()*WORDS.length);renderDaily();
+spRenderHistory(); // async，自動執行
+cwRenderList();    // 自定義詞庫
+
+// hash nav
+const h=location.hash.replace('#','');
+if(h==='sentence')document.querySelector('.tab-btn:nth-child(2)').click();
+else if(h==='daily')document.querySelector('.tab-btn:nth-child(3)').click();
+else if(h==='custom')document.querySelector('.tab-btn:nth-child(4)').click();
+
+// ===== 背景主題切換器 =====
+const BG_THEMES=['star','geo','noise','mountain'];
+const BG_BODY_CLASSES={star:[],geo:['bg-geo'],noise:['bg-noise'],mountain:['bg-mountain']};
+let currentBg=localStorage.getItem('ssBg')||'star';
+let bgRaf=null;
+function applyBgTheme(name){
+  document.body.classList.remove('bg-geo','bg-noise','bg-mountain');
+  (BG_BODY_CLASSES[name]||[]).forEach(c=>document.body.classList.add(c));
+  document.querySelectorAll('.bg-picker-btn').forEach(btn=>btn.classList.toggle('active',btn.dataset.bg===name));
+  currentBg=name; localStorage.setItem('ssBg',name);
+  if(bgRaf) cancelAnimationFrame(bgRaf);
+  startBgCanvas(name);
+  saveCloudTheme();
+}
+document.getElementById('bgSwitcher').addEventListener('click',e=>{
+  const btn=e.target.closest('.bg-picker-btn');
+  if(btn&&btn.dataset.bg!=='custom') applyBgTheme(btn.dataset.bg);
+});
+
+// ===== 自定義圖片背景 =====
+function getBgCustomKey(){ const uid=localStorage.getItem('ssCurrentId')||'guest'; return 'ssBgCustomImg_english_'+uid; }
+function bgIsBase64(s){ return s&&s.startsWith('data:'); }
+function _applyBgVisual(dataUrl){
+  document.body.style.backgroundImage='url('+dataUrl+')';
+  document.body.classList.add('bg-custom-img');
+  document.querySelectorAll('.bg-picker-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('bgCustomBtn').classList.add('active');
+  document.getElementById('bgCustomPreviewImg').src=dataUrl;
+  document.getElementById('bgCustomPreview').style.display='block';
+}
+async function applyCustomBg(dataUrl){
+  _applyBgVisual(dataUrl);
+  localStorage.setItem(getBgCustomKey(),dataUrl);
+  if(!bgIsBase64(dataUrl)){
+    const uid=ssGetId();
+    if(uid){
+      try{ await sbFetch('users?id=eq.'+uid,{method:'PATCH',prefer:'return=minimal',body:{bg_url:dataUrl}}); }
+      catch(e){ console.warn('bgSync:',e); }
+    }
+  }
+}
+(async function initCustomBg(){
+  const uid=ssGetId();
+  if(uid){
+    try{
+      const rows=await sbFetch('users?id=eq.'+uid+'&select=bg_url');
+      if(rows&&rows[0]&&rows[0].bg_url){ localStorage.setItem(getBgCustomKey(),rows[0].bg_url); _applyBgVisual(rows[0].bg_url); return; }
+    }catch(e){ console.warn('bgSync init:',e); }
+  }
+  const saved=localStorage.getItem(getBgCustomKey());
+  if(saved) _applyBgVisual(saved);
+})();
+function bgCustomOpen(){ document.getElementById('bgCustomOverlay').style.display='flex'; }
+function bgCustomClose(){ document.getElementById('bgCustomOverlay').style.display='none'; }
+function bgHandleFile(input){
+  const file=input.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>applyCustomBg(e.target.result);
+  reader.readAsDataURL(file);
+  bgCustomClose();
+}
+function bgApplyUrl(){
+  const url=document.getElementById('bgUrlInput').value.trim();
+  if(!url){return;}
+  applyCustomBg(url);
+  bgCustomClose();
+}
+async function bgCustomClear(){
+  localStorage.removeItem(getBgCustomKey());
+  document.body.style.backgroundImage='';
+  document.body.classList.remove('bg-custom-img');
+  document.getElementById('bgCustomBtn').classList.remove('active');
+  document.getElementById('bgCustomPreview').style.display='none';
+  applyBgTheme(currentBg);
+  bgCustomClose();
+  const uid=ssGetId();
+  if(uid){ try{ await sbFetch('users?id=eq.'+uid,{method:'PATCH',prefer:'return=minimal',body:{bg_url:null}}); }catch(e){} }
+}
+
+(function(){
+  const cv=document.getElementById('bgCanvas');
+  const ctx=cv.getContext('2d');
+  let W,H;
+  function resize(){W=cv.width=window.innerWidth;H=cv.height=window.innerHeight;}
+  window.addEventListener('resize',()=>{resize();if(currentBg)startBgCanvas(currentBg);});
+  resize();
+  function bgStar(){
+    let stars=[],comets=[],lastComet=0;
+    const n=Math.floor(W*H/4800);
+    for(let i=0;i<n;i++) stars.push({x:Math.random()*W,y:Math.random()*H,r:Math.random()*1.5+0.2,a:Math.random(),da:(Math.random()-0.5)*0.009,color:['#ffffff','#4ecdc4','#3a86ff','#ffd700'][Math.floor(Math.random()*4)]});
+    function spawnComet(){const y=Math.random()*H*0.65,len=90+Math.random()*130,spd=4+Math.random()*3.5;comets.push({x:-60,y,vx:spd,vy:spd*0.38,len});}
+    return function draw(){
+      ctx.clearRect(0,0,W,H);
+      stars.forEach(s=>{s.a+=s.da;if(s.a<=0||s.a>=1)s.da=-s.da;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle=s.color;ctx.globalAlpha=s.a*0.78;ctx.fill();});
+      const now=performance.now();if(now-lastComet>1800+Math.random()*3500){spawnComet();lastComet=now;}
+      ctx.globalAlpha=1;
+      comets.forEach(c=>{const g=ctx.createLinearGradient(c.x,c.y,c.x-c.len,c.y-c.len*0.38);g.addColorStop(0,'rgba(255,255,255,0.92)');g.addColorStop(1,'rgba(255,255,255,0)');ctx.strokeStyle=g;ctx.lineWidth=2.4;ctx.lineCap='round';ctx.beginPath();ctx.moveTo(c.x,c.y);ctx.lineTo(c.x-c.len,c.y-c.len*0.38);ctx.stroke();c.x+=c.vx;c.y+=c.vy;});
+      comets=comets.filter(c=>c.x<W+200&&c.y<H+200);
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+  function bgGeo(){
+    const CELL=52,DOT=1.3;
+    let nodes=[];
+    const cols=Math.ceil(W/CELL)+2,rows=Math.ceil(H/CELL)+2;
+    for(let r=0;r<rows;r++) for(let c=0;c<cols;c++) nodes.push({bx:(c-0.5)*CELL,by:(r-0.5)*CELL,ox:0,oy:0,a:Math.random()*Math.PI*2,da:(Math.random()-0.5)*0.008,amp:4+Math.random()*6});
+    return function draw(){
+      ctx.clearRect(0,0,W,H);
+      nodes.forEach(n=>{n.a+=n.da;n.ox=Math.cos(n.a)*n.amp;n.oy=Math.sin(n.a)*n.amp;});
+      for(let r=0;r<rows;r++){for(let c=0;c<cols;c++){const i=r*cols+c,n=nodes[i],nx=n.bx+n.ox,ny=n.by+n.oy;
+        if(c+1<cols){const m=nodes[i+1];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(58,134,255,0.07)';ctx.lineWidth=0.9;ctx.stroke();}
+        if(r+1<rows){const m=nodes[i+cols];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(78,205,196,0.07)';ctx.lineWidth=0.9;ctx.stroke();}
+        if(c+1<cols&&r+1<rows){const m=nodes[i+cols+1];ctx.beginPath();ctx.moveTo(nx,ny);ctx.lineTo(m.bx+m.ox,m.by+m.oy);ctx.strokeStyle='rgba(255,215,0,0.035)';ctx.lineWidth=0.7;ctx.stroke();}
+        ctx.beginPath();ctx.arc(nx,ny,DOT,0,Math.PI*2);ctx.fillStyle='rgba(58,134,255,0.25)';ctx.globalAlpha=1;ctx.fill();
+      }}
+      const cx=W/2,cy=H/2;
+      for(let i=0;i<8;i++){const angle=i*Math.PI/4+(performance.now()*0.0001);const g=ctx.createLinearGradient(cx,cy,cx+Math.cos(angle)*W*0.7,cy+Math.sin(angle)*H*0.7);g.addColorStop(0,'rgba(58,134,255,0.06)');g.addColorStop(1,'rgba(58,134,255,0)');ctx.beginPath();ctx.moveTo(cx,cy);ctx.lineTo(cx+Math.cos(angle)*W,cy+Math.sin(angle)*H);ctx.strokeStyle=g;ctx.lineWidth=60;ctx.stroke();}
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+  function bgNoise(){
+    const offC=document.createElement('canvas');offC.width=offC.height=256;
+    const offCtx=offC.getContext('2d'),imgData=offCtx.createImageData(256,256);
+    for(let i=0;i<imgData.data.length;i+=4){const v=Math.random()*255|0;imgData.data[i]=v;imgData.data[i+1]=v;imgData.data[i+2]=v;imgData.data[i+3]=18;}
+    offCtx.putImageData(imgData,0,0);
+    const noisePat=ctx.createPattern(offC,'repeat');
+    let blobs=[];
+    for(let i=0;i<5;i++) blobs.push({x:Math.random()*W,y:Math.random()*H,r:180+Math.random()*200,a:Math.random()*Math.PI*2,spd:0.004+Math.random()*0.006,col:['rgba(255,215,0,','rgba(58,134,255,','rgba(78,205,196,'][i%3],opa:0.04+Math.random()*0.04});
+    return function draw(){
+      ctx.clearRect(0,0,W,H);ctx.globalAlpha=0.9;ctx.fillStyle=noisePat;ctx.fillRect(0,0,W,H);
+      blobs.forEach(b=>{b.a+=b.spd;const bx=b.x+Math.cos(b.a)*60,by=b.y+Math.sin(b.a)*40;const g=ctx.createRadialGradient(bx,by,0,bx,by,b.r);g.addColorStop(0,b.col+b.opa+')');g.addColorStop(1,b.col+'0)');ctx.globalAlpha=1;ctx.fillStyle=g;ctx.beginPath();ctx.arc(bx,by,b.r,0,Math.PI*2);ctx.fill();});
+      for(let y=0;y<H;y+=3){ctx.globalAlpha=0.012;ctx.fillStyle=y%6===0?'rgba(255,255,255,1)':'rgba(0,0,0,1)';ctx.fillRect(0,y,W,1);}
+      ctx.globalAlpha=1;bgRaf=requestAnimationFrame(draw);
+    };
+  }
+  function bgMountain(){
+    function makeMountain(n,minH,maxH,seed){const pts=[{x:0,y:H}];for(let i=0;i<=n;i++){const x=i*W/n,y=H-(minH+(Math.sin(i*seed+seed)*0.5+0.5)*(maxH-minH));pts.push({x,y});}pts.push({x:W,y:H});return pts;}
+    const layers=[
+      {pts:makeMountain(12,H*0.52,H*0.72,1.7),col:'rgba(10,30,60,0.85)',speed:0},
+      {pts:makeMountain(10,H*0.42,H*0.62,2.3),col:'rgba(15,40,80,0.80)',speed:0.08},
+      {pts:makeMountain(8,H*0.32,H*0.52,3.1),col:'rgba(20,55,110,0.70)',speed:0.18},
+      {pts:makeMountain(6,H*0.22,H*0.42,4.2),col:'rgba(30,70,140,0.55)',speed:0.30},
+      {pts:makeMountain(5,H*0.14,H*0.30,5.8),col:'rgba(50,100,180,0.35)',speed:0.44},
+    ];
+    let scrollY=0,prevTS=0;
+    let stars2=[];const ns=Math.floor(W*H/9000);
+    for(let i=0;i<ns;i++) stars2.push({x:Math.random()*W,y:Math.random()*H*0.55,r:Math.random()+0.3,a:Math.random(),da:(Math.random()-0.5)*0.006});
+    return function draw(ts){
+      const dt=ts-prevTS;prevTS=ts;ctx.clearRect(0,0,W,H);
+      stars2.forEach(s=>{s.a+=s.da;if(s.a<=0||s.a>=1)s.da=-s.da;ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fillStyle='#ffffff';ctx.globalAlpha=s.a*0.6;ctx.fill();});
+      ctx.globalAlpha=1;
+      const gh=ctx.createLinearGradient(0,H*0.55,0,H);gh.addColorStop(0,'rgba(5,15,40,0)');gh.addColorStop(1,'rgba(5,15,40,0.95)');ctx.fillStyle=gh;ctx.fillRect(0,H*0.55,W,H*0.45);
+      [...layers].reverse().forEach(layer=>{const off=scrollY*layer.speed;ctx.beginPath();ctx.moveTo(layer.pts[0].x,layer.pts[0].y+off);layer.pts.forEach(p=>ctx.lineTo(p.x,p.y+off));ctx.closePath();ctx.fillStyle=layer.col;ctx.fill();});
+      const mg=ctx.createRadialGradient(W*0.78,H*0.12,0,W*0.78,H*0.12,W*0.28);mg.addColorStop(0,'rgba(180,210,255,0.10)');mg.addColorStop(1,'rgba(180,210,255,0)');ctx.fillStyle=mg;ctx.fillRect(0,0,W,H);
+      bgRaf=requestAnimationFrame(draw);
+    };
+  }
+  window.startBgCanvas=function(name){
+    if(bgRaf) cancelAnimationFrame(bgRaf);
+    resize();
+    let drawFn;
+    if(name==='star') drawFn=bgStar();
+    else if(name==='geo') drawFn=bgGeo();
+    else if(name==='noise') drawFn=bgNoise();
+    else if(name==='mountain') drawFn=bgMountain();
+    if(drawFn) bgRaf=requestAnimationFrame(drawFn);
+  };
+  startBgCanvas(currentBg);
+})();
+applyBgTheme(currentBg);
+// ===== 深淺色模式 =====
+function applyTheme(mode){
+  document.body.classList.toggle('light-mode', mode==='light');
+  document.getElementById('themeBtn').textContent = mode==='light' ? '🌙' : '☀️';
+}
+function toggleTheme(){
+  const next = document.body.classList.contains('light-mode') ? 'dark' : 'light';
+  localStorage.setItem('ssTheme', next);
+  applyTheme(next);
+  saveCloudTheme();
+}
+(function(){ applyTheme(localStorage.getItem('ssTheme')||'dark'); })();
+
+async function saveCloudTheme(){
+  const userId = ssGetId();
+  if(!userId) return;
+  const bg = localStorage.getItem('ssBg')||'star';
+  const theme = localStorage.getItem('ssTheme')||'dark';
+  try{
+    await sbFetch('user_settings?user_id=eq.'+userId, {
+      method:'PATCH', prefer:'return=minimal',
+      body:{bg_theme:bg, color_theme:theme, updated_at:'now()'}
+    });
+  }catch(e){}
+}
+
+// ===== TTS 語音朗讀 =====
+function speak(text, btnId){
+  if(!window.speechSynthesis){alert('此瀏覽器不支援語音功能');return;}
+  window.speechSynthesis.cancel();
+  const btn = btnId ? document.getElementById(btnId) : null;
+  const utt = new SpeechSynthesisUtterance(text);
+  utt.lang = 'en-US';
+  utt.rate = 0.85;
+  utt.pitch = 1;
+  // 優先選用英文原生聲音
+  const voices = window.speechSynthesis.getVoices();
+  const enVoice = voices.find(v=>v.lang.startsWith('en')&&v.localService) || voices.find(v=>v.lang.startsWith('en'));
+  if(enVoice) utt.voice = enVoice;
+  if(btn){ btn.classList.add('speaking'); utt.onend = ()=>btn.classList.remove('speaking'); utt.onerror = ()=>btn.classList.remove('speaking'); }
+  window.speechSynthesis.speak(utt);
+}
+function speakFC(){
+  // 正面：只讀單字
+  const word = document.getElementById('fcWord').textContent;
+  speak(word, 'ttsFC');
+}
+function speakFCEx(){
+  // 背面：讀例句
+  const ex = document.getElementById('fcEx').textContent.replace(/[""]/g,'');
+  speak(ex, 'ttsFCEx');
+}
+function speakDaily(){
+  const word = document.getElementById('dWord').textContent;
+  const ex = document.getElementById('dEx').textContent.replace(/[""]/g,'');
+  speak(word + '. ' + ex, 'ttsDaily');
+}
+// 預載聲音列表（部分瀏覽器需要此步驟）
+if(window.speechSynthesis) window.speechSynthesis.onvoiceschanged = ()=>{};
+</script>
+</body>
+</html>
